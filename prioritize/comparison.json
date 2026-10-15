@@ -1,0 +1,126 @@
+{
+  "budget": 3,
+  "budget_sweep": [
+    {
+      "budget": 0,
+      "interdiction_objective": 0.09880800721904279,
+      "interdiction_residual": 0.9059166207793562,
+      "naive_objective": 0.09880800721904279,
+      "naive_residual": 0.9059166207793562
+    },
+    {
+      "budget": 1,
+      "interdiction_objective": 0.09880800721904279,
+      "interdiction_residual": 0.9059166207793562,
+      "naive_objective": 0.09880800721904279,
+      "naive_residual": 0.9059166207793562
+    },
+    {
+      "budget": 2,
+      "interdiction_objective": 0.5346557204696007,
+      "interdiction_residual": 0.5858709588061782,
+      "naive_objective": 0.09880800721904279,
+      "naive_residual": 0.9059166207793562
+    },
+    {
+      "budget": 3,
+      "interdiction_objective": 0.5346557204696007,
+      "interdiction_residual": 0.5858709588061782,
+      "naive_objective": 0.09880800721904279,
+      "naive_residual": 0.9059166207793562
+    },
+    {
+      "budget": 4,
+      "interdiction_objective": 0.5959919078353854,
+      "interdiction_residual": 0.5510157378833559,
+      "naive_objective": 0.09880800721904279,
+      "naive_residual": 0.9059166207793562
+    },
+    {
+      "budget": 5,
+      "interdiction_objective": 0.5959919078353854,
+      "interdiction_residual": 0.5510157378833559,
+      "naive_objective": 0.09880800721904279,
+      "naive_residual": 0.9059166207793562
+    },
+    {
+      "budget": 6,
+      "interdiction_objective": 0.6312232493248321,
+      "interdiction_residual": 0.5319407067523961,
+      "naive_objective": 0.09880800721904279,
+      "naive_residual": 0.9059166207793562
+    }
+  ],
+  "crown_jewel_count": 4,
+  "entry_count": 3,
+  "methods": [
+    {
+      "name": "naive",
+      "objective": 0.09880800721904279,
+      "paths_cut_at_k": 0,
+      "ppr_crown_jewel_delta": {
+        "ADMIN_EQUIV": 0.0006499734631101525,
+        "bucket-0": 8.172525763022482e-05,
+        "bucket-1": 0.00014670815964460196,
+        "bucket-2": -0.013612936159370877
+      },
+      "residual_attack_prob": 0.9059166207793562,
+      "selected": [
+        "F-ae516f54",
+        "F-d8503194"
+      ]
+    },
+    {
+      "fractional_x": {
+        "F-0bf860a8": 0.0,
+        "F-26a2094a": 0.0,
+        "F-2dd17534": 0.12482806529929719,
+        "F-5f5c39d4": 0.3396188702987938,
+        "F-820b0a24": 0.0,
+        "F-830ae1e6": 0.0,
+        "F-a3fb6c61": 0.0,
+        "F-ae516f54": 0.0,
+        "F-b42cc0f7": 0.0674864533212808,
+        "F-c51899e9": 0.0,
+        "F-c59c1633": 0.0,
+        "F-c76b4e22": 0.1072550971766651,
+        "F-d8503194": 0.445461190987926,
+        "F-dfc646b4": 0.0,
+        "F-e10b81b3": 0.0,
+        "F-e4431bc0": 0.41535032291603724,
+        "F-f6787076": 0.0
+      },
+      "name": "stackelberg_rounded",
+      "note": "comparison only; fractional coverage has no operational meaning",
+      "objective": 0.09880800721904279,
+      "paths_cut_at_k": 0,
+      "ppr_crown_jewel_delta": {
+        "ADMIN_EQUIV": 0.0006307697139666252,
+        "bucket-0": 7.931064928800701e-05,
+        "bucket-1": 0.00014827517671681112,
+        "bucket-2": -0.013612936159370877
+      },
+      "residual_attack_prob": 0.9059166207793562,
+      "selected": [
+        "F-820b0a24",
+        "F-d8503194"
+      ]
+    },
+    {
+      "name": "interdiction",
+      "objective": 0.5346557204696007,
+      "paths_cut_at_k": 2,
+      "ppr_crown_jewel_delta": {
+        "ADMIN_EQUIV": -0.010341890470534167,
+        "bucket-0": 5.150647966591874e-05,
+        "bucket-1": 0.00012886701132982029,
+        "bucket-2": 0.00012440590054138383
+      },
+      "residual_attack_prob": 0.5858709588061782,
+      "selected": [
+        "F-b42cc0f7"
+      ]
+    }
+  ],
+  "source": "synthetic"
+}

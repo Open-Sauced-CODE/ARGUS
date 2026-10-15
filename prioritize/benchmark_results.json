@@ -1,0 +1,47 @@
+{
+  "brute_force_checks": 0,
+  "brute_force_mismatches": 0,
+  "budgets": [
+    2,
+    4,
+    6
+  ],
+  "by_budget": {
+    "2": {
+      "interdiction_better_than_naive": 43,
+      "interdiction_better_than_stackelberg": 43,
+      "interdiction_tied_all": 7,
+      "mean_interdiction_residual": 0.7180698404057635,
+      "mean_naive_residual": 0.8197592264967917,
+      "mean_stackelberg_residual": 0.8197592264967917,
+      "n_instances": 50
+    },
+    "4": {
+      "interdiction_better_than_naive": 49,
+      "interdiction_better_than_stackelberg": 49,
+      "interdiction_tied_all": 1,
+      "mean_interdiction_residual": 0.6406807645990855,
+      "mean_naive_residual": 0.7937838951877747,
+      "mean_stackelberg_residual": 0.7937838951877747,
+      "n_instances": 50
+    },
+    "6": {
+      "interdiction_better_than_naive": 49,
+      "interdiction_better_than_stackelberg": 49,
+      "interdiction_tied_all": 1,
+      "mean_interdiction_residual": 0.5796347094760856,
+      "mean_naive_residual": 0.7792524314292442,
+      "mean_stackelberg_residual": 0.7792524314292442,
+      "n_instances": 50
+    }
+  },
+  "max_solve_time_s": 0.8696258068084717,
+  "mean_solve_time_s": 0.03532846927642822,
+  "n_seeds": 50,
+  "scale_probe_n_findings": 58,
+  "scale_probe_solve_times_s": {
+    "backend_diff": 0.0,
+    "pulp": 0.03136634826660156,
+    "scipy": 0.038292646408081055
+  }
+}

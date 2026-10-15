@@ -1,0 +1,50 @@
+{
+  "delta_max": 13.8155,
+  "notes": "delta = ln(old_p / new_p). delta_max = -ln(1e-6), matching P_FLOOR in risk/simulate.py. Costs are relative effort units (1 = config toggle, 2 = needs review). Heuristic; frozen after team review.",
+  "fixes": {
+    "remove_policy_statement": {
+      "scope": "stmt",
+      "covers_etypes": ["CAN_ESCALATE", "DIRECT_ADMIN", "CAN_ACCESS"],
+      "direction": "out",
+      "new_p_factor": 0.0,
+      "delta": "delta_max",
+      "cost": 2,
+      "rule_family": "iam_privilege_escalation",
+      "simulated": true,
+      "enabled": true
+    },
+    "restrict_cidr": {
+      "scope": "sg",
+      "covers_etypes": ["RULE_TO_SG"],
+      "direction": "in",
+      "new_p_factor": 0.1,
+      "delta": 2.3026,
+      "cost": 1,
+      "rule_family": "net_open_ingress",
+      "simulated": true,
+      "enabled": true
+    },
+    "deactivate_key": {
+      "scope": "key",
+      "covers_etypes": ["USES_KEY"],
+      "direction": "out",
+      "new_p_factor": 0.0,
+      "delta": "delta_max",
+      "cost": 1,
+      "rule_family": "key_active",
+      "simulated": false,
+      "enabled": false
+    },
+    "tighten_trust": {
+      "scope": "role",
+      "covers_etypes": ["CAN_ASSUME"],
+      "direction": "in",
+      "new_p_factor": 0.1,
+      "delta": 2.3026,
+      "cost": 2,
+      "rule_family": "trust_overbroad",
+      "simulated": false,
+      "enabled": false
+    }
+  }
+}
