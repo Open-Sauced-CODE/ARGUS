@@ -1,0 +1,17 @@
+{
+  "default_budget": 3,
+  "critical_paths_k": 5,
+  "max_paths_enumerated": 2000,
+  "stackelberg": {
+    "pa_ratio": 0.2
+  },
+  "non_actionable_stmt_prefixes": ["arn:aws:iam::aws:policy/"],
+  "rule_family_to_rule_ids": {
+    "net_open_ingress": ["cis.sg_open_ingress", "dpdp.rule6_sg_open_ingress"],
+    "iam_privilege_escalation": [],
+    "iam_data_access": [],
+    "key_active": [],
+    "trust_overbroad": []
+  },
+  "notes": "Budget is in fix_catalogue cost units. rule ids must exist in policy/ (Phase 4). Empty list means no Rego rule exists yet (rule_gap)."
+}

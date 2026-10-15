@@ -1,0 +1,8 @@
+# Phase 3 extra dependencies (same convention as requirements-phase4.txt).
+# Do NOT add to requirements.txt to avoid merge conflicts.
+# Install alongside requirements.txt: pip install -r requirements-phase3.txt
+#
+# highspy provides the HiGHS solver that PuLP 4.0.0 needs (PuLP 4 ships with
+# no bundled solver; scipy.optimize.milp is the automatic fallback if this is
+# absent).  Version recorded: 1.15.1 on Python 3.13 / Windows amd64.
+highspy
