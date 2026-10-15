@@ -1,0 +1,4 @@
+# Phase 5 additions (kept out of requirements.txt on purpose, to avoid merge conflicts with other branches).
+# Everything else Phase 5 Section 1 needs (jsonschema, requests, pytest, lark) is already in requirements.txt.
+# Model training does NOT run on this laptop: it runs in Google Colab / Kaggle, so torch/unsloth are not listed here.
+python-hcl2==8.1.4

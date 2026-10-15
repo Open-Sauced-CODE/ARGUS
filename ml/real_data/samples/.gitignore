@@ -1,0 +1,4 @@
+# Third-party Terraform files downloaded for the parser smoke test. Never commit them
+# (they are other people's code; keep their licence terms out of our repository).
+*
+!.gitignore
