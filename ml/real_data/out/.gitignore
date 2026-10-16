@@ -1,0 +1,4 @@
+# Intermediate Stage C inputs written by filter_terrads (Tier C candidates, violation counts).
+# They are regenerated from TerraDS; the frozen Tier C files are committed later under held_out/.
+*
+!.gitignore

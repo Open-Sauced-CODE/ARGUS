@@ -1,0 +1,5 @@
+resource_type,train,val,test,total
+AWSIpPermissionInbound,3097,548,913,4558
+AWSPolicyStatement,5742,727,1417,7886
+AWSRDSInstance,480,66,117,663
+AWSS3Bucket,32,5,11,48

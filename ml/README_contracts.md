@@ -107,9 +107,13 @@ Why: it has the most rules (3) and 3 distinct mutators, and S3 and RDS bases are
 - **D5. Values the model cannot see.** For security-group narrowing and for IAM full-admin statements, the projected record does not contain the original, safe value (the original CIDR or the original scope). The reference-patch convention for these is decided at Step 5 with the team; until then both routes stay "M1".
 - **D6. One-time scoring rule.** The unit is the pair (model, held-out set): each pair is scored once. Baseline models are frozen at Step 15, so their held-out rows may be produced then. Every decision (model size, checkpoint, sampling settings) uses validation numbers only.
 - **D7. Phase 1 skeleton and Python packages.** `ml/mutation_engine/mutators.py` and `ml/mutation_engine/test_mutators.py` stay as they are until Step 5. Do not add an `__init__.py` to `ml/mutation_engine/`: the Phase 1 test imports `mutators` as a top-level module and would stop working.
+- **D8. Bases are attribute dictionaries, not Terraform text.** A base keeps `attrs` (every field a rule reads, Rego names) and `extras` (harmless real attributes no rule reads). Step 5 mutators edit `attrs`; the Phase 1 text-replacing mutators are superseded.
+- **D9. Real compliant S3 buckets are rare.** If Step 4 yields too few clean S3 bases, Step 5 adds documented "completed" bases (a real bucket's extras plus synthetic compliance fields).
+- **D10. The model input has few distinct values.** The airlock projects only the rule's fields, so identical inputs across splits are unavoidable. The Step 9 leakage check hashes the full mutated resource (attrs plus extras), not the projected input.
 
 ## 7. Change log
 
 | Date | Change | Reason | Approved by |
 |---|---|---|---|
 | 2026-10-07 | First version | Phase 5 Step 1 | |
+| 2026-10-07 | Added D8, D9, D10 | Phase 5 Step 4 findings | |
