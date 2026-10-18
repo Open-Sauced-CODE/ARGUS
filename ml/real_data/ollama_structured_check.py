@@ -35,7 +35,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = REPO_ROOT / "remediate" / "patch_ir" / "schema.json"
 
 DEFAULT_HOST = "http://127.0.0.1:11434"
-DEFAULT_MODEL = "qwen2.5:7b"
+DEFAULT_MODEL = "qwen3.5:0.8b"
 
 SYSTEM_PROMPT = (
     "You repair cloud misconfigurations. Reply with exactly one Patch-IR JSON object and nothing else. "

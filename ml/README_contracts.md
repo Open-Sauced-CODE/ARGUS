@@ -110,6 +110,10 @@ Why: it has the most rules (3) and 3 distinct mutators, and S3 and RDS bases are
 - **D8. Bases are attribute dictionaries, not Terraform text.** A base keeps `attrs` (every field a rule reads, Rego names) and `extras` (harmless real attributes no rule reads). Step 5 mutators edit `attrs`; the Phase 1 text-replacing mutators are superseded.
 - **D9. Real compliant S3 buckets are rare.** If Step 4 yields too few clean S3 bases, Step 5 adds documented "completed" bases (a real bucket's extras plus synthetic compliance fields).
 - **D10. The model input has few distinct values.** The airlock projects only the rule's fields, so identical inputs across splits are unavoidable. The Step 9 leakage check hashes the full mutated resource (attrs plus extras), not the projected input.
+- **D11. The Phase 1 skeleton moved to ml/mutation_engine/phase1_skeleton/.** The Step 5 package ml/mutation_engine/mutators/ replaces it; this supersedes D7.
+- **D12. Reference fixes for values the model cannot see.** Security groups: restrict_cidr to the placeholder INTERNAL_CIDR (resolved by the Phase 7 compiler). Encryption: aws:kms. IAM: wildcard appended, fix restores the original lists. The example original is the base with these values canonical.
+- **D13. Ops used in Phase 5 data:** set_attr, restrict_cidr, set_lifecycle_rule, escalate. add_policy_statement, remove_policy_statement and enable_feature are unused (limitation).
+- **D14. Synthetic bases:** completed S3 buckets and 40 account fixtures, in bases_synthetic.jsonl, each marked in source.synthetic.
 
 ## 7. Change log
 
@@ -117,3 +121,4 @@ Why: it has the most rules (3) and 3 distinct mutators, and S3 and RDS bases are
 |---|---|---|---|
 | 2026-10-07 | First version | Phase 5 Step 1 | |
 | 2026-10-07 | Added D8, D9, D10 | Phase 5 Step 4 findings | |
+| 2026-10-18 | Added D11 to D14 | Phase 5 Steps 5-7 | |

@@ -106,7 +106,7 @@ def test_main_exit_codes(sample_file, tmp_path, capsys):
 
 
 def test_phase1_fixtures_parse_if_present():
-    fixtures = sorted(hcl.FIXTURES_DIR.glob("*.tf"))
+    fixtures = [f for folder in hcl.FIXTURES_DIRS for f in sorted(folder.glob("*.tf"))]
     if not fixtures:
         pytest.skip("no Phase 1 fixtures found")
     for path in fixtures:
@@ -129,7 +129,7 @@ class FakeOllama(BaseHTTPRequestHandler):
     # Class-level knobs, reset by the fixture below.
     chat_replies = []          # list of (http_status, body_dict) used in order, last one repeats
     reject_think_once = False
-    installed = ["qwen2.5:7b"]
+    installed = ["qwen3.5:0.8b"]
     seen_payloads = []
 
     def log_message(self, *args):  # keep test output quiet
@@ -173,7 +173,7 @@ def _reply(content, done_reason="stop"):
 def server():
     FakeOllama.chat_replies = [_reply(json.dumps(GOOD_PATCH))]
     FakeOllama.reject_think_once = False
-    FakeOllama.installed = ["qwen2.5:7b"]
+    FakeOllama.installed = ["qwen3.5:0.8b"]
     FakeOllama.seen_payloads = []
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), FakeOllama)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
@@ -210,14 +210,14 @@ def test_classify_statuses():
 
 
 def test_all_three_prompts_valid(server):
-    results = oc.run_checks(server, "qwen2.5:7b")
+    results = oc.run_checks(server, "qwen3.5:0.8b")
     assert [r["status"] for r in results] == ["VALID", "VALID", "VALID"]
     assert len(FakeOllama.seen_payloads) == 3
 
 
 def test_think_field_is_dropped_when_the_server_rejects_it(server):
     FakeOllama.reject_think_once = True
-    results = oc.run_checks(server, "qwen2.5:7b")
+    results = oc.run_checks(server, "qwen3.5:0.8b")
     assert [r["status"] for r in results] == ["VALID", "VALID", "VALID"]
     assert len(FakeOllama.seen_payloads) == 4  # one rejected attempt, one retry, two more prompts
     assert "think" not in FakeOllama.seen_payloads[1]
@@ -229,7 +229,7 @@ def test_invalid_and_truncated_replies_are_reported(server):
         _reply("{\"finding_id\": \"F-TOY-1\", \"reason\": \"aaaa", done_reason="length"),
         (500, {"error": "grammar error"}),
     ]
-    results = oc.run_checks(server, "qwen2.5:7b")
+    results = oc.run_checks(server, "qwen3.5:0.8b")
     assert [r["status"] for r in results] == ["SCHEMA_INVALID", "NOT_JSON", "HTTP_ERROR"]
     assert "token limit" in results[1]["detail"]
     assert "grammar error" in results[2]["detail"]
@@ -245,7 +245,7 @@ def test_main_exit_codes(server, capsys):
 
     FakeOllama.installed = ["some-other-model:latest"]
     assert oc.main(["--host", server]) == 2
-    assert "ollama pull qwen2.5:7b" in capsys.readouterr().out
+    assert "ollama pull qwen3.5:0.8b" in capsys.readouterr().out
 
 
 def test_main_reports_unreachable_server(capsys):

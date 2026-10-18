@@ -10,7 +10,7 @@ Run from the repo root (PowerShell):
     python -m ml.real_data.hcl_smoke_test
     python -m ml.real_data.hcl_smoke_test path\\to\\a.tf path\\to\\b.tf
 
-With no arguments it parses the two Phase 1 fixtures plus every .tf file in ml/real_data/samples/.
+With no arguments it parses the Phase 1 fixtures plus every .tf file in ml/real_data/samples/.
 Exit code: 0 = every file parsed, 1 = at least one file failed to parse, 2 = no files found or
 python-hcl2 is not installed.
 """
@@ -22,7 +22,12 @@ from importlib import metadata
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FIXTURES_DIR = REPO_ROOT / "ml" / "mutation_engine" / "fixtures"
+# The Phase 1 fixtures moved to phase1_skeleton/ in Phase 5 Section 2B; both places are checked.
+FIXTURES_DIRS = (
+    REPO_ROOT / "ml" / "mutation_engine" / "phase1_skeleton" / "fixtures",
+    REPO_ROOT / "ml" / "mutation_engine" / "fixtures",
+)
+FIXTURES_DIR = FIXTURES_DIRS[0]
 SAMPLES_DIR = REPO_ROOT / "ml" / "real_data" / "samples"
 
 META_ARGUMENTS = ("count", "for_each", "dynamic", "provider", "depends_on", "lifecycle")
@@ -121,7 +126,10 @@ def analyse_file(path):
 
 
 def default_files():
-    files = sorted(FIXTURES_DIR.glob("*.tf")) + sorted(SAMPLES_DIR.glob("*.tf"))
+    files = []
+    for folder in FIXTURES_DIRS:
+        files += sorted(folder.glob("*.tf"))
+    files += sorted(SAMPLES_DIR.glob("*.tf"))
     return [p for p in files if p.is_file()]
 
 
