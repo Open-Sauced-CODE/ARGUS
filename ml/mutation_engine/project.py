@@ -17,6 +17,7 @@ from cryptography.fernet import Fernet
 
 from privacy.airlock.airlock import run_airlock
 from privacy.airlock.projection import project
+from privacy.scrubbers.scrubbers import scrub
 from privacy.vault.tokenizer import tokenize
 from privacy.vault.vault import TokenVault
 
@@ -42,6 +43,7 @@ def model_input(raw, rule_id, vault):
 def tokenize_ops(raw, rule_id, record, ops, vault):
     """The reference operations written in the same tokens as `record`."""
     joint, _refs = tokenize(dict(project(raw, rule_id), target_ops=ops), vault=vault)
+    joint, _ = scrub(joint)
     if joint["fields"] != record["fields"] or joint["resource_ref"] != record["resource_ref"]:
         raise ValueError("token mismatch between the model input and its reference patch")
     return joint["target_ops"]

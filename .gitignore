@@ -52,4 +52,7 @@ aws/
 !testbeds/cloudgoat/
 !testbeds/cloudgoat/ground_truth_paths.json
 !testbeds/**/*.json
-
+
+ml/real_data/clones/
+ml/train_m1/data/*.jsonl
+ml/train_m1/eval/runs/*/*.candidates.jsonl

@@ -114,6 +114,9 @@ Why: it has the most rules (3) and 3 distinct mutators, and S3 and RDS bases are
 - **D12. Reference fixes for values the model cannot see.** Security groups: restrict_cidr to the placeholder INTERNAL_CIDR (resolved by the Phase 7 compiler). Encryption: aws:kms. IAM: wildcard appended, fix restores the original lists. The example original is the base with these values canonical.
 - **D13. Ops used in Phase 5 data:** set_attr, restrict_cidr, set_lifecycle_rule, escalate. add_policy_statement, remove_policy_statement and enable_feature are unused (limitation).
 - **D14. Synthetic bases:** completed S3 buckets and 40 account fixtures, in bases_synthetic.jsonl, each marked in source.synthetic.
+- **D15. Validation has no personal-data S3 bases (versioning, lifecycle rules).** They are T0 rules; checked by template tests instead.
+- **D16. Every mutator gets at least 100 train examples, so escalate share is above the suggested 3 to 5 percent; the exact share is in DATASET_CARD.md.**
+- **D17. Because the airlock shows one rule's fields only, B1 "unseen combinations" is invisible to the model.** B1 measures unseen repositories/decoys and resource-level success (all findings of one resource fixed).
 
 ## 7. Change log
 
@@ -122,3 +125,4 @@ Why: it has the most rules (3) and 3 distinct mutators, and S3 and RDS bases are
 | 2026-10-07 | First version | Phase 5 Step 1 | |
 | 2026-10-07 | Added D8, D9, D10 | Phase 5 Step 4 findings | |
 | 2026-10-18 | Added D11 to D14 | Phase 5 Steps 5-7 | |
+| 2026-10-21 | Added D15 to D17 | Phase 5 Steps 8-9 | |
