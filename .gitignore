@@ -46,6 +46,8 @@ aws/
 # Secrets / key files
 *.csv
 !ml/mutation_engine/bases/*.csv
+!ml/real_data/*.csv
+!ml/real_data/**/*.csv
 *accessKeys*
 
 # Testbeds ground truth

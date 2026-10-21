@@ -1,0 +1,15 @@
+rule_id,trivy_ids,checkov_ids
+dpdp.rule6a,AWS-0088,CKV_AWS_19;CKV_AWS_145
+cis.s3_default_encryption,AWS-0088,CKV_AWS_19;CKV_AWS_145
+dpdp.rule6a_rds,AWS-0080,CKV_AWS_16
+dpdp.rule6_versioning,AWS-0090,CKV_AWS_21
+dpdp.rule8_lifecycle,,CKV2_AWS_61
+dpdp.rule6_public_exposure,AWS-0086;AWS-0087;AWS-0091;AWS-0093,CKV_AWS_53;CKV_AWS_54;CKV_AWS_55;CKV_AWS_56;CKV2_AWS_6
+cis.s3_public_access_block,AWS-0086;AWS-0087;AWS-0091;AWS-0093,CKV_AWS_53;CKV_AWS_54;CKV_AWS_55;CKV_AWS_56;CKV2_AWS_6
+dpdp.rule6_sg_open_ingress,AWS-0107,CKV_AWS_24;CKV_AWS_25;CKV_AWS_260;CKV_AWS_277
+cis.sg_open_ingress,AWS-0107,CKV_AWS_24;CKV_AWS_25;CKV_AWS_260;CKV_AWS_277
+cis.iam_no_full_admin,AWS-0057,CKV_AWS_49;CKV_AWS_62;CKV_AWS_63;CKV_AWS_289;CKV_AWS_290;CKV_AWS_355
+dpdp.rule6_logging,AWS-0089,CKV_AWS_18
+dpdp.rule6_account_mfa,,
+dpdp.rule7_detection,,
+dpdp.rule15_region,,
