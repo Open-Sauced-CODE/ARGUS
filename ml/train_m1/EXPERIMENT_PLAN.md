@@ -93,3 +93,4 @@ the team before the first commit of this file.
 | Date | Change | Reason | Held-out result already visible? |
 |---|---|---|---|
 | 2026-10-07 | First version | Phase 5 Step 2 | no |
+| 2026-10-22 | Step 14-15 baseline decisions confirmed on A_val. Base model: Qwen3.5-4B (`qwen3.5:4b`). Prompt format: fixed chat template (system message + compact JSON user input + Patch-IR assistant target). Temperature: sample 1 greedy (0.0), samples 2-8 at 0.7. Token lengths (chars/3): p50 359, p99 492, max 746 (context window 1024). A_val zero-shot baseline: pass@1 26.6% [22.3, 31.4], pass@8 48.8% [43.6, 53.9], schema-valid 551/560 (98.4%), median s to first pass 5.01s. T0 baseline: 196/361 (54.3%), gate-pass 100%. | Phase 5 Steps 14 and 15 model size and baseline freeze | no |

@@ -1,0 +1,44 @@
+{
+  "distinct_inputs": 70,
+  "escalate": {
+    "fn": 44,
+    "fp": 0,
+    "precision": null,
+    "recall": 0.0,
+    "tp": 0
+  },
+  "examples": 361,
+  "gate_passing_candidates": 107,
+  "hidden_ok_among_gate_passing": [
+    62,
+    107
+  ],
+  "label": "zeroshot",
+  "median_seconds_to_first_pass": 5.0108641386032104,
+  "model": "qwen3.5:4b",
+  "never_passed": 185,
+  "pass_at": {
+    "1": 96,
+    "2": 138,
+    "3": 171,
+    "4": 171,
+    "5": 172,
+    "6": 176,
+    "7": 176,
+    "8": 176
+  },
+  "pass_at_1_text": "96/361 = 26.6% [22.3, 31.4]",
+  "pass_at_k_text": "176/361 = 48.8% [43.6, 53.9]",
+  "request_errors": 0,
+  "samples": 8,
+  "schema_valid_candidates": [
+    551,
+    560
+  ],
+  "set": "A_val",
+  "temperature": 0.7,
+  "unsafe_candidates": [
+    391,
+    560
+  ]
+}
