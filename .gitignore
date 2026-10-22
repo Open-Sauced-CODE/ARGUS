@@ -27,6 +27,7 @@ neo4j_data/
 *.safetensors
 ml/mutation_engine/dataset/*.jsonl
 ml/train_m1/adapters/
+ml/train_m1/out/
 
 # OS / editor
 .DS_Store

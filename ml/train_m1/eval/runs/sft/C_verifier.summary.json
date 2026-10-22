@@ -1,0 +1,44 @@
+{
+  "distinct_inputs": 108,
+  "escalate": {
+    "fn": 51,
+    "fp": 0,
+    "precision": null,
+    "recall": 0.0,
+    "tp": 0
+  },
+  "examples": 466,
+  "gate_passing_candidates": 849,
+  "hidden_ok_among_gate_passing": [
+    849,
+    849
+  ],
+  "label": "sft",
+  "median_seconds_to_first_pass": 1.8672850131988525,
+  "model": "argus-m1-sft",
+  "never_passed": 0,
+  "pass_at": {
+    "1": 414,
+    "2": 465,
+    "3": 466,
+    "4": 466,
+    "5": 466,
+    "6": 466,
+    "7": 466,
+    "8": 466
+  },
+  "pass_at_1_text": "414/466 = 88.8% [85.7, 91.4]",
+  "pass_at_k_text": "466/466 = 100.0% [99.2, 100.0]",
+  "request_errors": 0,
+  "samples": 8,
+  "schema_valid_candidates": [
+    864,
+    864
+  ],
+  "set": "C_verifier",
+  "temperature": 0.7,
+  "unsafe_candidates": [
+    0,
+    864
+  ]
+}
