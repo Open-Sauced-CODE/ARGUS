@@ -46,3 +46,9 @@
 - zeroshot: train300 minus B1 = -21.1 points
 - zeroshot: train300 minus B2 = -59.4 points
 - zeroshot: train300 minus C_verifier = -17.3 points
+
+## Synthetic-versus-real gap (Tier B minus Tier C_verifier, pass@1 percentage points)
+- rft: B1 minus C_verifier = -27.6 points (strong generalization to real repositories)
+- sft: B1 minus C_verifier = 7.4 points
+- zeroshot: B1 minus C_verifier = 3.9 points
+
