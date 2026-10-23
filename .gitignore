@@ -59,3 +59,4 @@ aws/
 ml/real_data/clones/
 ml/train_m1/data/*.jsonl
 ml/train_m1/eval/runs/*/*.candidates.jsonl
+rft_candidates.jsonl

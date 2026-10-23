@@ -33,10 +33,11 @@ builds a stub gate for its own QA and reward-hacking audit (see decision D3).
 
 | Name | Status | Where / when |
 |---|---|---|
-| gate stub: `gate(mutated, patch_ir)` returning passed plus per-check results (a) to (d) | planned | `ml/mutation_engine/qa/gate_stub.py`, Section 2 (Steps 5-8) |
-| T0 `match(finding)` returns Patch-IR or None | planned, signature frozen at Step 22 | `remediate/templates/` |
-| M1 `generate(tokenized_finding)` returns a list of Patch-IR candidates | planned, signature frozen at Step 22 | `remediate/local_model/` |
-| `generate_with_stats(...)` returns candidates plus log-probability statistics and agreement rate | planned, for Phase 6 | `remediate/local_model/` |
+| gate stub: `gate(mutated, patch_ir)` returning passed plus per-check results (a) to (d) | implemented | `ml/mutation_engine/qa/gate_stub.py`, Section 2 (Steps 5-8) |
+| T0 `match(finding)` returns Patch-IR or None | implemented & frozen | `remediate/templates/`, Step 22 |
+| M1 `generate(tokenized_finding)` returns a list of Patch-IR candidates | implemented & frozen | `remediate/local_model/`, Step 22 |
+| `generate_with_stats(...)` returns candidates plus log-probability statistics and agreement rate | implemented & frozen | `remediate/local_model/`, Step 22 |
+
 
 ## 3. Shapes
 
@@ -126,3 +127,4 @@ Why: it has the most rules (3) and 3 distinct mutators, and S3 and RDS bases are
 | 2026-10-07 | Added D8, D9, D10 | Phase 5 Step 4 findings | |
 | 2026-10-18 | Added D11 to D14 | Phase 5 Steps 5-7 | |
 | 2026-10-21 | Added D15 to D17 | Phase 5 Steps 8-9 | |
+| 2026-10-23 | Section 2 interfaces implemented & frozen: T0 match(), M1 generate(), generate_with_stats() | Phase 5 Step 22 completion | Role C |
