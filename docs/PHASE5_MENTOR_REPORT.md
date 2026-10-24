@@ -2,7 +2,7 @@
 
 **Date:** October 23, 2026  
 **Track:** Role C (ML Track, Part 1)  
-**Git Commit / Tag:** `f169325` / [`phase5-complete`](file:///c:/Users/Prabhav/Downloads/ARGUS) (`phase5-m1-v1`)  
+**Git Commit / Tag:** `b5d4467` / [`phase5-complete`](https://github.com/Prabhav-020108/ARGUS/tree/phase5-complete) (`phase5-m1-v1`)  
 **Status:** **100% Complete & Green** (All 24 steps completed, all 228 tests passing)
 
 ---
@@ -12,7 +12,7 @@
 Phase 5 delivers **M1 (ARGUS-M1)**: a specialized, locally-hosted, verifier-guided language model designed to remediate cloud Infrastructure-as-Code (Terraform) misconfigurations under India's Digital Personal Data Protection (DPDP) Act rules and CIS benchmarks. 
 
 Operating entirely on-device via Ollama, M1 replaces generic, third-party LLM API calls with a **privacy-first, verifier-guided 4-tier pipeline**:
-1. **Zero-API-Cost Data Generation:** A deterministic mutation engine generated 3,309 synthetic, verifiable training pairs with ground-truth correctness guaranteed by construction, supplemented by 60 cloned real-world GitHub repositories (Tier C).
+1. **Zero-API-Cost Data Generation:** A deterministic mutation engine generated 3,309 synthetic, verifiable examples (2,507 training pairs, 361 validation, and 441 held-out test pairs) with ground-truth correctness guaranteed by construction, supplemented by 58 scanned real-world GitHub repositories (Tier C, out of 60 selected).
 2. **Supervised & Rejection-Sampling Fine-Tuning (SFT + RFT):** Using Qwen3.5-4B as the base model, we executed a two-stage fine-tuning ladder on free-tier T4 GPUs via Unsloth QLoRA, followed by policy-guided rejection-sampling fine-tuning (RFT).
 3. **Flawless Safety Record:** Across **2,728 inference requests** evaluated across 6 benchmark splits, M1 achieved **100.0% schema validity** and **0.00% unsafe outputs** (0/2,728 candidates), completely eliminating dangerous failure modes like unauthorized resource deletion or privilege escalation.
 4. **Superior Real-World Generalization:** On real violations mined from unseen production GitHub repositories (`C_verifier`), `argus-m1-rft` achieved **89.3% pass@1**, outperforming the SFT model (88.8%) and vastly outperforming the zero-shot base model (35.6%, $p < 0.0001$).
