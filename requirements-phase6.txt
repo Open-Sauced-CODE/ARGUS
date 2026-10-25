@@ -1,0 +1,14 @@
+# Phase 6 (Shaurya's track: Trust Engine). Kept out of requirements.txt on purpose, to avoid merge conflicts.
+# Install after requirements.txt and requirements-phase5.txt.
+# Lower bounds only; after the first successful install, `pip freeze` is saved under ml/train_m2/out/reports/.
+numpy>=1.26
+scipy>=1.13
+pandas>=2.2
+scikit-learn>=1.5
+lightgbm>=4.3
+matplotlib>=3.9
+joblib>=1.4
+jsonschema>=4.22
+pytest>=8.0
+# Optional, only if the conformal-library cross-check is attempted:
+# mapie>=0.9

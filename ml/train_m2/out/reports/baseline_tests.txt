@@ -1,0 +1,12 @@
+Date: 2026-10-25 (UTC)
+HEAD before commit: de8996e
+
+ml/tests baseline:
+2 failed, 46 passed, 76 skipped in 28.14s
+
+Other test suites:
+prioritize/tests: 1 failed, 94 passed in 21.58s
+privacy/tests: 98 passed, 7 skipped in 2.99s
+risk/tests: 52 passed in 2.67s
+
+phase 6 skeleton tests: 28 passed in 3.41s
