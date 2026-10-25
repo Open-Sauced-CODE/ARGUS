@@ -1,2 +1,0 @@
-# Phase 6: concurrent appends to these logs merge cleanly (both entries are kept)
-docs/decisions-log.md merge=union
