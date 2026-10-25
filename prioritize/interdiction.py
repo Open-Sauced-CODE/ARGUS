@@ -25,9 +25,20 @@ import math
 import time
 from pathlib import Path
 
+from typing import TypedDict
+
 import networkx as nx
 
 from prioritize.evaluate import attack_length, residual_prob
+
+
+class InterdictionResult(TypedDict):
+    selected: set[str]
+    objective: float | None
+    baseline_objective: float | None
+    status: str
+    backend: str
+    solve_seconds: float
 
 _S = "__S__"
 _T = "__T__"
@@ -193,8 +204,8 @@ def _solve_scipy(G, entry, crown, findings, budget, cover):
     ub_bounds[nN:] = 1.0       # x ≤ 1
 
     # Integrality: x variables are integer (1); π variables are continuous (0)
-    integrality = np.zeros(nv)
-    integrality[nN:] = 1.0
+    integrality = np.zeros(nv, dtype=int)
+    integrality[nN:] = 1
 
     res = milp(
         cvec,
@@ -203,17 +214,17 @@ def _solve_scipy(G, entry, crown, findings, budget, cover):
         bounds=Bounds(lb, ub_bounds),
     )
 
-    if res.status not in (0, 1):  # 0=optimal, 1=iteration limit (near-optimal)
+    if res.status not in (0, 1) or res.x is None or res.fun is None:  # 0=optimal, 1=iteration limit (near-optimal)
         raise RuntimeError(
             f"scipy.optimize.milp returned status {res.status}: {res.message}"
         )
 
     sel = {findings[k]["finding_id"] for k in range(nF) if res.x[nN + k] > 0.5}
-    obj = -res.fun  # we minimized the negative
+    obj = -float(res.fun)  # we minimized the negative
     return sel, obj, f"scipy milp status={res.status}"
 
 
-def build_and_solve(G, entry, crown, findings, budget, backend="auto"):
+def build_and_solve(G, entry, crown, findings, budget, backend="auto") -> InterdictionResult:
     """Build and solve the interdiction MILP.
 
     Parameters

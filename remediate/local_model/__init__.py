@@ -53,7 +53,8 @@ def generate_with_stats(tokenized_finding, n=8, model=None):
         candidates.append(patch)
         key = json.dumps(patch["ops"], sort_keys=True)
         canon_counts[key] = canon_counts.get(key, 0) + 1
-        lps = [t.get("logprob") for t in (reply.get("logprobs") or []) if isinstance(t, dict) and t.get("logprob") is not None]
+        raw_lps = reply.get("logprobs")
+        lps: list[float] = [float(t["logprob"]) for t in (raw_lps if isinstance(raw_lps, list) else []) if isinstance(t, dict) and isinstance(t.get("logprob"), (int, float))]
         if lps:
             lp_means.append(sum(lps) / len(lps))
             lp_mins.append(min(lps))

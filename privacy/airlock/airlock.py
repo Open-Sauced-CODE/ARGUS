@@ -44,7 +44,9 @@ def run_airlock(raw_finding, rule_id, *, vault=None, policy_dir=None):
     tokenized, vault_refs = tokenize(projected, vault=vault)
     clean, scrub_result = scrub(tokenized)
 
-    receipt = {
+    from typing import Any
+
+    receipt: dict[str, Any] = {
         "finding_id": clean["finding_id"],
         "rule_id": rule_id,
         "projected_fields": clean["fields"],

@@ -126,7 +126,8 @@ def test_interdiction_ge_stackelberg_property():
         G, entry, crown, findings = random_graph(
             seed, n_nodes=9, n_edges=16, n_fixes=8
         )
-        H = nx.DiGraph(G)
+        H: nx.DiGraph = nx.DiGraph()
+        H.add_edges_from(G.edges)
         for e in entry:
             if e in G:
                 H.add_edge("__S__", e)

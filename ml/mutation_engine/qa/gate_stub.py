@@ -21,6 +21,7 @@ Public functions: gate(record, patch), gate_many([(record, patch), ...]).
 import copy
 import re
 from dataclasses import dataclass, field
+from typing import Any, Optional
 
 from ml.mutation_engine.dataset_io import canon
 from ml.mutation_engine.labeler import schema_errors
@@ -45,7 +46,7 @@ class GateResult:
     checks: dict
     reasons: list = field(default_factory=list)
     unsafe: bool = False
-    after_fields: dict = None
+    after_fields: Optional[dict[str, Any]] = None
 
 
 def strings_in(obj):

@@ -1,0 +1,7 @@
+
+# ---- Phase 6 (both tracks) ----
+ml/train_m2/out/
+ml/train_m2/harvest_out/
+ml/train_m1/v2/out/
+*.joblib
+!ml/train_m2/out/reports/

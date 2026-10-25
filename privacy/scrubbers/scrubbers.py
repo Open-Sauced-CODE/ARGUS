@@ -34,7 +34,9 @@ class Hit:
     end: int
 
 
-_STATE = {"loaded": False, "recognizers": None}
+from typing import Any
+
+_STATE: dict[str, Any] = {"loaded": False, "recognizers": None}
 
 
 def _load_presidio():
@@ -141,7 +143,7 @@ def _scrub_text(text, counts, engine):
     return out
 
 
-def _scrub_node(node, counts, engine):
+def _scrub_node(node: Any, counts: dict[str, int], engine: str) -> Any:
     if isinstance(node, dict):
         return {
             _scrub_node(k, counts, engine) if isinstance(k, str) else k: _scrub_node(v, counts, engine)
@@ -158,7 +160,7 @@ def _scrub_node(node, counts, engine):
     return node
 
 
-def scrub(record, engine="auto"):
+def scrub(record: Any, engine: str = "auto") -> tuple[Any, dict[str, int]]:
     """Scrub every string (keys and values) in `record`. Returns (clean_record, hits)."""
     counts = {"presidio_hits": 0, "secret_scan_hits": 0}
     clean = _scrub_node(record, counts, engine)

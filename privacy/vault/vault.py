@@ -18,6 +18,7 @@ import sqlite3
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Union
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -96,7 +97,7 @@ class TokenVault:
         return [self.get(r) for r in refs]
 
 
-_DEFAULT = {"vault": None}
+_DEFAULT: dict[str, "TokenVault | None"] = {"vault": None}
 
 
 def get_default_vault():

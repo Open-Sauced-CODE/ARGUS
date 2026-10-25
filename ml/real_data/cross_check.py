@@ -122,7 +122,9 @@ def main(argv=None):
                 checkov_flags[(int(row["repo_id"]), f)] = ids
     per = table(findings, mapping, trivy_flags, checkov_flags, have_trivy, have_checkov)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    rows = [["rule_id", "our_findings", "trivy_agree", "checkov_agree"]]
+    from typing import Any
+
+    rows: list[list[Any]] = [["rule_id", "our_findings", "trivy_agree", "checkov_agree"]]
     lines = ["# Agreement with Trivy and Checkov (file level, approximate)", "", "| rule | our findings | Trivy agrees | Checkov agrees |", "|---|---:|---:|---:|"]
     for rule in sorted(per):
         v = per[rule]

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "m2.harvest.v1 - one generation (one line of a harvest part file)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "input_key", "generator", "profile", "sample_idx", "temperature", "top_p", "seed",
+               "model", "model_digest", "ollama_version", "content", "error", "eval_count", "seconds", "done_reason", "tokens"],
+  "properties": {
+    "schema_version": {"const": "m2.harvest.v1"},
+    "input_key": {"type": "string", "minLength": 2},
+    "generator": {"enum": ["zeroshot", "sft", "rft", "rft_v2"]},
+    "profile": {"enum": ["A", "B"]},
+    "sample_idx": {"type": "integer", "minimum": 0, "maximum": 7},
+    "temperature": {"type": "number", "minimum": 0},
+    "top_p": {"type": ["number", "null"]},
+    "seed": {"type": ["integer", "null"]},
+    "model": {"type": "string"},
+    "model_digest": {"type": ["string", "null"]},
+    "ollama_version": {"type": "string"},
+    "content": {"type": "string"},
+    "error": {"type": ["string", "null"]},
+    "eval_count": {"type": "integer", "minimum": 0},
+    "seconds": {"type": "number", "minimum": 0},
+    "done_reason": {"type": ["string", "null"]},
+    "tokens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["t", "lp", "top"],
+        "properties": {
+          "t": {"type": "string"},
+          "lp": {"type": "number", "maximum": 0.000001},
+          "top": {"type": ["array", "null"],
+                  "items": {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"type": "string"}, {"type": "number"}]}}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"error": {"type": "null"}}}, "then": {"properties": {"tokens": {"minItems": 1}, "content": {"minLength": 1}}}},
+    {"if": {"properties": {"error": {"type": "string"}}}, "then": {"properties": {"tokens": {"maxItems": 0}}}}
+  ]
+}

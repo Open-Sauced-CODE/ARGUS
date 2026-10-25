@@ -29,7 +29,7 @@ _T = "__T__"
 _HERE = Path(__file__).resolve().parent
 
 
-def attack_length(G, entry, crown, selected_ids, findings):
+def attack_length(G, entry, crown, selected_ids, findings) -> float:
     """Shortest __S__ → __T__ path length under modified edge lengths.
 
     Edge length = -ln(p) + sum(delta for selected findings covering that edge).
@@ -103,7 +103,7 @@ def residual_prob(objective):
     return math.exp(-objective)
 
 
-def brute_force_best(G, entry, crown, findings, budget):
+def brute_force_best(G, entry, crown, findings, budget) -> tuple[float, list[set[str]]]:
     """Enumerate all budget-feasible subsets and return the best objective.
 
     Parameters

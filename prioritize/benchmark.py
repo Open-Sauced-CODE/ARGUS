@@ -103,7 +103,11 @@ def synthetic_enterprise(
     for b in bucket_ids:
         G.add_node(b, kind="bucket", label=b, personal_data=rng.random() > 0.5)
 
-    # SG / Network nodes
+    # SG / Network nodes (initialized to empty so they are always bound)
+    iprange_id: str = ""
+    vpc_id: str = ""
+    iprule_ids: list[str] = []
+    sg_ids: list[str] = []
     if n_sgs > 0:
         iprange_id = "iprange-0"
         G.add_node(iprange_id, kind="iprange", label=iprange_id)
@@ -238,13 +242,14 @@ def run_benchmark(n_seeds=200, budgets=(2, 4, 6)):
     dict
         Aggregated results written to benchmark_results.json.
     """
+    score_digraph = None
+    to_percent = None
     try:
-        ppr_mod = __import__("risk.pagerank", fromlist=["score_digraph", "to_percent"])
-        score_digraph = ppr_mod.score_digraph
-        to_percent = ppr_mod.to_percent
+        from risk.pagerank import score_digraph as _score_digraph, to_percent as _to_percent
+        score_digraph = _score_digraph
+        to_percent = _to_percent
     except ImportError:
-        score_digraph = None
-        to_percent = None
+        pass
 
     cfg = load_config()
     pa_ratio = cfg.get("stackelberg", {}).get("pa_ratio", 0.2)
@@ -286,7 +291,7 @@ def run_benchmark(n_seeds=200, budgets=(2, 4, 6)):
             continue
 
         # PPR for naive/stackelberg
-        if score_digraph is not None:
+        if callable(score_digraph) and callable(to_percent):
             try:
                 ppr = score_digraph(G, entry_in_g)
                 ppr_pct = to_percent(ppr)
@@ -303,7 +308,7 @@ def run_benchmark(n_seeds=200, budgets=(2, 4, 6)):
             # Naive
             naive_r = naive_select(G, entry_in_g, findings, budget, ppr=ppr)
             naive_sel = set(naive_r["selected"])
-            naive_obj = attack_length(G, entry_in_g, crown_in_g, naive_sel, findings)
+            naive_obj = float(attack_length(G, entry_in_g, crown_in_g, naive_sel, findings))
 
             # Stackelberg
             try:
@@ -315,7 +320,7 @@ def run_benchmark(n_seeds=200, budgets=(2, 4, 6)):
                     ssg_sel = set()
             except Exception:
                 ssg_sel = set()
-            ssg_obj = attack_length(G, entry_in_g, crown_in_g, ssg_sel, findings)
+            ssg_obj = float(attack_length(G, entry_in_g, crown_in_g, ssg_sel, findings))
 
             # Interdiction
             try:
@@ -329,16 +334,18 @@ def run_benchmark(n_seeds=200, budgets=(2, 4, 6)):
             except RuntimeError:
                 continue
 
-            interd_obj = interd.get("objective")
-            if interd_obj is None:
+            interd_obj_raw = interd.get("objective")
+            if not isinstance(interd_obj_raw, (int, float)):
                 continue
+            interd_obj: float = float(interd_obj_raw)
 
             # Brute-force check for small instances
             if len(findings) <= 16:
                 try:
-                    bf_obj, _ = brute_force_best(
+                    bf_res = brute_force_best(
                         G, entry_in_g, crown_in_g, findings, budget
                     )
+                    bf_obj = float(bf_res[0])
                     brute_force_checks += 1
                     if abs(interd_obj - bf_obj) > 1e-6:
                         brute_force_mismatches += 1
@@ -359,7 +366,7 @@ def run_benchmark(n_seeds=200, budgets=(2, 4, 6)):
                 rb["interdiction_tied_all"] += 1
 
     # Scale probe: large graph
-    scale_times = {}
+    scale_times: dict[str, float | str] = {}
     G_large, entry_l, crown_l, findings_l = _large_enterprise(seed=0)
     entry_l_g = [e for e in entry_l if e in G_large]
     crown_l_g = [c for c in crown_l if c in G_large]
@@ -381,10 +388,12 @@ def run_benchmark(n_seeds=200, budgets=(2, 4, 6)):
                               budget=4, backend="pulp")
         scale_times["pulp"] = time.time() - t0
         # Cross-check
-        obj1 = build_and_solve(G_large, entry_l_g, crown_l_g, findings_l,
+        raw_obj1 = build_and_solve(G_large, entry_l_g, crown_l_g, findings_l,
                                budget=4, backend="scipy")["objective"]
-        obj2 = r2["objective"]
-        scale_times["backend_diff"] = abs((obj1 or 0) - (obj2 or 0))
+        raw_obj2 = r2["objective"]
+        val1 = float(raw_obj1) if isinstance(raw_obj1, (int, float)) else 0.0
+        val2 = float(raw_obj2) if isinstance(raw_obj2, (int, float)) else 0.0
+        scale_times["backend_diff"] = abs(val1 - val2)
     except Exception as e:
         scale_times["pulp"] = f"unavailable: {e}"
 

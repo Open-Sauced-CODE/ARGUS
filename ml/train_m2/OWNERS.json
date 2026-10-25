@@ -1,0 +1,21 @@
+{
+  "_comment": "Phase 6 file ownership. The LONGEST matching prefix decides the owner. Anything under 'shared' may be touched by either person. Run: python tools/check_ownership.py --who <name>",
+  "shaurya": [
+    "ml/train_m2/labels/", "ml/train_m2/features/", "ml/train_m2/models/", "ml/train_m2/risk/",
+    "ml/train_m2/monitor/", "ml/train_m2/eval/", "ml/train_m2/tests/", "ml/train_m2/configs/",
+    "ml/train_m2/common.py", "ml/train_m2/intake.py", "ml/train_m2/validate_harvest.py", "ml/train_m2/splits.py",
+    "ml/train_m2/cal_data.py", "ml/train_m2/decide.py", "ml/train_m2/api_schemas.py", "ml/train_m2/licence_audit.py",
+    "ml/train_m2/EXPERIMENT_PLAN_M2.md", "ml/train_m2/MODEL_CARD.md", "ml/train_m2/DATASHEET.md",
+    "ml/real_data/select_cal.py", "requirements-phase6.txt", ".github/", "docs/PHASE6_", "docs/PHASE7_HANDOFF.md",
+    "docs/SECURITY.md", "docs/phase6_shaurya/", ".env.example", "tools/check_ownership.py"
+  ],
+  "prabhav": [
+    "ml/train_m2/harvest/", "ml/train_m2/harvest_manifests/", "ml/train_m1/v2/", "ml/real_data/diagnostics/",
+    "ml/real_data/mine_history.py", "ml/real_data/gitutil.py", "requirements-m1v2.txt", "docs/phase6_prabhav/",
+    "docs/proposals/"
+  ],
+  "shared": [
+    "ml/train_m2/contract/", "ml/train_m2/OWNERS.json", "ml/train_m2/README.md", "ml/train_m2/__init__.py",
+    "ml/README_contracts_phase6.md", "docs/decisions-log.md", ".gitignore", ".gitattributes"
+  ]
+}

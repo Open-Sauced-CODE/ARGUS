@@ -230,8 +230,9 @@ def score_digraph(
     # ---------------------------------------------------------------------- #
     if damping is None:
         with open(_CONFIG_PATH, encoding="utf-8") as fh:
-            damping = json.load(fh)["damping"]
+            damping = float(json.load(fh)["damping"])
 
+    damping = float(damping)  # narrow type from Any/float|None to float
     if not (0 < damping < 1):
         raise ValueError(
             "damping must satisfy 0 < damping < 1, got {!r}".format(damping)
