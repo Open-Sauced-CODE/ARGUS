@@ -15,12 +15,10 @@ import time
 from pathlib import Path
 
 try:
-    import io as _io
     if hasattr(sys.stdout, "reconfigure"):
-        _io.TextIOWrapper(sys.stdout.buffer).reconfigure  # type: ignore[attr-defined]
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 except Exception:
     pass
 
@@ -48,7 +46,7 @@ def _check_hand_examples():
     from prioritize.interdiction import build_and_solve
     from prioritize.tests.fixtures.graphs import exercise1, parallel_paths
 
-    results: dict[str, tuple[bool, float | None, float | str]] = {}
+    results = {}
 
     # Exercise 1: budget 0 → 2.0, budget 1 → 3.0, budget 2 → 7.0
     G, entry, crown, findings = exercise1()
@@ -71,7 +69,7 @@ def _check_hand_examples():
                                  naive_obj, expected_naive)
 
     r_pp = build_and_solve(G2, e2, c2, f2, budget=2, backend="scipy")
-    interd_obj: float = float(r_pp["objective"] or 0)
+    interd_obj = r_pp["objective"] or 0
     results["parallel_interdiction"] = (14.0 < interd_obj < 14.2, interd_obj,
                                         "(14.0, 14.2)")
 
@@ -89,7 +87,7 @@ def _check_budget_monotonicity():
     vals = []
     for b in range(7):
         r = build_and_solve(G, entry, crown, findings, budget=b, backend="scipy")
-        obj: float = float(r.get("objective") or 0.0)
+        obj = r.get("objective") or 0.0
         vals.append(obj)
         if obj < prev - 1e-9:
             ok = False
@@ -110,8 +108,7 @@ def _check_brute_force_summary():
 
     for seed in range(60):
         G, entry, crown, findings = random_graph(seed, n_nodes=9, n_edges=16, n_fixes=8)
-        H: nx.DiGraph = nx.DiGraph()
-        H.add_edges_from(G.edges)
+        H = nx.DiGraph(G)
         for e in entry:
             if e in G:
                 H.add_edge("__S__", e)
@@ -128,15 +125,14 @@ def _check_brute_force_summary():
         usable += 1
         for budget in [1, 3, 5]:
             seeds_checked += 1
-            bf_obj = float(brute_force_best(G, entry, crown, findings, budget)[0])
+            bf_obj, _ = brute_force_best(G, entry, crown, findings, budget)
             try:
                 r = build_and_solve(G, entry, crown, findings, budget, backend="scipy")
             except RuntimeError:
                 continue
-            milp_obj_raw = r.get("objective")
-            if not isinstance(milp_obj_raw, (int, float)):
+            milp_obj = r.get("objective")
+            if milp_obj is None:
                 continue
-            milp_obj: float = float(milp_obj_raw)
             if abs(milp_obj - bf_obj) > 1e-6:
                 mismatches += 1
 

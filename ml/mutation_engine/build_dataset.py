@@ -25,7 +25,6 @@ import sys
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from ml.mutation_engine.compose import load_violation_counts, mutator_weights
 from ml.mutation_engine.dataset_io import canon, full_hash, input_key, read_jsonl, sha256_text, target_key, write_jsonl
@@ -70,8 +69,8 @@ class Spec:
     cap: int             # at most this many examples with the same (input, target) per rule
     k_dist: dict = field(default_factory=lambda: dict(K_DIST))
     combo_mode: str = "avoid"   # avoid (no held-out pair), pairs (only held-out pairs), any
-    mutator_ids: Optional[tuple] = None
-    rule_filter: Optional[tuple] = None
+    mutator_ids: tuple = None
+    rule_filter: tuple = None
 
 
 def applicable_indexes(bases, mutator):

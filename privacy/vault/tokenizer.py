@@ -17,7 +17,6 @@ a token unambiguous (token -> random vault reference -> encrypted real value).
 import ipaddress
 import re
 from collections import OrderedDict
-from typing import Any
 
 from privacy.vault.vault import get_default_vault
 
@@ -149,7 +148,7 @@ def _record_type(record):
     return rtype
 
 
-def tokenize(record, vault=None) -> tuple[dict[str, Any], dict[str, str]]:
+def tokenize(record, vault=None):
     """Tokenize a projected record. Returns (tokenized_record, vault_refs)."""
     vault = vault or get_default_vault()
     sess = _Session()
@@ -157,7 +156,7 @@ def tokenize(record, vault=None) -> tuple[dict[str, Any], dict[str, str]]:
     out = {}
     for k, v in record.items():
         if k == "resource_id" and isinstance(v, str) and v:
-            out[k] = sess.token_for(_NAME_KIND_BY_TYPE.get(rtype or "", "RESOURCE"), v)
+            out[k] = sess.token_for(_NAME_KIND_BY_TYPE.get(rtype, "RESOURCE"), v)
         else:
             out[k] = sess.walk(v, key=k, rtype=rtype)
     if "resource_id" in out:
@@ -166,13 +165,13 @@ def tokenize(record, vault=None) -> tuple[dict[str, Any], dict[str, str]]:
     return out, refs
 
 
-def rehydrate(obj: Any, vault_refs: dict[str, str], vault=None) -> Any:
+def rehydrate(obj, vault_refs, vault=None):
     """Replace tokens in `obj` (any JSON-like structure) by their real values."""
     vault = vault or get_default_vault()
     if not vault_refs:
         return obj
     mapping = {tok: vault.get(ref) for tok, ref in vault_refs.items()}
-    alternatives = "|".join(re.escape(str(t)) for t in sorted(mapping, key=len, reverse=True))
+    alternatives = "|".join(re.escape(t) for t in sorted(mapping, key=len, reverse=True))
     rx = re.compile(r"(?<![A-Za-z0-9_])(" + alternatives + r")(?![A-Za-z0-9_])")
 
     def sub(node):

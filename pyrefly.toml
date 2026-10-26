@@ -1,29 +1,19 @@
 # pyrefly.toml — Pyrefly type-checker configuration for ARGUS
 # Docs: https://pyrefly.org/en/stable/configuration/
 
-python-interpreter-path = ".venv/Scripts/python.exe"
-use-ignore-files = true
+[pyrefly]
+# Use the project venv so risk.* modules and dependencies resolve correctly.
+python_interpreter = "D:/argus/argus-venv/Scripts/python.exe"
 
-project-includes = [
-    "risk/**",
-    "prioritize/**",
-    "privacy/**",
-    "ml/**",
-    "backend/**",
-    "graph/**",
-    "remediate/**",
-    "verify/**",
+# Source roots: Pyrefly will add these to the module search path.
+source = ["D:/argus"]
+
+# Directories to skip entirely (third-party code, generated files, build artefacts).
+exclude = [
+    "argus-venv/**",
+    "cloudgoat/**",
+    "dashboard/node_modules/**",
+    ".ruff_cache/**",
+    ".mypy_cache/**",
+    ".pytest_cache/**",
 ]
-
-project-excludes = [
-    "**/tests/**",
-    "**/notebooks/**",
-    "**/node_modules/**",
-    "**/.venv/**",
-    "**/argus-venv/**",
-    "**/cloudgoat/**",
-    "**/.ruff_cache/**",
-    "**/.mypy_cache/**",
-    "**/.pytest_cache/**",
-]
-

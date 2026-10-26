@@ -131,9 +131,7 @@ def read_repo_files(archive_root, repo_id, max_file_bytes=400_000):
                             continue
                         name = _clean_name(member.name, repo_id)
                         if name:
-                            extracted = tar.extractfile(member)
-                            if extracted is not None:
-                                files[name] = _decode(extracted.read())
+                            files[name] = _decode(tar.extractfile(member).read())
                 return _finish(files, too_large)
         archive = base / (str(repo_id) + ".zip")
         if archive.is_file():

@@ -1,0 +1,14 @@
+# Frozen paths: must stay byte-identical to the Phase 5 tag (see tools/check_frozen.py).
+# One path per line; a trailing slash means a whole directory. Lines starting with # are comments.
+ml/README_contracts.md
+remediate/local_model/__init__.py
+remediate/templates/__init__.py
+remediate/patch_ir/schema.json
+privacy/airlock/
+privacy/vault/
+privacy/scrubbers/
+policy/
+ml/train_m1/eval/
+ml/mutation_engine/held_out/
+ml/mutation_engine/qa/gate_stub.py
+ml/mutation_engine/qa/hidden_checks.py

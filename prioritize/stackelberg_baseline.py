@@ -28,18 +28,10 @@ Public API:
 
 import math
 
-from typing import Optional, TypedDict
-
 from scipy.optimize import linprog
 
 
-class StackelbergResult(TypedDict):
-    x: dict[str, float]
-    best_target: str
-    value: float
-
-
-def solve_stackelberg(findings, ra, budget, pa_ratio=0.2) -> Optional[StackelbergResult]:
+def solve_stackelberg(findings, ra, budget, pa_ratio=0.2):
     """Solve the Stackelberg multiple-LP problem.
 
     Parameters
@@ -72,7 +64,7 @@ def solve_stackelberg(findings, ra, budget, pa_ratio=0.2) -> Optional[Stackelber
     n = len(ids)
     id_idx = {fid: j for j, fid in enumerate(ids)}
 
-    best: Optional[StackelbergResult] = None
+    best = None
 
     for ts_idx, ts in enumerate(ids):
         # Variables: x_0 .. x_{n-1}
@@ -112,10 +104,10 @@ def solve_stackelberg(findings, ra, budget, pa_ratio=0.2) -> Optional[Stackelber
 
         res = linprog(c_obj, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method="highs")
 
-        if res.status != 0 or res.fun is None or res.x is None:
+        if res.status != 0:
             continue  # infeasible or unbounded for this attacker target
 
-        val = -float(res.fun) + Pd[ts]   # restore constant term
+        val = -res.fun + Pd[ts]   # restore constant term
         x_vals = {ids[j]: float(res.x[j]) for j in range(n)}
 
         if best is None or val > best["value"]:

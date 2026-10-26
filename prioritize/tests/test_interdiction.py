@@ -31,7 +31,6 @@ def test_budget_zero_empty_selection(backend):
     result = build_and_solve(G, entry, crown, findings, budget=0, backend=backend)
     assert result["selected"] == set()
     baseline = attack_length(G, entry, crown, set(), findings)
-    assert result["objective"] is not None
     assert abs(result["objective"] - baseline) < 1e-9
 
 
@@ -40,7 +39,6 @@ def test_exercise1_budget1(backend):
     """exercise1 budget 1 → objective 3.0."""
     G, entry, crown, findings = exercise1()
     result = build_and_solve(G, entry, crown, findings, budget=1, backend=backend)
-    assert result["objective"] is not None
     assert abs(result["objective"] - 3.0) < 1e-9, \
         f"Expected 3.0, got {result['objective']}"
 
@@ -50,7 +48,6 @@ def test_exercise1_budget2(backend):
     """exercise1 budget 2 → objective 7.0."""
     G, entry, crown, findings = exercise1()
     result = build_and_solve(G, entry, crown, findings, budget=2, backend=backend)
-    assert result["objective"] is not None
     assert abs(result["objective"] - 7.0) < 1e-9, \
         f"Expected 7.0, got {result['objective']}"
 
@@ -65,7 +62,6 @@ def test_parallel_paths_budget2(backend):
     assert "F-alpha" in sel or "F-beta" in sel, \
         f"Neither alpha nor beta selected: {sel}"
     obj = result["objective"]
-    assert obj is not None
     assert obj > 14.0, f"Objective {obj} not > 14.0"
     assert obj < 14.2, f"Objective {obj} not < 14.2"
 
@@ -209,6 +205,5 @@ def test_backends_agree_on_exercise1(backend):
     G, entry, crown, findings = exercise1()
     r1 = build_and_solve(G, entry, crown, findings, budget=2, backend="scipy")
     r2 = build_and_solve(G, entry, crown, findings, budget=2, backend=backend)
-    assert r1["objective"] is not None and r2["objective"] is not None
     assert abs(r1["objective"] - r2["objective"]) < 1e-6, \
         f"scipy={r1['objective']}, {backend}={r2['objective']}"

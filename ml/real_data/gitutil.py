@@ -53,7 +53,7 @@ class BlobReader:
 
     def read(self, spec):
         """Bytes of the object named by `spec` (for example 'abc123:path/main.tf'), or None if it does not exist."""
-        if "\n" in spec or self.proc.stdin is None or self.proc.stdout is None:
+        if "\n" in spec:
             return None
         self.proc.stdin.write((spec + "\n").encode("utf-8"))
         self.proc.stdin.flush()
@@ -68,8 +68,7 @@ class BlobReader:
 
     def close(self):
         try:
-            if self.proc.stdin is not None:
-                self.proc.stdin.close()
+            self.proc.stdin.close()
         except Exception:
             pass
         self.proc.wait(timeout=30)

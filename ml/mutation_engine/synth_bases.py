@@ -49,7 +49,7 @@ def completed_s3(real_bases):
                             "source": {"repo_id": 0, "repo": name, "commit": "synthetic", "license": "synthetic",
                                        "file": "-", "tf_type": "aws_s3_bucket", "tf_name": "fixture", "bucket": bucket_of(name)}})
     out = []
-    for parent in sorted(parents, key=lambda b: str(b["base_id"])):
+    for parent in sorted(parents, key=lambda b: b["base_id"]):
         for algorithm in ALGORITHMS:
             for personal, versioning in ((True, "Enabled"), (False, None), (False, "Enabled")):
                 attrs = {"default_encryption": True, "encryption_algorithm": algorithm,

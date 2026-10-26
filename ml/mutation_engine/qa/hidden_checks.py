@@ -58,14 +58,7 @@ def values_equivalent(attr, a, b):
 def hidden_checks(record, candidate, reference=None):
     edits = _edits(candidate)
     fields = record.get("fields", {})
-    from typing import Optional
-
-    result: dict[str, Optional[bool]] = {
-        "decoys_untouched": True,
-        "no_side_effects": True,
-        "minimal_patch": None,
-        "full_equivalence": None,
-    }
+    result = {"decoys_untouched": True, "no_side_effects": True, "minimal_patch": None, "full_equivalence": None}
 
     known = all_rule_fields()
     for op in edits:

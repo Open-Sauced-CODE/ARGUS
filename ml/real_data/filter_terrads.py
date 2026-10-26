@@ -108,8 +108,7 @@ def run(db, archive_root, bases_out=DEFAULT_BASES_OUT, real_out=DEFAULT_REAL_OUT
     funnel = Counter()
     funnel["repos_selected"] = len(jobs)
     for b in buckets_by_id.values():
-        if b is not None:
-            funnel["repos_bucket_" + str(b)] += 1
+        funnel["repos_bucket_" + b] += 1
     skips, seen = Counter(), Counter()
     seen_hashes = {}  # norm_hash -> base_id of the kept base
     tierc_hashes = set()
