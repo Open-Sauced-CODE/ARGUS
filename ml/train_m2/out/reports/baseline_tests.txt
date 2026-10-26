@@ -17,6 +17,6 @@ HEAD before repair commit: 0b5b4c9, restored from b5d4467 (undoing edits made by
 ml/tests/test_contracts_doc.py: 13 passed in 0.58s
 ml/train_m2/tests: 28 passed in 28.56s
 ml/tests: 48 passed, 76 skipped in 14.26s
-prioritize/tests: HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+prioritize/tests: 95 passed in 50.77s
 privacy/tests: 98 passed, 7 skipped in 7.40s
 risk/tests: 52 passed in 4.86s
