@@ -1,0 +1,28 @@
+ARGUS Phase 6 machine check
+===========================
+when_utc            : 2026-10-26T06:14:42Z
+python              : 3.12.8
+platform            : Windows-11-10.0.26300-SP0
+ollama_cli_version  : ollama version is 0.40.11
+server_version      : 0.40.11
+installed models    : argus-m1-rft:latest, argus-m1-sft:latest, qwen3.5:4b, gemma4:e2b, llama3.2:3b
+  argus-m1-sft      : present
+  argus-m1-rft      : present
+  qwen3.5:4b        : present
+
+Logprobs test
+  done_reason       : stop
+  top-level keys    : ['created_at', 'done', 'done_reason', 'eval_count', 'eval_duration', 'load_duration', 'logprobs', 'message', 'model', 'prompt_eval_cached_count', 'prompt_eval_count', 'prompt_eval_duration', 'total_duration']
+  logprobs found    : True (top level)
+  entry keys        : ['bytes', 'logprob', 'token', 'top_logprobs']
+  top-k alternatives: True (5 per token)
+  first entry       : {"token": "OK", "logprob": -5.12613078171853e-05, "bytes": [79, 75], "top_logprobs": [{"token": "OK", "logprob": -5.12613078171853e-05, "bytes": [79, 75]}, {"token": "Ok", "logprob": -10.959108352661133, "bytes": [79, 107]}, {"token": "Okay", "logprob": -11.050773620605469, "bytes": [79, 107, 97, 121]}, {"token": "<think>", "logprob": -12.008234024047852, "bytes": [60, 116, 104, 105, 110, 107, 62]
+
+Parallel requests test
+  one request       : 2.03 s
+  4 at once         : 7.91 s
+  verdict           : NO parallelism: requests queue (speedup 1.0x). Throughput will be about 1/4 of a parallel server.
+
+Disk free           : 70.1 GB (needs about 0.5 GB for the whole harvest with top-5 alternatives)
+
+OVERALL: PASS

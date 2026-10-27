@@ -1,0 +1,87 @@
+{
+  "complete": true,
+  "duplicate_keys": 0,
+  "error_rate": 0.0,
+  "errors": 0,
+  "generator": "sft",
+  "inputs_in_contract": 321,
+  "lines_expected": 2568,
+  "lines_total": 2568,
+  "model": "argus-m1-sft",
+  "model_digest": "sha256:ded5fad28aadecc0b2bcdaac695ce47472f8808d1d2f1b6dc66ffe575405aed7",
+  "model_digests_seen_in_files": [
+    "sha256:ded5fad28aadecc0b2bcdaac695ce47472f8808d1d2f1b6dc66ffe575405aed7"
+  ],
+  "num_predict": 1024,
+  "ollama_version": "0.40.11",
+  "ollama_versions_seen_in_files": [
+    "0.40.11"
+  ],
+  "parts": [
+    {
+      "file": "part-0000.jsonl",
+      "lines": 500,
+      "sha256": "4f61744aa115539b28f69b550d4d473117388ca9b4c7d7d3bc7fed60eba082be"
+    },
+    {
+      "file": "part-0001.jsonl",
+      "lines": 500,
+      "sha256": "edc79c6edac2efc9500dd257cf0959b764cbac5b3f45b0242b14e599c60e816b"
+    },
+    {
+      "file": "part-0002.jsonl",
+      "lines": 500,
+      "sha256": "ba7d4af98b329cf5105714d4e1c1788e0c826553486cc8cf2bf7f23f39d2da89"
+    },
+    {
+      "file": "part-0003.jsonl",
+      "lines": 500,
+      "sha256": "304e1d21372147177bfec60f3cf519307b8e099321ffb04404cea279d16e2a38"
+    },
+    {
+      "file": "part-0004.jsonl",
+      "lines": 500,
+      "sha256": "b29644474b6d8b72aa50f9f9b1e82bd282ec6a16650430120bd64dabdd31c659"
+    },
+    {
+      "file": "part-0005.jsonl",
+      "lines": 68,
+      "sha256": "969c146ffe122e867edf03dabc3e459b00ca5762554dc842153d6cae9861b745"
+    }
+  ],
+  "profile": "A",
+  "provenance": {
+    "git_commit": "0b5b4c94c08bfa15d8b3033f86861e547500cfd3",
+    "git_dirty": true,
+    "inputs_sha256": "5eae7dedc5ff027e738f8dbde8392d8da3ae054691aa20244d6b0ffa90028bcd",
+    "jsonschema": "4.26.0",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.12.8",
+    "requests": "2.34.2",
+    "schema_sha256": "ee9e531dcd823c7c12dc43c9e9f720f72d4f20f03002c716032f75f415a00204"
+  },
+  "runs": [
+    {
+      "command": "python -m ml.train_m2.harvest.run --generator sft --model argus-m1-sft --profile A --threads 4 --top-logprobs 5",
+      "errors": 0,
+      "finished_utc": "2026-10-26T10:18:42Z",
+      "generations_per_hour": 2963.5,
+      "limit": null,
+      "lines_written": 2568,
+      "removed_error_lines_before_run": 0,
+      "shard": "0/1",
+      "started_utc": "2026-10-26T09:26:42Z",
+      "stopped_early": false,
+      "stratify": false,
+      "temperature_override": null,
+      "threads": 4,
+      "wall_seconds": 3119.6
+    }
+  ],
+  "samples_per_input": 8,
+  "schema_version": "m2.harvest.v1",
+  "success_lines_cut_by_num_predict": 0,
+  "success_lines_without_top_alternatives": 0,
+  "text_token_mismatches": 0,
+  "top_logprobs_requested": 5
+}

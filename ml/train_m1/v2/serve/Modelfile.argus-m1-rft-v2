@@ -1,0 +1,15 @@
+# Modelfile for argus-m1-rft-v2
+# Place the downloaded GGUF file from Google Drive into C:\Users\Prabhav\Downloads\ARGUS\
+# or update the path below.
+#
+# To register in Ollama:
+#   ollama create argus-m1-rft-v2 -f ml/train_m1/v2/serve/Modelfile.argus-m1-rft-v2
+
+FROM C:\Users\Prabhav\Downloads\ARGUS\argus-m1-rft-v2.Q4_K_M.gguf
+TEMPLATE {{ .Prompt }}
+RENDERER qwen3.5
+PARSER qwen3.5
+PARAMETER presence_penalty 1.5
+PARAMETER temperature 1
+PARAMETER top_k 20
+PARAMETER top_p 0.95

@@ -1,0 +1,74 @@
+{
+  "extra_dir": null,
+  "held_out_files": [
+    "C:\\Users\\Prabhav\\Downloads\\ARGUS\\ml\\mutation_engine\\held_out\\held_out_hashes.txt",
+    "C:\\Users\\Prabhav\\Downloads\\ARGUS\\ml\\train_m1\\data\\heldout_hashes.txt"
+  ],
+  "meta_sha256": "98ff742cff62fb8e83516cb7404f225b3a3dfcccecc686319e42bd8675244331",
+  "pool_file_hashes": {
+    "C:\\Users\\Prabhav\\Downloads\\ARGUS\\ml\\train_m2\\harvest_out\\sft\\A": [
+      "4f61744aa115539b28f69b550d4d473117388ca9b4c7d7d3bc7fed60eba082be",
+      "edc79c6edac2efc9500dd257cf0959b764cbac5b3f45b0242b14e599c60e816b",
+      "ba7d4af98b329cf5105714d4e1c1788e0c826553486cc8cf2bf7f23f39d2da89",
+      "304e1d21372147177bfec60f3cf519307b8e099321ffb04404cea279d16e2a38",
+      "b29644474b6d8b72aa50f9f9b1e82bd282ec6a16650430120bd64dabdd31c659",
+      "969c146ffe122e867edf03dabc3e459b00ca5762554dc842153d6cae9861b745"
+    ],
+    "C:\\Users\\Prabhav\\Downloads\\ARGUS\\ml\\train_m2\\harvest_out\\zeroshot\\A": [
+      "9df57e4f3e678cac08c4f810d1b52dcdc74d2e9d68c7b76204d3b3918d66e7dd",
+      "b981cbbdeab5b02f43f7eba603959bd423c82f08d824053832ad01aed6a1dca4",
+      "46fd9cc5f9e1649bd6837e212188f0fe520d29f68a23cd2d4645a6b8f7a32ed9",
+      "282579fc5564d77d3013ca018a5e51d5931698588dc53ebfe8ed821bb6eb4072",
+      "147f107589ca6c6fa1079490e6a5e61b238af7f475b7d2c6d5b1b0879e69d65a",
+      "4a927fb4d3c3f5ed193afd6396cf1ce1f44ade46e9768c50bbb03466ff334ac6"
+    ]
+  },
+  "pool_folders": [
+    "sft/A",
+    "zeroshot/A"
+  ],
+  "seed": 20261029,
+  "stats": {
+    "distinct_answers_per_input_histogram": {
+      "1": 200,
+      "2": 16,
+      "3": 4,
+      "4": 10
+    },
+    "distinct_train_inputs": 230,
+    "esc_distinct_inputs_added": 0,
+    "esc_distinct_inputs_before": 0,
+    "pool_candidates_gate_accepted": 68,
+    "pool_candidates_staged": 1752,
+    "rows_by_kind": {
+      "cand": 54,
+      "sft": 230
+    },
+    "rows_by_route": {
+      "escalate": 27,
+      "fix": 257
+    },
+    "rows_by_rule": {
+      "cis.iam_no_full_admin": 145,
+      "cis.s3_default_encryption": 3,
+      "cis.s3_public_access_block": 7,
+      "cis.sg_open_ingress": 37,
+      "dpdp.rule15_region": 8,
+      "dpdp.rule6_account_mfa": 5,
+      "dpdp.rule6_logging": 5,
+      "dpdp.rule6_public_exposure": 6,
+      "dpdp.rule6_sg_open_ingress": 27,
+      "dpdp.rule6_versioning": 3,
+      "dpdp.rule6a": 19,
+      "dpdp.rule6a_rds": 5,
+      "dpdp.rule7_detection": 9,
+      "dpdp.rule8_lifecycle": 5
+    },
+    "rows_total": 284,
+    "sft_share": 0.8099,
+    "train_examples": 2507,
+    "train_examples_dropped_as_held_out": 0
+  },
+  "train_file": "C:\\Users\\Prabhav\\Downloads\\ARGUS\\ml\\mutation_engine\\dataset\\train.jsonl",
+  "train_sha256": "62f526a08c1484b12db63940354d0b05f968bf013593cdbcd5750cd6d9ed2abb"
+}

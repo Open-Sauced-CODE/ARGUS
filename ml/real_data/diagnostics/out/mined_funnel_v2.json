@@ -1,0 +1,11 @@
+{
+  "ambiguous_multi_record": 1402,
+  "commits_dropped_by_keyword_prefilter": 735,
+  "commits_touching_tf": 4251,
+  "duplicate": 8,
+  "in_vocabulary_gate_passing": 37,
+  "repos_scanned": 58,
+  "resource_pairs": 6335,
+  "resource_pairs_changed": 55,
+  "violating_before_passing_after": 45
+}

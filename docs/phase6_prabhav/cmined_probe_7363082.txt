@@ -1,0 +1,54 @@
+== 0. Environment
+platform            : Windows-11-10.0.26300-SP0
+python              : 3.12.8
+preferred encoding  : cp1252   (subprocess text=True uses this; utf-8 is the safe value)
+filesystem encoding : utf-8
+python-hcl2         : 8.1.4
+jsonschema          : 4.26.0
+git                 : git version 2.55.0.windows.4
+NOTE: Windows default encoding is cp1252. Any gitutil call using text=True decodes git output with it.
+
+== 1. Raw git health of D:\argus_clones\7363082
+rev-parse HEAD      : exit 0  stdout b'c7443e0eec552da158d7111f97e19ef87453f214'  stderr b''
+is-shallow          : b'false'
+core.quotepath      : b''
+core.autocrlf       : b'true'
+commit count        : b'48'
+commits touching *.tf (raw git log): 26
+
+== 2. Raw plumbing on the first 25 commits touching *.tf
+commits without a parent among the sample : 0
+tf paths with non-ASCII bytes             : 0
+tf paths containing a backslash           : 0
+tf blobs with CRLF line endings           : 0
+tf blobs starting with a UTF-8 BOM        : 0
+tf paths or blobs that are not valid UTF-8: 0
+
+== 3. ml.real_data.gitutil on the same clone
+head_sha           : 'c7443e0eec552da158d7111f97e19ef87453f214' (raw git says c7443e0eec55) same
+tf_commits         : 26 commits (raw git log says 26)
+over 25 sampled commits: parent_of returned None for 0; changed_tf_files empty for 0; read_tf_files empty for 0
+paths with backslashes 0, quoted/escaped paths 0, files containing U+FFFD (decode damage) 0
+
+== 4. Independent pairing (gitutil + tf_normalise), first 25 commits with a parent
+  changed_records                  2
+  commits_used                     25
+  common_keys                      52
+  files_parsed                     274
+  pairs_if_any_attr_same_key       52
+  parse_errors                     0
+  records_commit                   55
+  records_parent                   52
+  skip:iam:resource_unresolved     42
+
+== 5. CRLF and BOM against python-hcl2 (real file from the clone)
+  file 'infrastructure/acm.tf': {'as stored': 'parses', 'LF': 'parses', 'CRLF': 'parses', 'BOM + LF': 'FAILS (UnexpectedToken)'}
+  note: python-hcl2 cannot parse a BOM by itself; that only matters if gitutil/tf_normalise do not strip it.
+
+== 6. mine_history.pairs_for_commit (signature, and one best-effort call)
+  signature: pairs_for_commit(path, sha, parent, counters)
+  call on c7443e0eec returned list: []
+  counters after the call: {'resource_pairs': 3}
+
+== PROBLEMS FOUND: 0
+  none detected by this probe. Send the saved file; the cause is in the miner's own logic (mine_history.pairs_for_commit / _index).

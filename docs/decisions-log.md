@@ -82,3 +82,8 @@ Work / Methodology sections) will thank present-you for this.
 **Decision:** Path-finding helpers (most_probable_path, all_paths_to_target) live in a dedicated risk/paths.py module.
 **Why:** Keeps validate.py as a runner script; path logic is reusable by Phase 7 and Phase 10. Eliminates the Pyrefly static-analysis error from the conditional import.
 **Alternatives considered:** Inline in validate.py; inline in attack_graph.py.
+
+## 2026-10-25 — Phase 6 Generator & Harvest Contract Decisions (Prabhav Track)
+**Decision:** Production M1 model is designated as SFT (`argus-m1-sft`) following EXPERIMENT_PLAN.md Rule 5.2. Harvest interface contract frozen as `m2.harvest.v1`.
+**Why:** SFT achieved 96.7% pass@1 and 99.4% pass@8 diversity on A_val. Harvest line schema enforces strict token and logprob verification for M2 trust engine calibration.
+**Alternatives considered:** Using RFT-v1 (rejected due to temperature collapse and loss of sampling diversity).

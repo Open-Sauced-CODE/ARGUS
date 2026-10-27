@@ -1,0 +1,104 @@
+{
+  "escalate": {
+    "fn": 0,
+    "fp": 44,
+    "precision": 0.0,
+    "recall": null,
+    "tn": 317,
+    "tp": 0
+  },
+  "examples_without_candidates": 0,
+  "mean_distinct": 1.0,
+  "n_examples": 361,
+  "pass_at_1": 0.7950138504155124,
+  "pass_at_1_count": 287,
+  "pass_at_8": 0.8060941828254847,
+  "per_rule": {
+    "cis.iam_no_full_admin": {
+      "mean_distinct": 1.0,
+      "n": 15,
+      "pass_at_1": 1.0,
+      "pass_at_8": 1.0,
+      "route_is_esc": false
+    },
+    "cis.s3_default_encryption": {
+      "mean_distinct": 1.0,
+      "n": 20,
+      "pass_at_1": 1.0,
+      "pass_at_8": 1.0,
+      "route_is_esc": false
+    },
+    "cis.s3_public_access_block": {
+      "mean_distinct": 1.0,
+      "n": 53,
+      "pass_at_1": 0.8490566037735849,
+      "pass_at_8": 0.8490566037735849,
+      "route_is_esc": false
+    },
+    "cis.sg_open_ingress": {
+      "mean_distinct": 1.0,
+      "n": 53,
+      "pass_at_1": 1.0,
+      "pass_at_8": 1.0,
+      "route_is_esc": false
+    },
+    "dpdp.rule15_region": {
+      "mean_distinct": 1.0,
+      "n": 8,
+      "pass_at_1": 1.0,
+      "pass_at_8": 1.0,
+      "route_is_esc": false
+    },
+    "dpdp.rule6_account_mfa": {
+      "mean_distinct": 1.0,
+      "n": 8,
+      "pass_at_1": 1.0,
+      "pass_at_8": 1.0,
+      "route_is_esc": false
+    },
+    "dpdp.rule6_logging": {
+      "mean_distinct": 1.0,
+      "n": 20,
+      "pass_at_1": 0.0,
+      "pass_at_8": 0.0,
+      "route_is_esc": false
+    },
+    "dpdp.rule6_public_exposure": {
+      "mean_distinct": 1.0,
+      "n": 53,
+      "pass_at_1": 0.5094339622641509,
+      "pass_at_8": 0.5094339622641509,
+      "route_is_esc": false
+    },
+    "dpdp.rule6_sg_open_ingress": {
+      "mean_distinct": 1.0,
+      "n": 53,
+      "pass_at_1": 1.0,
+      "pass_at_8": 1.0,
+      "route_is_esc": false
+    },
+    "dpdp.rule6a": {
+      "mean_distinct": 1.0,
+      "n": 50,
+      "pass_at_1": 0.6,
+      "pass_at_8": 0.68,
+      "route_is_esc": false
+    },
+    "dpdp.rule6a_rds": {
+      "mean_distinct": 1.0,
+      "n": 20,
+      "pass_at_1": 1.0,
+      "pass_at_8": 1.0,
+      "route_is_esc": false
+    },
+    "dpdp.rule7_detection": {
+      "mean_distinct": 1.0,
+      "n": 8,
+      "pass_at_1": 1.0,
+      "pass_at_8": 1.0,
+      "route_is_esc": false
+    }
+  },
+  "schema_valid_rate": 1.0,
+  "unsafe_candidates": 0
+}

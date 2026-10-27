@@ -1,0 +1,87 @@
+{
+  "complete": true,
+  "duplicate_keys": 0,
+  "error_rate": 0.0,
+  "errors": 0,
+  "generator": "zeroshot",
+  "inputs_in_contract": 321,
+  "lines_expected": 2568,
+  "lines_total": 2568,
+  "model": "qwen3.5:4b",
+  "model_digest": "sha256:d8b0f5e9760cd1682034f292d7ef72ec46f432149be0df7574bf2d6e92e38c04",
+  "model_digests_seen_in_files": [
+    "sha256:d8b0f5e9760cd1682034f292d7ef72ec46f432149be0df7574bf2d6e92e38c04"
+  ],
+  "num_predict": 1024,
+  "ollama_version": "0.40.11",
+  "ollama_versions_seen_in_files": [
+    "0.40.11"
+  ],
+  "parts": [
+    {
+      "file": "part-0000.jsonl",
+      "lines": 500,
+      "sha256": "9df57e4f3e678cac08c4f810d1b52dcdc74d2e9d68c7b76204d3b3918d66e7dd"
+    },
+    {
+      "file": "part-0001.jsonl",
+      "lines": 500,
+      "sha256": "b981cbbdeab5b02f43f7eba603959bd423c82f08d824053832ad01aed6a1dca4"
+    },
+    {
+      "file": "part-0002.jsonl",
+      "lines": 500,
+      "sha256": "46fd9cc5f9e1649bd6837e212188f0fe520d29f68a23cd2d4645a6b8f7a32ed9"
+    },
+    {
+      "file": "part-0003.jsonl",
+      "lines": 500,
+      "sha256": "282579fc5564d77d3013ca018a5e51d5931698588dc53ebfe8ed821bb6eb4072"
+    },
+    {
+      "file": "part-0004.jsonl",
+      "lines": 500,
+      "sha256": "147f107589ca6c6fa1079490e6a5e61b238af7f475b7d2c6d5b1b0879e69d65a"
+    },
+    {
+      "file": "part-0005.jsonl",
+      "lines": 68,
+      "sha256": "4a927fb4d3c3f5ed193afd6396cf1ce1f44ade46e9768c50bbb03466ff334ac6"
+    }
+  ],
+  "profile": "A",
+  "provenance": {
+    "git_commit": "0b5b4c94c08bfa15d8b3033f86861e547500cfd3",
+    "git_dirty": true,
+    "inputs_sha256": "5eae7dedc5ff027e738f8dbde8392d8da3ae054691aa20244d6b0ffa90028bcd",
+    "jsonschema": "4.26.0",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.12.8",
+    "requests": "2.34.2",
+    "schema_sha256": "ee9e531dcd823c7c12dc43c9e9f720f72d4f20f03002c716032f75f415a00204"
+  },
+  "runs": [
+    {
+      "command": "python -m ml.train_m2.harvest.run --generator zeroshot --model qwen3.5:4b --profile A --threads 4 --top-logprobs 5",
+      "errors": 0,
+      "finished_utc": "2026-10-26T09:26:38Z",
+      "generations_per_hour": 1457.1,
+      "limit": null,
+      "lines_written": 2568,
+      "removed_error_lines_before_run": 0,
+      "shard": "0/1",
+      "started_utc": "2026-10-26T07:40:53Z",
+      "stopped_early": false,
+      "stratify": false,
+      "temperature_override": null,
+      "threads": 4,
+      "wall_seconds": 6344.6
+    }
+  ],
+  "samples_per_input": 8,
+  "schema_version": "m2.harvest.v1",
+  "success_lines_cut_by_num_predict": 10,
+  "success_lines_without_top_alternatives": 0,
+  "text_token_mismatches": 0,
+  "top_logprobs_requested": 5
+}
