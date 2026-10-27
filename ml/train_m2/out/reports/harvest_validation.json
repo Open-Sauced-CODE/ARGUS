@@ -1,0 +1,408 @@
+{
+  "accepted": true,
+  "allow_partial": false,
+  "folders": [
+    {
+      "checks": [
+        {
+          "examples": [],
+          "message": "all 2568 lines valid",
+          "name": "SCHEMA",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "generator and profile match the folder",
+          "name": "FOLDER_FIELDS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "no duplicate (input_key, sample_idx)",
+          "name": "DUPLICATES",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all input_keys are known",
+          "name": "KEYS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all 2568 (input, sample) pairs present",
+          "name": "COMPLETENESS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "tokens spell the content on all 2568 successful lines",
+          "name": "TEXT_EQ_TOKENS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all lines follow profile A",
+          "name": "PROFILE",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "no line has mean logprob below -5",
+          "name": "LOGPROB",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "error-line rate 0.00%",
+          "name": "ERRORS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "ollama_version ['0.40.11'], model_digest ['sha256:02e86d0a0b5e35052997c8f4396a8c1e752d1fda7c58abbbccd111e8ea74d53e']",
+          "name": "VERSIONS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "6 part(s): sha256 and line counts match",
+          "name": "MANIFEST",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "1430/1448 = 98.8% of lines equal the Phase 5 text; by sample index: {0: '179/181', 1: '178/181', 2: '179/181', 3: '179/181', 4: '179/181', 5: '179/181', 6: '179/181', 7: '178/181'} (information only; seeded samples may differ across Ollama versions)",
+          "name": "REPLICATION",
+          "status": "INFO"
+        }
+      ],
+      "generator": "rft",
+      "n_files": 6,
+      "n_lines": 2568,
+      "profile": "A",
+      "stats": {
+        "collapse_share": 0.9716,
+        "coverage": 1.0,
+        "error_lines": 0,
+        "expected_pairs": 2568,
+        "lines": 2568,
+        "model_digests": [
+          "sha256:02e86d0a0b5e35052997c8f4396a8c1e752d1fda7c58abbbccd111e8ea74d53e"
+        ],
+        "models": [
+          "argus-m1-rft"
+        ],
+        "ollama_versions": [
+          "0.40.11"
+        ],
+        "present_pairs": 2568,
+        "success_lines": 2568,
+        "topk_share": 1.0
+      }
+    },
+    {
+      "checks": [
+        {
+          "examples": [],
+          "message": "all 2568 lines valid",
+          "name": "SCHEMA",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "generator and profile match the folder",
+          "name": "FOLDER_FIELDS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "no duplicate (input_key, sample_idx)",
+          "name": "DUPLICATES",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all input_keys are known",
+          "name": "KEYS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all 2568 (input, sample) pairs present",
+          "name": "COMPLETENESS",
+          "status": "PASS"
+        },
+        {
+          "examples": [
+            "part-0001.jsonl:376"
+          ],
+          "message": "1 of 2568 lines (0.04%) where the tokens do not spell the content (byte-level tokenizer pieces can legitimately differ; above 0.5 percent fails)",
+          "name": "TEXT_EQ_TOKENS",
+          "status": "WARN"
+        },
+        {
+          "examples": [],
+          "message": "all lines follow profile A",
+          "name": "PROFILE",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "no line has mean logprob below -5",
+          "name": "LOGPROB",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "error-line rate 0.00%",
+          "name": "ERRORS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "ollama_version ['0.40.11'], model_digest ['sha256:ddf8f8491255d0db7da445f9d43077f3ba12e62bd9bddcb208ac0a27f044e888']",
+          "name": "VERSIONS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "6 part(s): sha256 and line counts match",
+          "name": "MANIFEST",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "not applicable (only profile A of zeroshot, sft and rft has Phase 5 logs to compare with)",
+          "name": "REPLICATION",
+          "status": "INFO"
+        }
+      ],
+      "generator": "rft_v2",
+      "n_files": 6,
+      "n_lines": 2568,
+      "profile": "A",
+      "stats": {
+        "collapse_share": 0.0,
+        "coverage": 1.0,
+        "error_lines": 0,
+        "expected_pairs": 2568,
+        "lines": 2568,
+        "model_digests": [
+          "sha256:ddf8f8491255d0db7da445f9d43077f3ba12e62bd9bddcb208ac0a27f044e888"
+        ],
+        "models": [
+          "argus-m1-rft-v2"
+        ],
+        "ollama_versions": [
+          "0.40.11"
+        ],
+        "present_pairs": 2568,
+        "success_lines": 2568,
+        "topk_share": 1.0
+      }
+    },
+    {
+      "checks": [
+        {
+          "examples": [],
+          "message": "all 2568 lines valid",
+          "name": "SCHEMA",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "generator and profile match the folder",
+          "name": "FOLDER_FIELDS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "no duplicate (input_key, sample_idx)",
+          "name": "DUPLICATES",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all input_keys are known",
+          "name": "KEYS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all 2568 (input, sample) pairs present",
+          "name": "COMPLETENESS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "tokens spell the content on all 2568 successful lines",
+          "name": "TEXT_EQ_TOKENS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all lines follow profile A",
+          "name": "PROFILE",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "no line has mean logprob below -5",
+          "name": "LOGPROB",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "error-line rate 0.00%",
+          "name": "ERRORS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "ollama_version ['0.40.11'], model_digest ['sha256:ded5fad28aadecc0b2bcdaac695ce47472f8808d1d2f1b6dc66ffe575405aed7']",
+          "name": "VERSIONS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "6 part(s): sha256 and line counts match",
+          "name": "MANIFEST",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "1320/1440 = 91.7% of lines equal the Phase 5 text; by sample index: {0: '165/180', 1: '165/180', 2: '165/180', 3: '165/180', 4: '165/180', 5: '165/180', 6: '165/180', 7: '165/180'} (information only; seeded samples may differ across Ollama versions)",
+          "name": "REPLICATION",
+          "status": "INFO"
+        }
+      ],
+      "generator": "sft",
+      "n_files": 6,
+      "n_lines": 2568,
+      "profile": "A",
+      "stats": {
+        "collapse_share": 0.604,
+        "coverage": 1.0,
+        "error_lines": 0,
+        "expected_pairs": 2568,
+        "lines": 2568,
+        "model_digests": [
+          "sha256:ded5fad28aadecc0b2bcdaac695ce47472f8808d1d2f1b6dc66ffe575405aed7"
+        ],
+        "models": [
+          "argus-m1-sft"
+        ],
+        "ollama_versions": [
+          "0.40.11"
+        ],
+        "present_pairs": 2568,
+        "success_lines": 2568,
+        "topk_share": 1.0
+      }
+    },
+    {
+      "checks": [
+        {
+          "examples": [],
+          "message": "all 2568 lines valid",
+          "name": "SCHEMA",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "generator and profile match the folder",
+          "name": "FOLDER_FIELDS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "no duplicate (input_key, sample_idx)",
+          "name": "DUPLICATES",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all input_keys are known",
+          "name": "KEYS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all 2568 (input, sample) pairs present",
+          "name": "COMPLETENESS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "tokens spell the content on all 2568 successful lines",
+          "name": "TEXT_EQ_TOKENS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "all lines follow profile A",
+          "name": "PROFILE",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "no line has mean logprob below -5",
+          "name": "LOGPROB",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "error-line rate 0.00%",
+          "name": "ERRORS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "ollama_version ['0.40.11'], model_digest ['sha256:d8b0f5e9760cd1682034f292d7ef72ec46f432149be0df7574bf2d6e92e38c04']",
+          "name": "VERSIONS",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "6 part(s): sha256 and line counts match",
+          "name": "MANIFEST",
+          "status": "PASS"
+        },
+        {
+          "examples": [],
+          "message": "1310/1448 = 90.5% of lines equal the Phase 5 text; by sample index: {0: '163/181', 1: '165/181', 2: '163/181', 3: '163/181', 4: '163/181', 5: '164/181', 6: '166/181', 7: '163/181'} (information only; seeded samples may differ across Ollama versions)",
+          "name": "REPLICATION",
+          "status": "INFO"
+        }
+      ],
+      "generator": "zeroshot",
+      "n_files": 6,
+      "n_lines": 2568,
+      "profile": "A",
+      "stats": {
+        "collapse_share": 0.0,
+        "coverage": 1.0,
+        "error_lines": 0,
+        "expected_pairs": 2568,
+        "lines": 2568,
+        "model_digests": [
+          "sha256:d8b0f5e9760cd1682034f292d7ef72ec46f432149be0df7574bf2d6e92e38c04"
+        ],
+        "models": [
+          "qwen3.5:4b"
+        ],
+        "ollama_versions": [
+          "0.40.11"
+        ],
+        "present_pairs": 2568,
+        "success_lines": 2568,
+        "topk_share": 1.0
+      }
+    }
+  ],
+  "global": [],
+  "inputs": 321,
+  "require_manifests": false,
+  "summary_line": "ACCEPTED"
+}
