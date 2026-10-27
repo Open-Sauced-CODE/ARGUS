@@ -1,0 +1,913 @@
+{
+  "missing": [],
+  "report": {
+    "candidates": {
+      "cells": [
+        {
+          "candidates": 560,
+          "empty_replies": 0,
+          "examples": 361,
+          "gate_passing": 107,
+          "gate_passing_escalated": 3,
+          "gate_passing_hidden_fail": 45,
+          "generator": "zeroshot",
+          "inputs": 70,
+          "mean_distinct_answers": 7.243,
+          "pass_at_1_examples": 96,
+          "pass_at_8_examples": 176,
+          "set": "A_val"
+        },
+        {
+          "candidates": 696,
+          "empty_replies": 0,
+          "examples": 300,
+          "gate_passing": 109,
+          "gate_passing_escalated": 3,
+          "gate_passing_hidden_fail": 49,
+          "generator": "zeroshot",
+          "inputs": 87,
+          "mean_distinct_answers": 7.437,
+          "pass_at_1_examples": 55,
+          "pass_at_8_examples": 116,
+          "set": "train300"
+        },
+        {
+          "candidates": 288,
+          "empty_replies": 0,
+          "examples": 261,
+          "gate_passing": 97,
+          "gate_passing_escalated": 3,
+          "gate_passing_hidden_fail": 42,
+          "generator": "zeroshot",
+          "inputs": 36,
+          "mean_distinct_answers": 6.778,
+          "pass_at_1_examples": 103,
+          "pass_at_8_examples": 132,
+          "set": "B1"
+        },
+        {
+          "candidates": 80,
+          "empty_replies": 0,
+          "examples": 180,
+          "gate_passing": 58,
+          "gate_passing_escalated": 0,
+          "gate_passing_hidden_fail": 24,
+          "generator": "zeroshot",
+          "inputs": 10,
+          "mean_distinct_answers": 5.7,
+          "pass_at_1_examples": 140,
+          "pass_at_8_examples": 140,
+          "set": "B2"
+        },
+        {
+          "candidates": 864,
+          "empty_replies": 0,
+          "examples": 466,
+          "gate_passing": 35,
+          "gate_passing_escalated": 0,
+          "gate_passing_hidden_fail": 2,
+          "generator": "zeroshot",
+          "inputs": 108,
+          "mean_distinct_answers": 7.833,
+          "pass_at_1_examples": 166,
+          "pass_at_8_examples": 173,
+          "set": "C_verifier"
+        },
+        {
+          "candidates": 240,
+          "empty_replies": 0,
+          "examples": 80,
+          "gate_passing": 29,
+          "gate_passing_escalated": 0,
+          "gate_passing_hidden_fail": 0,
+          "generator": "zeroshot",
+          "inputs": 30,
+          "mean_distinct_answers": 7.533,
+          "pass_at_1_examples": 29,
+          "pass_at_8_examples": 31,
+          "set": "gold"
+        },
+        {
+          "candidates": 560,
+          "empty_replies": 8,
+          "examples": 361,
+          "gate_passing": 550,
+          "gate_passing_escalated": 69,
+          "gate_passing_hidden_fail": 4,
+          "generator": "sft",
+          "inputs": 70,
+          "mean_distinct_answers": 1.114,
+          "pass_at_1_examples": 349,
+          "pass_at_8_examples": 359,
+          "set": "A_val"
+        },
+        {
+          "candidates": 696,
+          "empty_replies": 0,
+          "examples": 300,
+          "gate_passing": 694,
+          "gate_passing_escalated": 77,
+          "gate_passing_hidden_fail": 11,
+          "generator": "sft",
+          "inputs": 87,
+          "mean_distinct_answers": 1.138,
+          "pass_at_1_examples": 290,
+          "pass_at_8_examples": 300,
+          "set": "train300"
+        },
+        {
+          "candidates": 288,
+          "empty_replies": 0,
+          "examples": 261,
+          "gate_passing": 286,
+          "gate_passing_escalated": 76,
+          "gate_passing_hidden_fail": 11,
+          "generator": "sft",
+          "inputs": 36,
+          "mean_distinct_answers": 1.167,
+          "pass_at_1_examples": 251,
+          "pass_at_8_examples": 261,
+          "set": "B1"
+        },
+        {
+          "candidates": 80,
+          "empty_replies": 0,
+          "examples": 180,
+          "gate_passing": 79,
+          "gate_passing_escalated": 12,
+          "gate_passing_hidden_fail": 11,
+          "generator": "sft",
+          "inputs": 10,
+          "mean_distinct_answers": 1.5,
+          "pass_at_1_examples": 160,
+          "pass_at_8_examples": 180,
+          "set": "B2"
+        },
+        {
+          "candidates": 864,
+          "empty_replies": 0,
+          "examples": 466,
+          "gate_passing": 849,
+          "gate_passing_escalated": 4,
+          "gate_passing_hidden_fail": 0,
+          "generator": "sft",
+          "inputs": 108,
+          "mean_distinct_answers": 1.648,
+          "pass_at_1_examples": 414,
+          "pass_at_8_examples": 466,
+          "set": "C_verifier"
+        },
+        {
+          "candidates": 240,
+          "empty_replies": 0,
+          "examples": 80,
+          "gate_passing": 231,
+          "gate_passing_escalated": 3,
+          "gate_passing_hidden_fail": 0,
+          "generator": "sft",
+          "inputs": 30,
+          "mean_distinct_answers": 1.933,
+          "pass_at_1_examples": 70,
+          "pass_at_8_examples": 80,
+          "set": "gold"
+        },
+        {
+          "candidates": 560,
+          "empty_replies": 0,
+          "examples": 361,
+          "gate_passing": 489,
+          "gate_passing_escalated": 80,
+          "gate_passing_hidden_fail": 0,
+          "generator": "rft",
+          "inputs": 70,
+          "mean_distinct_answers": 1.0,
+          "pass_at_1_examples": 287,
+          "pass_at_8_examples": 291,
+          "set": "A_val"
+        },
+        {
+          "candidates": 696,
+          "empty_replies": 0,
+          "examples": 300,
+          "gate_passing": 656,
+          "gate_passing_escalated": 80,
+          "gate_passing_hidden_fail": 8,
+          "generator": "rft",
+          "inputs": 87,
+          "mean_distinct_answers": 1.046,
+          "pass_at_1_examples": 282,
+          "pass_at_8_examples": 282,
+          "set": "train300"
+        },
+        {
+          "candidates": 288,
+          "empty_replies": 0,
+          "examples": 261,
+          "gate_passing": 182,
+          "gate_passing_escalated": 70,
+          "gate_passing_hidden_fail": 8,
+          "generator": "rft",
+          "inputs": 36,
+          "mean_distinct_answers": 1.056,
+          "pass_at_1_examples": 161,
+          "pass_at_8_examples": 161,
+          "set": "B1"
+        },
+        {
+          "candidates": 80,
+          "empty_replies": 0,
+          "examples": 180,
+          "gate_passing": 56,
+          "gate_passing_escalated": 8,
+          "gate_passing_hidden_fail": 8,
+          "generator": "rft",
+          "inputs": 10,
+          "mean_distinct_answers": 1.0,
+          "pass_at_1_examples": 120,
+          "pass_at_8_examples": 120,
+          "set": "B2"
+        },
+        {
+          "candidates": 864,
+          "empty_replies": 0,
+          "examples": 466,
+          "gate_passing": 840,
+          "gate_passing_escalated": 8,
+          "gate_passing_hidden_fail": 0,
+          "generator": "rft",
+          "inputs": 108,
+          "mean_distinct_answers": 1.019,
+          "pass_at_1_examples": 416,
+          "pass_at_8_examples": 417,
+          "set": "C_verifier"
+        },
+        {
+          "candidates": 240,
+          "empty_replies": 0,
+          "examples": 80,
+          "gate_passing": 224,
+          "gate_passing_escalated": 8,
+          "gate_passing_hidden_fail": 0,
+          "generator": "rft",
+          "inputs": 30,
+          "mean_distinct_answers": 1.0,
+          "pass_at_1_examples": 70,
+          "pass_at_8_examples": 70,
+          "set": "gold"
+        }
+      ],
+      "logprobs_present": false,
+      "natural_negative_clusters": {
+        "rft": 1,
+        "sft": 4,
+        "union": 22,
+        "zeroshot": 21
+      },
+      "pass_at_checks": [
+        {
+          "diff_points": 0.0,
+          "examples": 361,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 1,
+          "recomputed": 96,
+          "set": "A_val",
+          "summary": 96
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 361,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 8,
+          "recomputed": 176,
+          "set": "A_val",
+          "summary": 176
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 300,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 1,
+          "recomputed": 55,
+          "set": "train300",
+          "summary": 55
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 300,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 8,
+          "recomputed": 116,
+          "set": "train300",
+          "summary": 116
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 261,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 1,
+          "recomputed": 103,
+          "set": "B1",
+          "summary": 103
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 261,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 8,
+          "recomputed": 132,
+          "set": "B1",
+          "summary": 132
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 180,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 1,
+          "recomputed": 140,
+          "set": "B2",
+          "summary": 140
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 180,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 8,
+          "recomputed": 140,
+          "set": "B2",
+          "summary": 140
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 466,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 1,
+          "recomputed": 166,
+          "set": "C_verifier",
+          "summary": 166
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 466,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 8,
+          "recomputed": 173,
+          "set": "C_verifier",
+          "summary": 173
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 80,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 1,
+          "recomputed": 29,
+          "set": "gold",
+          "summary": 29
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 80,
+          "flag": false,
+          "generator": "zeroshot",
+          "k": 8,
+          "recomputed": 31,
+          "set": "gold",
+          "summary": 31
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 361,
+          "flag": false,
+          "generator": "sft",
+          "k": 1,
+          "recomputed": 349,
+          "set": "A_val",
+          "summary": 349
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 361,
+          "flag": false,
+          "generator": "sft",
+          "k": 8,
+          "recomputed": 359,
+          "set": "A_val",
+          "summary": 359
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 300,
+          "flag": false,
+          "generator": "sft",
+          "k": 1,
+          "recomputed": 290,
+          "set": "train300",
+          "summary": 290
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 300,
+          "flag": false,
+          "generator": "sft",
+          "k": 8,
+          "recomputed": 300,
+          "set": "train300",
+          "summary": 300
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 261,
+          "flag": false,
+          "generator": "sft",
+          "k": 1,
+          "recomputed": 251,
+          "set": "B1",
+          "summary": 251
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 261,
+          "flag": false,
+          "generator": "sft",
+          "k": 8,
+          "recomputed": 261,
+          "set": "B1",
+          "summary": 261
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 180,
+          "flag": false,
+          "generator": "sft",
+          "k": 1,
+          "recomputed": 160,
+          "set": "B2",
+          "summary": 160
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 180,
+          "flag": false,
+          "generator": "sft",
+          "k": 8,
+          "recomputed": 180,
+          "set": "B2",
+          "summary": 180
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 466,
+          "flag": false,
+          "generator": "sft",
+          "k": 1,
+          "recomputed": 414,
+          "set": "C_verifier",
+          "summary": 414
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 466,
+          "flag": false,
+          "generator": "sft",
+          "k": 8,
+          "recomputed": 466,
+          "set": "C_verifier",
+          "summary": 466
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 80,
+          "flag": false,
+          "generator": "sft",
+          "k": 1,
+          "recomputed": 70,
+          "set": "gold",
+          "summary": 70
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 80,
+          "flag": false,
+          "generator": "sft",
+          "k": 8,
+          "recomputed": 80,
+          "set": "gold",
+          "summary": 80
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 361,
+          "flag": false,
+          "generator": "rft",
+          "k": 1,
+          "recomputed": 287,
+          "set": "A_val",
+          "summary": 287
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 361,
+          "flag": false,
+          "generator": "rft",
+          "k": 8,
+          "recomputed": 291,
+          "set": "A_val",
+          "summary": 291
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 300,
+          "flag": false,
+          "generator": "rft",
+          "k": 1,
+          "recomputed": 282,
+          "set": "train300",
+          "summary": 282
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 300,
+          "flag": false,
+          "generator": "rft",
+          "k": 8,
+          "recomputed": 282,
+          "set": "train300",
+          "summary": 282
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 261,
+          "flag": false,
+          "generator": "rft",
+          "k": 1,
+          "recomputed": 161,
+          "set": "B1",
+          "summary": 161
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 261,
+          "flag": false,
+          "generator": "rft",
+          "k": 8,
+          "recomputed": 161,
+          "set": "B1",
+          "summary": 161
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 180,
+          "flag": false,
+          "generator": "rft",
+          "k": 1,
+          "recomputed": 120,
+          "set": "B2",
+          "summary": 120
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 180,
+          "flag": false,
+          "generator": "rft",
+          "k": 8,
+          "recomputed": 120,
+          "set": "B2",
+          "summary": 120
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 466,
+          "flag": false,
+          "generator": "rft",
+          "k": 1,
+          "recomputed": 416,
+          "set": "C_verifier",
+          "summary": 416
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 466,
+          "flag": false,
+          "generator": "rft",
+          "k": 8,
+          "recomputed": 417,
+          "set": "C_verifier",
+          "summary": 417
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 80,
+          "flag": false,
+          "generator": "rft",
+          "k": 1,
+          "recomputed": 70,
+          "set": "gold",
+          "summary": 70
+        },
+        {
+          "diff_points": 0.0,
+          "examples": 80,
+          "flag": false,
+          "generator": "rft",
+          "k": 8,
+          "recomputed": 70,
+          "set": "gold",
+          "summary": 70
+        }
+      ]
+    },
+    "harvest_inputs": {
+      "distinct_inputs_all_sets": 321,
+      "equal": true,
+      "extra_in_list": 0,
+      "harvest_inputs": 321,
+      "missing_from_list": 0,
+      "present": true
+    },
+    "licences": {
+      "bases": 13155,
+      "copyleft_bases": 1808,
+      "copyleft_by_licence": {
+        "AGPL-3.0": 75,
+        "CC-BY-SA-4.0": 28,
+        "EPL-1.0": 1,
+        "EPL-2.0": 3,
+        "EUPL-1.2": 3,
+        "GPL-2.0": 76,
+        "GPL-3.0": 1164,
+        "LGPL-2.1": 1,
+        "LGPL-3.0": 6,
+        "MPL-2.0": 451
+      },
+      "copyleft_share": 0.1374,
+      "licences": {
+        "0BSD": 1,
+        "AGPL-3.0": 75,
+        "Apache-2.0": 3524,
+        "BSD-2-Clause": 42,
+        "BSD-3-Clause": 173,
+        "BSD-4-Clause": 1,
+        "CC-BY-4.0": 17,
+        "CC-BY-SA-4.0": 28,
+        "CC0-1.0": 73,
+        "EPL-1.0": 1,
+        "EPL-2.0": 3,
+        "EUPL-1.2": 3,
+        "GPL-2.0": 76,
+        "GPL-3.0": 1164,
+        "ISC": 27,
+        "LGPL-2.1": 1,
+        "LGPL-3.0": 6,
+        "MIT": 7084,
+        "MIT-0": 305,
+        "MPL-2.0": 451,
+        "Unlicense": 95,
+        "WTFPL": 5
+      },
+      "present": true
+    },
+    "manifest": {
+      "ok": 10,
+      "present": true,
+      "problems": 0,
+      "results": [
+        {
+          "file": "dataset/train.jsonl",
+          "status": "ok"
+        },
+        {
+          "file": "dataset/train_ablation_no_encryption.jsonl",
+          "status": "ok"
+        },
+        {
+          "file": "dataset/val.jsonl",
+          "status": "ok"
+        },
+        {
+          "file": "held_out/gold.jsonl",
+          "status": "ok"
+        },
+        {
+          "file": "held_out/tierB1.jsonl",
+          "status": "ok"
+        },
+        {
+          "file": "held_out/tierB2.jsonl",
+          "status": "ok"
+        },
+        {
+          "file": "held_out/tierC_mined.jsonl",
+          "status": "ok"
+        },
+        {
+          "file": "held_out/tierC_verifier.jsonl",
+          "status": "ok"
+        },
+        {
+          "file": "held_out/held_out_hashes.txt",
+          "status": "ok"
+        },
+        {
+          "file": "held_out/tierC_base_hashes.txt",
+          "status": "ok"
+        }
+      ]
+    },
+    "overlap": {
+      "pairs": {
+        "A_val&B1": 31,
+        "A_val&B2": 9,
+        "A_val&C_verifier": 30,
+        "A_val&gold": 14,
+        "B1&B2": 10,
+        "B1&C_verifier": 12,
+        "B1&gold": 8,
+        "B2&C_verifier": 3,
+        "B2&gold": 3,
+        "C_verifier&gold": 30,
+        "train&A_val": 55,
+        "train&B1": 36,
+        "train&B2": 10,
+        "train&C_verifier": 32,
+        "train&gold": 14
+      },
+      "share_in_train": {
+        "A_val": {
+          "also_in_train": 55,
+          "distinct": 70,
+          "share": 0.7857
+        },
+        "B1": {
+          "also_in_train": 36,
+          "distinct": 36,
+          "share": 1.0
+        },
+        "B2": {
+          "also_in_train": 10,
+          "distinct": 10,
+          "share": 1.0
+        },
+        "C_verifier": {
+          "also_in_train": 32,
+          "distinct": 108,
+          "share": 0.2963
+        },
+        "gold": {
+          "also_in_train": 14,
+          "distinct": 30,
+          "share": 0.4667
+        }
+      }
+    },
+    "sets": {
+      "A_val": {
+        "distinct_inputs": 70,
+        "distinct_inputs_per_rule": {
+          "cis.iam_no_full_admin": 15,
+          "cis.s3_default_encryption": 1,
+          "cis.s3_public_access_block": 6,
+          "cis.sg_open_ingress": 12,
+          "dpdp.rule15_region": 3,
+          "dpdp.rule6_account_mfa": 2,
+          "dpdp.rule6_logging": 2,
+          "dpdp.rule6_public_exposure": 6,
+          "dpdp.rule6_sg_open_ingress": 12,
+          "dpdp.rule6a": 6,
+          "dpdp.rule6a_rds": 2,
+          "dpdp.rule7_detection": 3
+        },
+        "escalate_rows": 44,
+        "max_rows_per_input": 20,
+        "routes": {
+          "escalate": 44,
+          "fix": 317
+        },
+        "rows": 361
+      },
+      "B1": {
+        "distinct_inputs": 36,
+        "distinct_inputs_per_rule": {
+          "cis.s3_default_encryption": 1,
+          "cis.s3_public_access_block": 6,
+          "dpdp.rule15_region": 3,
+          "dpdp.rule6_account_mfa": 2,
+          "dpdp.rule6_logging": 2,
+          "dpdp.rule6_public_exposure": 6,
+          "dpdp.rule6_versioning": 2,
+          "dpdp.rule6a": 7,
+          "dpdp.rule6a_rds": 2,
+          "dpdp.rule7_detection": 3,
+          "dpdp.rule8_lifecycle": 2
+        },
+        "escalate_rows": 80,
+        "max_rows_per_input": 20,
+        "routes": {
+          "escalate": 80,
+          "fix": 181
+        },
+        "rows": 261
+      },
+      "B2": {
+        "distinct_inputs": 10,
+        "distinct_inputs_per_rule": {
+          "cis.s3_default_encryption": 1,
+          "dpdp.rule6a": 7,
+          "dpdp.rule6a_rds": 2
+        },
+        "escalate_rows": 40,
+        "max_rows_per_input": 40,
+        "routes": {
+          "escalate": 40,
+          "fix": 140
+        },
+        "rows": 180
+      },
+      "C_mined": {
+        "distinct_inputs": 0,
+        "distinct_inputs_per_rule": {},
+        "escalate_rows": 0,
+        "max_rows_per_input": 0,
+        "routes": {},
+        "rows": 0
+      },
+      "C_verifier": {
+        "distinct_inputs": 108,
+        "distinct_inputs_per_rule": {
+          "cis.iam_no_full_admin": 2,
+          "cis.s3_default_encryption": 1,
+          "cis.s3_public_access_block": 5,
+          "cis.sg_open_ingress": 46,
+          "dpdp.rule6_logging": 1,
+          "dpdp.rule6_public_exposure": 5,
+          "dpdp.rule6_sg_open_ingress": 46,
+          "dpdp.rule6a": 1,
+          "dpdp.rule6a_rds": 1
+        },
+        "escalate_rows": 51,
+        "max_rows_per_input": 74,
+        "routes": {
+          "escalate": 51,
+          "fix": 415
+        },
+        "rows": 466
+      },
+      "gold": {
+        "distinct_inputs": 30,
+        "distinct_inputs_per_rule": {
+          "cis.iam_no_full_admin": 2,
+          "cis.s3_default_encryption": 1,
+          "cis.s3_public_access_block": 3,
+          "cis.sg_open_ingress": 10,
+          "dpdp.rule6_logging": 1,
+          "dpdp.rule6_public_exposure": 1,
+          "dpdp.rule6_sg_open_ingress": 10,
+          "dpdp.rule6a": 1,
+          "dpdp.rule6a_rds": 1
+        },
+        "escalate_rows": 9,
+        "max_rows_per_input": 10,
+        "routes": {
+          "escalate": 9,
+          "fix": 71
+        },
+        "rows": 80
+      },
+      "train": {
+        "distinct_inputs": 230,
+        "distinct_inputs_per_rule": {
+          "cis.iam_no_full_admin": 142,
+          "cis.s3_default_encryption": 1,
+          "cis.s3_public_access_block": 6,
+          "cis.sg_open_ingress": 26,
+          "dpdp.rule15_region": 3,
+          "dpdp.rule6_account_mfa": 2,
+          "dpdp.rule6_logging": 2,
+          "dpdp.rule6_public_exposure": 6,
+          "dpdp.rule6_sg_open_ingress": 26,
+          "dpdp.rule6_versioning": 2,
+          "dpdp.rule6a": 7,
+          "dpdp.rule6a_rds": 2,
+          "dpdp.rule7_detection": 3,
+          "dpdp.rule8_lifecycle": 2
+        },
+        "escalate_rows": 360,
+        "max_rows_per_input": 80,
+        "routes": {
+          "escalate": 360,
+          "fix": 2147
+        },
+        "rows": 2507
+      }
+    }
+  }
+}

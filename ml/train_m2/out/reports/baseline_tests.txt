@@ -1,22 +1,9 @@
-Date: 2026-10-25 (UTC)
-HEAD before commit: de8996e
+﻿=== py -m pytest ml/tests -q ===
+........................................................................ [ 58%]
+....................................................                     [100%]
+124 passed in 161.72s (0:02:41)
 
-ml/tests baseline:
-2 failed, 46 passed, 76 skipped in 28.14s
-
-Other test suites:
-prioritize/tests: 1 failed, 94 passed in 21.58s
-privacy/tests: 98 passed, 7 skipped in 2.99s
-risk/tests: 52 passed in 2.67s
-
-phase 6 skeleton tests: 28 passed in 3.41s
-
-REPAIRED BASELINE (supersedes the baseline above; written by phase6_repair.py)
-Date: 2026-10-26 08:23 UTC
-HEAD before repair commit: 0b5b4c9, restored from b5d4467 (undoing edits made by b6894a8)
-ml/tests/test_contracts_doc.py: 13 passed in 0.58s
-ml/train_m2/tests: 28 passed in 28.56s
-ml/tests: 48 passed, 76 skipped in 14.26s
-prioritize/tests: 95 passed in 50.77s
-privacy/tests: 98 passed, 7 skipped in 7.40s
-risk/tests: 52 passed in 4.86s
+=== py -m pytest ml/train_m2/tests -q ===
+........................................................................ [ 90%]
+........                                                                 [100%]
+80 passed in 42.42s
