@@ -172,7 +172,7 @@ def test_provenance_has_required_fields(tmp_path: Path) -> None:
     src = tmp_path / "in.txt"
     src.write_bytes(b"abc")
     prov = provenance({"task": "t"}, inputs=[src], seed=42, argv=["prog", "--x"])
-    assert prov["input_sha256"][str(src)] == sha256_file(src)
+    assert prov["input_sha256"]["in.txt"] == sha256_file(src)
     assert prov["seed"] == 42 and prov["argv"] == ["prog", "--x"] and prov["extra"] == {"task": "t"}
     assert prov["utc_time"].endswith("Z") and len(prov["utc_time"]) == 20
     assert prov["python"].startswith("3.")

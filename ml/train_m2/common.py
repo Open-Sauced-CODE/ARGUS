@@ -142,10 +142,89 @@ def load_inputs(path: str | os.PathLike[str] | None = None) -> list[dict[str, An
     return list(jsonl_iter(source))
 
 
-def _git(*args: str) -> str:
+def _clean_path_item(val: Any, root: Path) -> Any:
+    """Make an existing or absolute path repo-relative with forward slashes, or filename if outside."""
+    if not isinstance(val, (str, os.PathLike)):
+        return val
+    if isinstance(val, os.PathLike):
+        p = Path(val)
+        s = str(val)
+    else:
+        s = str(val)
+        if not s or s.startswith("-"):
+            return s
+        try:
+            p = Path(s)
+        except Exception:
+            return s
+
+    is_abs = False
+    try:
+        is_abs = p.is_absolute()
+    except Exception:
+        pass
+
+    starts_slash = s.startswith(("\\", "/")) or (len(s) > 2 and s[1] == ":" and s[2] in ("\\", "/"))
+    exists = False
+    try:
+        exists = p.exists() and s not in (".", "..")
+    except Exception:
+        pass
+
+    if is_abs or starts_slash or exists:
+        try:
+            resolved = p.resolve()
+            if resolved.is_relative_to(root):
+                return resolved.relative_to(root).as_posix()
+            return resolved.name
+        except (ValueError, OSError):
+            try:
+                p_posix = p.as_posix()
+                root_posix = root.as_posix()
+                if p_posix.lower().startswith(root_posix.lower()):
+                    return p_posix[len(root_posix):].lstrip("/")
+                return p.name
+            except Exception:
+                return p.name
+    return s
+
+
+def _clean_extra(val: Any, root: Path, home: Path) -> Any:
+    """Recursively ensure no absolute repo or home paths are present in extra."""
+    if isinstance(val, (os.PathLike, Path)):
+        return _clean_path_item(val, root)
+    if isinstance(val, Mapping):
+        return {
+            _clean_path_item(k, root) if isinstance(k, (os.PathLike, Path)) else str(k): _clean_extra(v, root, home)
+            for k, v in val.items()
+        }
+    if isinstance(val, Sequence) and not isinstance(val, (str, bytes, bytearray)):
+        return [_clean_extra(item, root, home) for item in val]
+    if isinstance(val, str):
+        cleaned = _clean_path_item(val, root)
+        if isinstance(cleaned, str):
+            root_str = str(root)
+            root_posix = root.as_posix()
+            home_str = str(home)
+            home_posix = home.as_posix()
+            if root_str in cleaned:
+                cleaned = cleaned.replace(root_str, "")
+            if root_posix in cleaned:
+                cleaned = cleaned.replace(root_posix, "")
+            if home_str in cleaned:
+                cleaned = cleaned.replace(home_str, "")
+            if home_posix in cleaned:
+                cleaned = cleaned.replace(home_posix, "")
+            return cleaned.replace("\\", "/")
+        return cleaned
+    return val
+
+
+def _git(*args: str, root: Path | None = None) -> str:
+    r = root if root is not None else repo_root()
     try:
         out = subprocess.run(
-            ["git", *args], cwd=str(repo_root()), capture_output=True, text=True, timeout=20, check=True
+            ["git", *args], cwd=str(r), capture_output=True, text=True, timeout=20, check=True
         )
         return out.stdout.strip()
     except (OSError, subprocess.SubprocessError, RuntimeError):
@@ -174,10 +253,15 @@ def provenance(
     Records git commit and dirty flag, python and package versions, SHA-256 of every input file,
     the seed, the UTC time and the command line. ``extra`` is merged under the key ``extra``.
     """
-    input_hashes = {str(p): sha256_file(p) for p in inputs}
-    status = _git("status", "--porcelain")
+    root = repo_root()
+    home = Path.home()
+    input_hashes = {_clean_path_item(p, root): sha256_file(p) for p in inputs}
+    status = _git("status", "--porcelain", "--", ".", ":(exclude)ml/train_m2/out", root=root)
+    raw_argv = list(sys.argv if argv is None else argv)
+    sanitized_argv = [_clean_path_item(a, root) for a in raw_argv]
+    sanitized_extra = _clean_extra(dict(extra), root, home) if extra else {}
     return {
-        "git_commit": _git("rev-parse", "HEAD"),
+        "git_commit": _git("rev-parse", "HEAD", root=root),
         "git_dirty": None if status == "unknown" else bool(status),
         "python": sys.version.split()[0],
         "platform": platform.platform(),
@@ -185,8 +269,8 @@ def provenance(
         "input_sha256": input_hashes,
         "seed": seed,
         "utc_time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "argv": list(sys.argv if argv is None else argv),
-        "extra": dict(extra) if extra else {},
+        "argv": sanitized_argv,
+        "extra": sanitized_extra,
     }
 
 
