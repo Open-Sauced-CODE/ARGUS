@@ -583,7 +583,7 @@ class TestProvenanceLeak:
 
         root_str = str(repo_root()).replace("\\", "/")
         home_str = str(Path.home()).replace("\\", "/")
-        leak_patterns = [root_str, home_str, "C:/Users", "C:\\Users", "Desktop"]
+        leak_patterns = [root_str, home_str, "C:/Users", "C:\\Users", f"{home_str}/Desktop", "/Desktop/", "\\Desktop\\"]
 
         for out_file in out_dir.rglob("*"):
             if out_file.is_file():

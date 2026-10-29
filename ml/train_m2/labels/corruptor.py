@@ -225,6 +225,19 @@ def corrupt(
     raise ValueError(f"Unknown corruption type {corruption_type!r}")
 
 
+def _deterministic_corrupt_seed(global_seed: int, input_key: str, ctype: str) -> int:
+    """Derive a deterministic int seed for one (input_key, ctype) pair.
+
+    Uses hashlib.sha256 so the result is PYTHONHASHSEED-independent (F3 fix).
+    """
+    import hashlib
+
+    raw = f"{global_seed}:{input_key}:{ctype}".encode("utf-8")
+    digest = hashlib.sha256(raw).digest()
+    # Take the first 8 bytes as a big-endian unsigned int; mask to fit in Python int
+    return int.from_bytes(digest[:8], "big") & 0x7FFF_FFFF_FFFF_FFFF
+
+
 def make_corrupted_rows(
     record: Mapping[str, Any],
     reference: dict | None,
@@ -238,10 +251,15 @@ def make_corrupted_rows(
     The returned dicts extend LabelRow.to_dict() with:
       "corruption_type": str
       "schema_valid": bool
+
+    F3 fix: each (input_key, ctype) gets a deterministic seed derived from
+    hashlib.sha256(f"{seed}:{input_key}:{ctype}") -- not python hash().
     """
     valid_candidates: list[tuple[str, dict, bool]] = []
     for ctype in CORRUPTION_TYPES:
-        patch = corrupt(record, reference, ctype, seed=seed)
+        # F3 fix: use deterministic per-(input_key, ctype) seed, not python hash()
+        ctype_seed = _deterministic_corrupt_seed(seed, input_key, ctype)
+        patch = corrupt(record, reference, ctype, seed=ctype_seed)
         if patch is None:
             continue
         # Validate: must not introduce ops outside ALLOWED_OPS and must pass schema
@@ -294,7 +312,8 @@ def hard_negative_stats(rows: list[dict]) -> dict[str, dict]:
     """Per-type gate_pass_rate, oracle_wrong_rate, hard_negative_rate.
 
     hard_negative_rate = P(gate_pass AND oracle wrong).
-    A row is oracle-wrong if oracle_class in {wrong, unknown}.
+    A row is oracle-wrong if oracle_class == 'wrong' ONLY.
+    oracle_class == 'unknown' is EXCLUDED from wrong and counted separately (F7 fix).
     """
     from collections import defaultdict
 
@@ -307,38 +326,88 @@ def hard_negative_stats(rows: list[dict]) -> dict[str, dict]:
     for ctype, bucket in buckets.items():
         n = len(bucket)
         gate_pass = sum(1 for r in bucket if r.get("gate_pass"))
-        oracle_wrong = sum(1 for r in bucket if r.get("oracle_class") in ("wrong", "unknown"))
+        # F7: exclude 'unknown' from wrong count
+        oracle_wrong = sum(1 for r in bucket if r.get("oracle_class") == "wrong")
+        oracle_unknown = sum(1 for r in bucket if r.get("oracle_class") == "unknown")
         hard_neg = sum(
             1 for r in bucket
-            if r.get("gate_pass") and r.get("oracle_class") in ("wrong", "unknown")
+            if r.get("gate_pass") and r.get("oracle_class") == "wrong"
         )
         result[ctype] = {
             "n": n,
             "gate_pass_rate": gate_pass / n if n else 0.0,
             "oracle_wrong_rate": oracle_wrong / n if n else 0.0,
+            "oracle_unknown_count": oracle_unknown,
             "hard_negative_rate": hard_neg / n if n else 0.0,
         }
     return result
 
 
-def write_hard_negative_table(stats: dict[str, dict], out_path: str | None = None) -> str:
-    """Render the hard-negative stats as a Markdown table. Returns the Markdown text."""
-    header = "| Corruption type | n | gate_pass_rate | oracle_wrong_rate | hard_negative_rate |\n"
-    header += "| --- | --- | --- | --- | --- |\n"
-    rows_md = []
-    for ctype in sorted(stats):
-        s = stats[ctype]
-        rows_md.append(
-            "| {} | {} | {:.3f} | {:.3f} | {:.3f} |".format(
-                ctype, s["n"],
-                s["gate_pass_rate"],
-                s["oracle_wrong_rate"],
-                s["hard_negative_rate"],
-            )
+def filter_hard_negative_types(
+    stats: dict[str, dict],
+) -> tuple[dict[str, dict], list[str]]:
+    """Keep only corruption types with hard_negative_rate > 0.
+
+    Returns (kept_stats, dropped_types).
+    F2 fix: types with hard_negative_rate == 0 are dropped from output.
+    """
+    kept: dict[str, dict] = {}
+    dropped: list[str] = []
+    for ctype, s in stats.items():
+        if s["hard_negative_rate"] > 0.0:
+            kept[ctype] = s
+        else:
+            dropped.append(ctype)
+    return kept, sorted(dropped)
+
+
+def write_hard_negative_table(
+    stats: dict[str, dict],
+    out_path: str | None = None,
+    pre_filter_stats: dict[str, dict] | None = None,
+    dropped_types: list[str] | None = None,
+) -> str:
+    """Render hard-negative stats as a Markdown table; returns the Markdown text.
+
+    When pre_filter_stats and dropped_types are supplied, the table includes a
+    pre-filter section and a dropped-types list (F2 fix: shows what was removed).
+    oracle_unknown_count column added (F7 fix).
+    """
+    from pathlib import Path as _Path
+
+    def _render_table(tbl_stats: dict[str, dict], label: str) -> str:
+        hdr = (
+            f"## {label}\n\n"
+            "| Type | n | gate_pass_rate | oracle_wrong_rate"
+            " | unknown_count | hard_negative_rate |\n"
+            "| --- | --- | --- | --- | --- | --- |\n"
         )
-    text = "# Hard-negative table (corruptor, TRAIN partition)\n\n" + header + "\n".join(rows_md) + "\n"
+        lines_md = []
+        for ctype in sorted(tbl_stats):
+            s = tbl_stats[ctype]
+            lines_md.append(
+                "| {} | {} | {:.3f} | {:.3f} | {} | {:.3f} |".format(
+                    ctype,
+                    s["n"],
+                    s["gate_pass_rate"],
+                    s["oracle_wrong_rate"],
+                    s.get("oracle_unknown_count", 0),
+                    s["hard_negative_rate"],
+                )
+            )
+        return hdr + "\n".join(lines_md) + "\n"
+
+    parts: list[str] = ["# Hard-negative table (corruptor, TRAIN partition)\n"]
+
+    if pre_filter_stats is not None:
+        parts.append(_render_table(pre_filter_stats, "Pre-filter (all types)"))
+        dropped = sorted(dropped_types or [])
+        parts.append(f"\n**Dropped types (hard_negative_rate == 0):** {', '.join(dropped) or 'none'}\n")
+
+    parts.append(_render_table(stats, "Post-filter (kept types)"))
+
+    text = "\n".join(parts)
     if out_path is not None:
-        from pathlib import Path
-        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-        Path(out_path).write_text(text, encoding="utf-8")
+        _Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        _Path(out_path).write_text(text, encoding="utf-8")
     return text
