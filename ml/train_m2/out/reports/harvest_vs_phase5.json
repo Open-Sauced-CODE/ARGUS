@@ -1,0 +1,82 @@
+{
+  "rft": {
+    "harvest_vs_phase5_common": {
+      "a_only_pass": 5,
+      "a_pass": 178,
+      "a_rate": 0.9834254143646409,
+      "b_only_pass": 1,
+      "b_pass": 174,
+      "b_rate": 0.9613259668508287,
+      "n_a": 321,
+      "n_b": 181,
+      "n_common": 181
+    },
+    "lengths": {
+      "greedy_done_length": 0,
+      "greedy_over_limit": 0,
+      "greedy_over_limit_share": 0.0,
+      "greedy_rows": 321,
+      "limit": 400
+    }
+  },
+  "rft_v2": {
+    "harvest_vs_phase5_common": {
+      "a_only_pass": 0,
+      "a_pass": 0,
+      "a_rate": null,
+      "b_only_pass": 0,
+      "b_pass": 0,
+      "b_rate": null,
+      "n_a": 321,
+      "n_b": 0,
+      "n_common": 0
+    },
+    "lengths": {
+      "greedy_done_length": 2,
+      "greedy_over_limit": 4,
+      "greedy_over_limit_share": 0.012461059190031152,
+      "greedy_rows": 321,
+      "limit": 400
+    }
+  },
+  "sft": {
+    "harvest_vs_phase5_common": {
+      "a_only_pass": 0,
+      "a_pass": 180,
+      "a_rate": 0.994475138121547,
+      "b_only_pass": 0,
+      "b_pass": 180,
+      "b_rate": 0.994475138121547,
+      "n_a": 321,
+      "n_b": 181,
+      "n_common": 181
+    },
+    "lengths": {
+      "greedy_done_length": 0,
+      "greedy_over_limit": 0,
+      "greedy_over_limit_share": 0.0,
+      "greedy_rows": 321,
+      "limit": 400
+    }
+  },
+  "zeroshot": {
+    "harvest_vs_phase5_common": {
+      "a_only_pass": 0,
+      "a_pass": 20,
+      "a_rate": 0.11049723756906077,
+      "b_only_pass": 0,
+      "b_pass": 20,
+      "b_rate": 0.11049723756906077,
+      "n_a": 321,
+      "n_b": 181,
+      "n_common": 181
+    },
+    "lengths": {
+      "greedy_done_length": 4,
+      "greedy_over_limit": 9,
+      "greedy_over_limit_share": 0.028037383177570093,
+      "greedy_rows": 321,
+      "limit": 400
+    }
+  }
+}

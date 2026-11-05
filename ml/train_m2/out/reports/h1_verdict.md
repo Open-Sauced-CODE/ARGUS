@@ -42,7 +42,7 @@ The full harvest is ACCEPTED for downstream consumption by M2 feature extraction
 | K11 | UNVERIFIED | Pilot Artifacts: ml/train_m1/v2/out/pilot/harvest_out and pilot_results.json missing on disk. |
 | K12 | PASS | Generalization Inventory: 321 harvest inputs consist of 132 held-out union keys, 70 A_val keys, 104 additional training keys, and 15 clean unseen inputs for SFT/RFT/RFT-v2. Zeroshot has 189 clean unseen inputs. |
 | K13 | FAIL | Logprob Distribution: Claim C13 contradicted. Presence penalty applied after the reported logprobs is consistent with the data (mismatch tokens re-use an earlier token more often: 63.7% vs 47.0% on zeroshot) but grammar masking cannot be separated from it without Ollama. |
-| K14 | EXPLAINED, PARTLY | Alignment & Arithmetic: Claim C16 EXPLAINED, PARTLY: Prabhav's per-rule counts 20/26/16/8 are per-key broadcast counts (eval_v2.py scores the first example of each key and multiplies by example count); per-example mismatches are 5/26/24/14 = 69; with finding_id aligned the harvest SFT scores 327/361 (90.6%); Phase 5 349/361 comes from per-key scoring weighted by example count; Phase 5 frozen run_eval.py lines ~154-165 show the grouping. The A1-S K14 aligned numbers for rft (87.8%) and rft_v2 (27.1%) stay as measured. |
+| K14 | EXPLAINED, PARTLY | Alignment & Arithmetic: Claim C16 EXPLAINED, PARTLY: Prabhav's per-rule counts 20/26/16/8 are per-key broadcast counts (eval_v2.py scores the first example of each key and multiplies by example count); per-example mismatches are 5/26/24/14 = 69; with finding_id aligned the harvest SFT scores 327/361 (90.6%); Phase 5 349/361 comes from per-key scoring weighted by example count; Phase 5 frozen run_eval.py lines ~154-165 show the grouping. On strict per-example evaluation (finding_id aligned), 74 examples differ on SFT (causes: 41 neither, 33 reference). The A1-S K14 aligned numbers for rft (87.8%) and rft_v2 (27.1%) stay as measured. |
 | K15 | UNVERIFIED | Provenance & Reproducibility: Harvest code was not committed in recording commit 0b5b4c9 (git_dirty=true on all manifests). Prabhav states run.py/client.py/profiles.py were not edited after the first harvest run started (four sha256 values supplied); marked UNVERIFIED as hashes match committed files today but cannot show run-time state. |
 
 ---
@@ -145,6 +145,10 @@ The full harvest is ACCEPTED for downstream consumption by M2 feature extraction
 
 7. **Rule for Harvest Fix Labels**:
    - To prevent artificial gate failures, M2 candidate labels must be computed dynamically against the finding_id of the input record itself, rather than assuming a static finding_id from training templates.
+
+8. **Counterfactual Oracle 100% Validation (P3c)**:
+   - Initial disagreements on cis.s3_public_access_block and dpdp.rule6_public_exposure (97 each) were caused by search depth capped at 3 (these rules require depth 4) and untyped value domains.
+   - Extending depth to max(3, #fields) and typing mutation domains resolved all false negatives, achieving 100.0% agreement (2,868/2,868) across all 14 rules. Counterfactual labels are restricted to training data augmentation.
 
 ---
 

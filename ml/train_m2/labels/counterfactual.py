@@ -59,6 +59,9 @@ RETENTION_DAYS = 90          # DPDP documented retention constant
 INTERNAL_CIDR = "INTERNAL_CIDR"
 MAX_EDITS = 3
 MAX_STATES = 5000
+# A rule that reads k fields can need k edits (e.g. four public-access-block flags), so the
+# search depth is never capped below the number of fields the rule reads, up to this ceiling.
+MAX_EDITS_CEILING = 6
 
 # Fields whose only valid replacement in the vocabulary is INTERNAL_CIDR or an approved CIDR
 CIDR_FIELDS = frozenset(["ip_range"])
@@ -104,29 +107,49 @@ def _observed_field_values() -> dict[str, set]:
 
 
 def _domain(fname: str, current_val: Any) -> list[Any]:
-    """Enumerate the finite candidate values for a field."""
+    """Enumerate the finite, TYPE-CORRECT candidate values for one field.
+
+    A value is only offered if it has the same type family as the field (a bool for a bool field, a
+    shorter list for a list field, a string for a string field). Offering True/False for a list field such
+    as an IAM action list "silences" a rule by corrupting the type and produces meaningless minimal states.
+
+      bool            -> {True, False}
+      list            -> the list with exactly one element removed (least-privilege edits)
+      CIDR field      -> {INTERNAL_CIDR}
+      encryption alg. -> APPROVED_ALGORITHMS
+      other scalar    -> values observed for that field in train/val with the same type
+      absent (None)   -> bools if the field is boolean in the data, else observed scalars
+    """
     if isinstance(current_val, bool):
-        return list(BOOL_VALUES)
+        return [True, False]
+    if isinstance(current_val, list):
+        out: list[Any] = []
+        seen: set[str] = set()
+        for i in range(len(current_val)):
+            cand = current_val[:i] + current_val[i + 1:]
+            h = json.dumps(cand, sort_keys=True)
+            if h not in seen:
+                seen.add(h)
+                out.append(cand)
+        return out
     if fname in CIDR_FIELDS:
         return [INTERNAL_CIDR]
     if fname == "encryption_algorithm":
         return list(APPROVED_ALGORITHMS)
     observed = _observed_field_values().get(fname, set())
-    candidates: list[Any] = []
-    # Booleans observed
-    for v in (True, False):
-        if v not in candidates:
-            candidates.append(v)
-    # Observed string/numeric values
-    for v in sorted(observed, key=str):
-        if v not in candidates:
-            candidates.append(v)
-    # Common lifecycle
-    if fname in DAYS_FIELDS or "day" in fname or "lifecycle" in fname:
-        for v in (True, RETENTION_DAYS):
-            if v not in candidates:
-                candidates.append(v)
-    return candidates
+    observed_bools = [v for v in observed if isinstance(v, bool)]
+    observed_scalars = sorted(
+        (v for v in observed if not isinstance(v, bool) and isinstance(v, (int, float, str))), key=str
+    )
+    if current_val is None:
+        if observed_bools and not observed_scalars:
+            return [True, False]
+        return list(observed_scalars)
+    cands = [v for v in observed_scalars if type(v) is type(current_val)]
+    if isinstance(current_val, int) and ("day" in fname or fname in DAYS_FIELDS):
+        if RETENTION_DAYS not in cands:
+            cands.append(RETENTION_DAYS)
+    return cands
 
 
 def _state_hash(fields: dict) -> str:
@@ -140,6 +163,7 @@ class CounterfactualResult:
     label: str               # "minimal_correct" | "valid_not_minimal" | "wrong" | "unknown"
     minimal_states: list[dict] = field(default_factory=list)
     min_edits: int = -1
+    reason: str = ""         # why label is "unknown": already_silent | state_budget_exhausted | no_solution_within_max_edits
 
 
 _GLOBAL_OPA_CACHE: dict[str, Any] = {}
@@ -162,6 +186,8 @@ class CounterfactualOracle:
         self._edit_fields: frozenset[str] = frozenset(
             f for f in load_declarations().get(rule_id, []) if f != "resource_type"
         )
+        self.max_edits = max(max_edits, min(len(self._edit_fields), MAX_EDITS_CEILING))
+        self.last_search: dict[str, Any] = {}
         self._opa_cache = _GLOBAL_OPA_CACHE
         self._states_evaluated = 0
 
@@ -192,11 +218,14 @@ class CounterfactualOracle:
 
     def search_minimal(self, initial_fields: dict) -> list[tuple[int, dict]]:
         """BFS; returns list of (edits, fields) for all minimal silent states."""
+        self._states_evaluated = 0          # per search, not per oracle instance
+        self.last_search = {"already_silent": False, "exhausted": False, "visited": 1}
         before = self._opa_result(initial_fields)
         before_fired = frozenset(before.deny) | frozenset(before.warn)
 
         if self.rule_id not in before_fired:
             # Already silent -- no fix needed; treat as unknown (no violation to fix)
+            self.last_search["already_silent"] = True
             return []
 
         visited: set[str] = {_state_hash(initial_fields)}
@@ -245,6 +274,8 @@ class CounterfactualOracle:
             if len(visited) >= self.max_states:
                 break
 
+        self.last_search["visited"] = len(visited)
+        self.last_search["exhausted"] = (len(visited) >= self.max_states) and not solutions
         return solutions
 
     def classify(self, record: Mapping[str, Any], candidate_patch: Any = None) -> CounterfactualResult:
@@ -261,11 +292,15 @@ class CounterfactualOracle:
         initial_fields = dict(record.get("fields", {}))
         solutions = self.search_minimal(initial_fields)
 
-        exhausted = self._states_evaluated >= self.max_states
-
         if not solutions:
-            label = "unknown" if exhausted else "unknown"
-            return CounterfactualResult(label=label, minimal_states=[], min_edits=-1)
+            ls = self.last_search
+            if ls.get("already_silent"):
+                reason = "already_silent"
+            elif ls.get("exhausted"):
+                reason = "state_budget_exhausted"
+            else:
+                reason = "no_solution_within_max_edits"
+            return CounterfactualResult(label="unknown", minimal_states=[], min_edits=-1, reason=reason)
 
         min_edits = min(e for e, _ in solutions)
         minimal_states = [s for e, s in solutions if e == min_edits]

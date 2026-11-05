@@ -159,7 +159,8 @@ def label_harvest(
             )
 
             try:
-                patch = json.loads(content) if content.strip() else None
+                parsed = json.loads(content) if content.strip() else None
+                patch = parsed if isinstance(parsed, dict) else None
             except (json.JSONDecodeError, AttributeError):
                 patch = None
 
@@ -196,6 +197,7 @@ def label_harvest(
                 profile=HARVEST_PROFILE,
                 sample_idx=sample_idx,
                 input_key=ik,
+                content=content,
             )
 
             # For no-reference rows: override strict_correct from CF

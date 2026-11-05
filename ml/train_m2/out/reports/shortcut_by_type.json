@@ -1,0 +1,20 @@
+{
+  "C1": {
+    "n": 52,
+    "n_ops": 0.9106554923675546,
+    "patch_json_len": 0.8082477609191168,
+    "trivially_separable": false
+  },
+  "C2": {
+    "n": 45,
+    "n_ops": 0.6013469021251122,
+    "patch_json_len": 0.5102480960457614,
+    "trivially_separable": false
+  },
+  "C3": {
+    "n": 47,
+    "n_ops": 0.5915893445076325,
+    "patch_json_len": 0.573146656307514,
+    "trivially_separable": false
+  }
+}

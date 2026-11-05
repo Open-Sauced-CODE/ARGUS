@@ -1,0 +1,36 @@
+# Corruptor store
+
+```
+{
+  "after_dedupe": 383,
+  "after_type_filter": 383,
+  "cap": 151,
+  "distinct_seed_inputs": 107,
+  "dropped_types": [
+    "C4",
+    "C5",
+    "C6",
+    "C7",
+    "C8"
+  ],
+  "frac": 0.35,
+  "generated": 745,
+  "hard_negative_rows_per_type_before_dedupe": {
+    "C1": 168,
+    "C2": 142,
+    "C3": 47
+  },
+  "kept": 151,
+  "kept_per_type": {
+    "C1": 52,
+    "C2": 52,
+    "C3": 47
+  },
+  "kept_types": [
+    "C1",
+    "C2",
+    "C3"
+  ],
+  "n_natural": 282
+}
+```

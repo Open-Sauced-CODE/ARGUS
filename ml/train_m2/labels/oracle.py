@@ -47,6 +47,7 @@ from typing import Any, Mapping, Sequence
 
 from ml.mutation_engine.qa.gate_stub import gate
 from ml.mutation_engine.qa.hidden_checks import all_ok, hidden_checks
+from ml.train_m2.labels.canon import canonical_answer
 
 LOG = logging.getLogger(__name__)
 
@@ -100,6 +101,8 @@ class LabelRow:
     profile: str | None = None
     sample_idx: int | None = None
     input_key: str | None = None
+    patch: dict[str, Any] | None = None   # the candidate Patch-IR (None if unparseable): features need it
+    answer_key: str | None = None         # canon.canonical_answer of the candidate: de-duplication key
 
     def to_dict(self) -> dict[str, Any]:
         """JSON-serialisable representation."""
@@ -115,6 +118,8 @@ class LabelRow:
             "profile": self.profile,
             "sample_idx": self.sample_idx,
             "input_key": self.input_key,
+            "patch": self.patch,
+            "answer_key": self.answer_key,
         }
 
     @classmethod
@@ -131,6 +136,8 @@ class LabelRow:
             profile=d.get("profile"),
             sample_idx=d.get("sample_idx"),
             input_key=d.get("input_key"),
+            patch=d.get("patch"),
+            answer_key=d.get("answer_key"),
         )
 
 
@@ -175,9 +182,14 @@ def _oracle_class(
 
         # Gate passed, outcome is fixed, but not strictly correct
         # Check whether at least rule-silence was achieved (any gate-pass that isn't strict)
-        if hidden is not None and hidden.get("full_equivalence") is True:
-            return OC_VALID_NOT_MINIMAL
-        return OC_WRONG
+        if (
+            hidden is not None
+            and hidden.get("full_equivalence") is True
+            and hidden.get("decoys_untouched") is True
+            and hidden.get("no_side_effects") is True
+        ):
+            return OC_VALID_NOT_MINIMAL   # only minimality failed: harmless extra edits
+        return OC_WRONG                   # side effects or touched decoys are harmful, never "valid"
 
     return OC_WRONG
 
@@ -195,6 +207,7 @@ def label_candidate(
     profile: str | None = None,
     sample_idx: int | None = None,
     input_key: str | None = None,
+    content: str | None = None,
 ) -> LabelRow:
     """Assign a ground-truth label to one candidate patch.
 
@@ -211,7 +224,17 @@ def label_candidate(
     source_file, generator, profile, sample_idx
                 Provenance fields written into LabelRow.
     input_key   Cluster identifier (stored verbatim; used by downstream consumers).
+    content     Raw model text when the patch object is not available (Phase 5 logs); parsed to fill
+                LabelRow.patch and LabelRow.answer_key.
     """
+    patch_obj = patch if isinstance(patch, dict) else None
+    if patch_obj is None and content:
+        try:
+            parsed = json.loads(content)
+            patch_obj = parsed if isinstance(parsed, dict) else None
+        except (TypeError, ValueError):
+            patch_obj = None
+    answer_key = canonical_answer(json.dumps(patch_obj) if patch_obj is not None else content)
     if route is None:
         route = _route_from_record(record)
     # Normalise route: T0 counts as "fix" for oracle purposes
@@ -266,6 +289,8 @@ def label_candidate(
         profile=profile,
         sample_idx=sample_idx,
         input_key=input_key,
+        patch=patch_obj,
+        answer_key=answer_key,
     )
 
 
@@ -281,6 +306,7 @@ def label_from_scored_log(
     profile: str | None = None,
     sample_idx: int | None = None,
     input_key: str | None = None,
+    content: str | None = None,
 ) -> LabelRow:
     """Convenience wrapper that labels one entry from a Phase 5 `scored.candidates` list.
 
@@ -303,4 +329,5 @@ def label_from_scored_log(
         profile=profile,
         sample_idx=sample_idx,
         input_key=input_key,
+        content=content,
     )

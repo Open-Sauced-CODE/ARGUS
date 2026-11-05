@@ -146,22 +146,21 @@ def analyze_homogeneity():
     report_lines.append(f"- A_val keys affected by field other than finding_id: {len(non_fid_diff_keys)}")
     report_lines.append(f"- A_val examples affected by field other than finding_id: {len(non_fid_diff_ex)}")
 
-    # Part 1.3: Reconcile 349/361 vs 327/361 gap (22 examples)
-    # Check what causes the 22 difference examples
-    report_lines.append("\n## Gap Reconciliation (349 vs 327 = 22 difference examples)")
-    report_lines.append("- (a) route/reference differing within a key: 0 examples")
-    report_lines.append("- (b) other record fields differing within a key: 0 examples")
-    report_lines.append("- (c) neither: all 22 examples come from finding_id misalignment / per-key broadcast scoring vs per-example evaluation.")
+    # Part 1.3: Reconcile 349/361 vs 327/361 gap (22 examples) and P3c findings
+    report_lines.append("\n## Gap Reconciliation and P3c Findings")
+    report_lines.append("- In Phase 5 evaluation, broadcast scoring (scoring only the first example per key and weighting by example count) yielded 349/361.")
+    report_lines.append("- Under strict per-example evaluation with finding_id aligned to each example:")
+    report_lines.append("  - Phase 5 candidate text yields 317/361 passes (74 differing examples).")
+    report_lines.append("  - Cause breakdown among differing examples: 41 'neither' (intrinsic finding_id sensitivity), 33 'reference' (differing references across examples sharing a key).")
+    report_lines.append("  - 17 keys in A_val (160 examples) have differing target references across examples sharing an input_key.")
 
     # Consequence
     report_lines.append("\n## Consequence for Label Pipeline")
     report_lines.append(
-        "Within each cluster (input_key), all record fields (fields, rule_id, resource_ref) "
-        "and target references and routes are 100% homogeneous across examples. "
-        "Only finding_id differs across examples sharing an input_key. "
-        "Therefore, tying the candidate label to the harvest input record's finding_id "
-        "produces a unique, unambiguous ground-truth label for each cluster. "
-        "Under per-example scoring with finding_id alignment, 0 A_val clusters have ambiguous labels."
+        "Clusters (input_keys) are homogeneous with respect to record rule_id and resource fields, "
+        "but NOT 100% homogeneous with respect to target references (17 keys / 160 examples differ in A_val). "
+        "Candidate labels must be evaluated against the finding_id of the input record itself, "
+        "and downstream M2 scoring must be evaluated at the cluster (input_key) level to respect statistical independence."
     )
 
     out_file = root / "ml/train_m2/out/reports/cluster_homogeneity.md"

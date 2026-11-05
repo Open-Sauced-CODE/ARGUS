@@ -1,0 +1,284 @@
+{
+  "bar": {
+    "corruptor_hard_negatives_distinct": 144,
+    "natural_cluster_threshold": 59,
+    "natural_cluster_verdict": "PASS",
+    "natural_share_of_total": 0.3142857142857143,
+    "natural_usable_strict_negative_candidates": 66,
+    "natural_usable_strict_negative_clusters": 61,
+    "negative_bar": 300,
+    "note": "Corruptor negatives are train-only and trivially separable unless shortcut_by_type says otherwise; evaluation and calibration use natural candidates only.",
+    "total_negatives": 210,
+    "total_verdict": "FAIL (shortfall 90)"
+  },
+  "calibration_alpha": {
+    "rft": {
+      "clusters": 15,
+      "min_certifiable_alpha_at_0_errors_delta_0.05": 0.18103627252208465
+    },
+    "rft_v2": {
+      "clusters": 9,
+      "min_certifiable_alpha_at_0_errors_delta_0.05": 0.2831288355631135
+    },
+    "sft": {
+      "clusters": 15,
+      "min_certifiable_alpha_at_0_errors_delta_0.05": 0.18103627252208465
+    },
+    "zeroshot": {
+      "clusters": 15,
+      "min_certifiable_alpha_at_0_errors_delta_0.05": 0.18103627252208465
+    }
+  },
+  "corruptor": {
+    "distinct_rows": 151,
+    "hard_negative_seed_clusters": 103,
+    "hard_negatives": 144,
+    "per_type": {
+      "C1": {
+        "distinct": 52,
+        "hard_negatives": 52,
+        "seed_clusters": 52
+      },
+      "C2": {
+        "distinct": 52,
+        "hard_negatives": 45,
+        "seed_clusters": 45
+      },
+      "C3": {
+        "distinct": 47,
+        "hard_negatives": 47,
+        "seed_clusters": 47
+      }
+    }
+  },
+  "natural": {
+    "all": {
+      "rft": {
+        "by_class": {
+          "minimal_correct": 235,
+          "wrong": 3
+        },
+        "candidates": 238,
+        "clusters": 235,
+        "clusters_with_harmful_negative": 3,
+        "clusters_with_positive": 235,
+        "clusters_with_strict_negative": 3,
+        "harmful_negatives": 3,
+        "positives": 235,
+        "strict_negatives": 3
+      },
+      "rft_v2": {
+        "by_class": {
+          "fixed_should_escalate": 33,
+          "minimal_correct": 139,
+          "valid_not_minimal": 7,
+          "wrong": 60
+        },
+        "candidates": 239,
+        "clusters": 127,
+        "clusters_with_harmful_negative": 64,
+        "clusters_with_positive": 71,
+        "clusters_with_strict_negative": 70,
+        "harmful_negatives": 93,
+        "positives": 139,
+        "strict_negatives": 100
+      },
+      "sft": {
+        "by_class": {
+          "fixed_should_escalate": 2,
+          "minimal_correct": 243,
+          "valid_not_minimal": 1,
+          "wrong": 9
+        },
+        "candidates": 255,
+        "clusters": 236,
+        "clusters_with_harmful_negative": 9,
+        "clusters_with_positive": 235,
+        "clusters_with_strict_negative": 10,
+        "harmful_negatives": 11,
+        "positives": 243,
+        "strict_negatives": 12
+      },
+      "union": {
+        "by_class": {
+          "fixed_should_escalate": 70,
+          "minimal_correct": 358,
+          "valid_not_minimal": 13,
+          "wrong": 100
+        },
+        "candidates": 541,
+        "clusters": 243,
+        "clusters_with_harmful_negative": 77,
+        "clusters_with_positive": 235,
+        "clusters_with_strict_negative": 86,
+        "harmful_negatives": 170,
+        "positives": 358,
+        "strict_negatives": 183
+      },
+      "zeroshot": {
+        "by_class": {
+          "fixed_should_escalate": 42,
+          "minimal_correct": 72,
+          "valid_not_minimal": 8,
+          "wrong": 33
+        },
+        "candidates": 155,
+        "clusters": 50,
+        "clusters_with_harmful_negative": 17,
+        "clusters_with_positive": 36,
+        "clusters_with_strict_negative": 23,
+        "harmful_negatives": 75,
+        "positives": 72,
+        "strict_negatives": 83
+      }
+    },
+    "calibration": {
+      "rft": {
+        "by_class": {
+          "minimal_correct": 15
+        },
+        "candidates": 15,
+        "clusters": 15,
+        "clusters_with_harmful_negative": 0,
+        "clusters_with_positive": 15,
+        "clusters_with_strict_negative": 0,
+        "harmful_negatives": 0,
+        "positives": 15,
+        "strict_negatives": 0
+      },
+      "rft_v2": {
+        "by_class": {
+          "minimal_correct": 2,
+          "valid_not_minimal": 1,
+          "wrong": 6
+        },
+        "candidates": 9,
+        "clusters": 9,
+        "clusters_with_harmful_negative": 6,
+        "clusters_with_positive": 2,
+        "clusters_with_strict_negative": 7,
+        "harmful_negatives": 6,
+        "positives": 2,
+        "strict_negatives": 7
+      },
+      "sft": {
+        "by_class": {
+          "minimal_correct": 15
+        },
+        "candidates": 15,
+        "clusters": 15,
+        "clusters_with_harmful_negative": 0,
+        "clusters_with_positive": 15,
+        "clusters_with_strict_negative": 0,
+        "harmful_negatives": 0,
+        "positives": 15,
+        "strict_negatives": 0
+      },
+      "union": {
+        "by_class": {
+          "minimal_correct": 28,
+          "valid_not_minimal": 1,
+          "wrong": 10
+        },
+        "candidates": 39,
+        "clusters": 29,
+        "clusters_with_harmful_negative": 9,
+        "clusters_with_positive": 27,
+        "clusters_with_strict_negative": 10,
+        "harmful_negatives": 10,
+        "positives": 28,
+        "strict_negatives": 11
+      },
+      "zeroshot": {
+        "by_class": {
+          "minimal_correct": 12,
+          "wrong": 4
+        },
+        "candidates": 16,
+        "clusters": 15,
+        "clusters_with_harmful_negative": 4,
+        "clusters_with_positive": 12,
+        "clusters_with_strict_negative": 4,
+        "harmful_negatives": 4,
+        "positives": 12,
+        "strict_negatives": 4
+      }
+    },
+    "usable": {
+      "rft": {
+        "by_class": {
+          "minimal_correct": 189,
+          "wrong": 3
+        },
+        "candidates": 192,
+        "clusters": 189,
+        "clusters_with_harmful_negative": 3,
+        "clusters_with_positive": 189,
+        "clusters_with_strict_negative": 3,
+        "harmful_negatives": 3,
+        "positives": 189,
+        "strict_negatives": 3
+      },
+      "rft_v2": {
+        "by_class": {
+          "minimal_correct": 54,
+          "valid_not_minimal": 2,
+          "wrong": 54
+        },
+        "candidates": 110,
+        "clusters": 84,
+        "clusters_with_harmful_negative": 53,
+        "clusters_with_positive": 37,
+        "clusters_with_strict_negative": 55,
+        "harmful_negatives": 54,
+        "positives": 54,
+        "strict_negatives": 56
+      },
+      "sft": {
+        "by_class": {
+          "minimal_correct": 193,
+          "valid_not_minimal": 1,
+          "wrong": 2
+        },
+        "candidates": 196,
+        "clusters": 189,
+        "clusters_with_harmful_negative": 2,
+        "clusters_with_positive": 189,
+        "clusters_with_strict_negative": 3,
+        "harmful_negatives": 2,
+        "positives": 193,
+        "strict_negatives": 3
+      },
+      "union": {
+        "by_class": {
+          "minimal_correct": 216,
+          "valid_not_minimal": 3,
+          "wrong": 63
+        },
+        "candidates": 282,
+        "clusters": 189,
+        "clusters_with_harmful_negative": 59,
+        "clusters_with_positive": 189,
+        "clusters_with_strict_negative": 61,
+        "harmful_negatives": 63,
+        "positives": 216,
+        "strict_negatives": 66
+      },
+      "zeroshot": {
+        "by_class": {
+          "minimal_correct": 12,
+          "wrong": 4
+        },
+        "candidates": 16,
+        "clusters": 15,
+        "clusters_with_harmful_negative": 4,
+        "clusters_with_positive": 12,
+        "clusters_with_strict_negative": 4,
+        "harmful_negatives": 4,
+        "positives": 12,
+        "strict_negatives": 4
+      }
+    }
+  },
+  "rows_missing_answer_key": 0
+}

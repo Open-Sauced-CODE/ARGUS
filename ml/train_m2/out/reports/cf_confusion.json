@@ -1,0 +1,47 @@
+{
+  "by_type": {
+    "C1": {
+      "truth=False,cf=valid_not_minimal": 234
+    },
+    "C2": {
+      "truth=False,cf=valid_not_minimal": 157,
+      "truth=True,cf=minimal_correct": 3
+    },
+    "C3": {
+      "truth=False,cf=minimal_correct": 50
+    },
+    "C4": {
+      "truth=True,cf=minimal_correct": 183,
+      "truth=True,cf=valid_not_minimal": 52
+    },
+    "C6": {
+      "truth=False,cf=wrong": 235
+    },
+    "C8": {
+      "truth=False,cf=valid_not_minimal": 4
+    },
+    "reference": {
+      "truth=True,cf=minimal_correct": 183,
+      "truth=True,cf=valid_not_minimal": 52
+    }
+  },
+  "lenient": {
+    "correct_called_correct": 473,
+    "correct_called_wrong": 0,
+    "false_wrong_rate_on_correct": 0.0,
+    "precision_of_wrong": 1.0,
+    "recall_of_wrong": 0.34558823529411764,
+    "wrong_called_correct": 445,
+    "wrong_called_wrong": 235
+  },
+  "n_fix_route_inputs": 235,
+  "strict": {
+    "correct_called_correct": 369,
+    "correct_called_wrong": 104,
+    "false_wrong_rate_on_correct": 0.21987315010570824,
+    "precision_of_wrong": 0.8583106267029973,
+    "recall_of_wrong": 0.9264705882352942,
+    "wrong_called_correct": 50,
+    "wrong_called_wrong": 630
+  }
+}

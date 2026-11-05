@@ -32,15 +32,21 @@ from typing import Any
 LOG = logging.getLogger(__name__)
 
 # Canonical held-out set names (order stable)
-HELD_OUT_SET_NAMES = ("B1", "B2", "C_verifier", "gold", "C-human")
+HELD_OUT_SET_NAMES = (
+    "tierB1", "tierB2", "tierC_verifier", "gold", "C-human",
+    "B1", "B2", "C_verifier",
+)
 
 # Harvest-inputs sets field -> canonical name mapping
 _SET_NAME_MAP: dict[str, str] = {
-    "B1": "B1",
-    "B2": "B2",
-    "C_verifier": "C_verifier",
+    "B1": "tierB1",
+    "B2": "tierB2",
+    "C_verifier": "tierC_verifier",
     "gold": "gold",
     "C-human": "C-human",
+    "tierB1": "tierB1",
+    "tierB2": "tierB2",
+    "tierC_verifier": "tierC_verifier",
 }
 
 # Phase 5 eval set name in the candidate-log files
@@ -59,16 +65,16 @@ def load_partition_sets() -> dict[str, set[str]]:
     Keys loaded:
       'a_val'          -- from harvest_inputs.jsonl sets['A_val']
       'phase5_train'   -- from harvest_inputs.jsonl sets['train']
-      'B1','B2','C_verifier','gold','C-human' -- held-out sets
+      'tierB1','tierB2','tierC_verifier','gold','C-human' -- held-out sets
       'v2_train'       -- from ml/train_m1/v2/data/v2_train.meta.jsonl
     """
     root = _repo_root()
     result: dict[str, set[str]] = {
         "a_val": set(),
         "phase5_train": set(),
-        "B1": set(),
-        "B2": set(),
-        "C_verifier": set(),
+        "tierB1": set(),
+        "tierB2": set(),
+        "tierC_verifier": set(),
         "gold": set(),
         "C-human": set(),
         "v2_train": set(),
@@ -89,9 +95,9 @@ def load_partition_sets() -> dict[str, set[str]]:
                     result["a_val"].add(ik)
                 if PHASE5_TRAIN_SET in sets:
                     result["phase5_train"].add(ik)
-                for held_name in HELD_OUT_SET_NAMES:
-                    if held_name in sets:
-                        result[held_name].add(ik)
+                for src_name, canon_name in _SET_NAME_MAP.items():
+                    if sets.get(src_name):
+                        result[canon_name].add(ik)
     else:
         LOG.warning("harvest_inputs.jsonl not found at %s", hi_path)
 

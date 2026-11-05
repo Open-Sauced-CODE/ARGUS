@@ -37,7 +37,7 @@ import logging
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterable, Iterator
 
 from ml.train_m2.common import (
     cluster_key,
@@ -50,12 +50,14 @@ from ml.train_m2.common import (
     sha256_file,
     write_provenance,
 )
+from ml.train_m2.labels.accounting import compute_accounting, render_markdown
 from ml.train_m2.labels.corruptor import (
     filter_hard_negative_types,
     hard_negative_stats,
     make_corrupted_rows,
     write_hard_negative_table,
 )
+from ml.train_m2.labels.leakguard import load_key_sets
 from ml.train_m2.labels.oracle import (
     ESC_RULE_IDS,
     LabelRow,
@@ -158,7 +160,7 @@ def build_labels_for_generator(
     ref_map: dict[str, dict],
     hi_map: dict[str, dict],
     partition_sets: dict[str, set[str]],
-    corruptor_eligible: set[str],
+    corruptor_eligible: set[str] | None = None,
     seed: int = 1337,
     corrupt_cap_frac: float = CORRUPT_CAP_FRAC,
     corruptor_cache: dict[str, list[dict]] | None = None,
@@ -227,6 +229,7 @@ def build_labels_for_generator(
                     profile="A",
                     sample_idx=sample_idx,
                     input_key=ik,
+                    content=content,
                 )
 
                 row_dict = label_row.to_dict()
@@ -248,83 +251,22 @@ def build_labels_for_generator(
                     if not is_heldout:
                         gate_pass_by_oc[label_row.oracle_class] += 1
 
-    # F5 fix: Generate corruptor rows on the 168 clean TRAIN seeds (phase5_train, not A_val, not held-out)
-    corruptor_seeded_clusters: set[str] = set()
-    for ik in sorted(corruptor_eligible):
-        ref_entry = ref_map.get(ik, {})
-        reference = ref_entry.get("reference")
-        if reference is None:
-            continue
-        record = hi_map.get(ik) or ref_entry.get("record")
-        if record is None:
-            continue
-        route = ref_entry.get("route", "fix")
-        pflags = build_partition_flags(ik, generator, partition_sets)
-
-        if corruptor_cache is not None and ik in corruptor_cache:
-            c_rows = [copy.deepcopy(r) for r in corruptor_cache[ik]]
-        else:
-            c_rows = make_corrupted_rows(
-                record=record,
-                reference=reference,
-                route=route,
-                input_key=ik,
-                seed=seed,
-                source_file="ml/train_m1/eval/runs/zeroshot/train300.candidates.jsonl",
-            )
-            if corruptor_cache is not None:
-                corruptor_cache[ik] = [copy.deepcopy(r) for r in c_rows]
-
-        if c_rows:
-            corruptor_seeded_clusters.add(ik)
-        for cr in c_rows:
-            cr["generator"] = generator
-            cr["train_only"] = True
-            cr["source_input_key"] = ik
-            cr["candidate_set"] = "train300"
-            cr.update(pflags)
-        corruptor_rows.extend(c_rows)
-
-    # Type filter (F2): compute stats on seed partition, keep only types with hard_neg_rate > 0
-    pre_filter_stats = hard_negative_stats(corruptor_rows)
-    kept_stats, dropped_types = filter_hard_negative_types(pre_filter_stats)
-    kept_ctypes = set(kept_stats.keys())
-
-    # Filter corruptor rows
-    corruptor_rows = [r for r in corruptor_rows if r.get("corruption_type") in kept_ctypes]
-
-    # Cap corruptor rows: cap = 35% of final TRAIN-eligible natural + corruptor rows
-    # TRAIN-eligible = heldout_sets empty AND not A_val
-    train_eligible_natural = [
-        r for r in rows
-        if not r.get("heldout_sets") and not r.get("in_a_val")
-        and not r.get("train_only")
-    ]
-    n_train_natural = len(train_eligible_natural)
-    max_corrupt = int(n_train_natural * corrupt_cap_frac / (1.0 - corrupt_cap_frac))
-    if len(corruptor_rows) > max_corrupt:
-        import random
-        random.seed(seed)
-        corruptor_rows = random.sample(corruptor_rows, max_corrupt)
-
-    all_rows = rows + corruptor_rows
-
     stats = {
         "natural_rows": len(rows),
-        "corruptor_rows": len(corruptor_rows),
-        "corruptor_rows_pre_filter": sum(pre_filter_stats[ct]["n"] for ct in pre_filter_stats),
-        "corruptor_generated_keys": len(corruptor_seeded_clusters),
+        "corruptor_rows": 0,
+        "corruptor_rows_pre_filter": 0,
+        "corruptor_generated_keys": 0,
         "gate_pass_by_oc": dict(gate_pass_by_oc),          # usable only
         "gate_pass_by_oc_all": dict(gate_pass_by_oc_all),  # all sets
         "nat_neg_clusters_usable": sorted(nat_neg_clusters_usable),
         "nat_neg_clusters_all": sorted(nat_neg_clusters_all),
         "n_nat_neg_usable": len(nat_neg_clusters_usable),
         "n_nat_neg_all": len(nat_neg_clusters_all),
-        "pre_filter_stats": pre_filter_stats,
-        "kept_stats": kept_stats,
-        "dropped_types": dropped_types,
+        "pre_filter_stats": {},
+        "kept_stats": {},
+        "dropped_types": [],
     }
-    return all_rows, stats
+    return rows, stats
 
 
 def reproduce_phase5_natural_negatives(root: Path) -> tuple[dict[str, int], int]:
@@ -344,127 +286,12 @@ def reproduce_phase5_natural_negatives(root: Path) -> tuple[dict[str, int], int]
     return counts, union_cnt
 
 
-def compute_acceptance(all_stats: dict[str, dict], root: Path | None = None) -> None:
-    """Print per-registered-bar acceptance results (F1 fix).
-
-    Reports natural and corruptor SEPARATELY. Never adds generated rows to a
-    natural count. Flags shortfall; prints cheapest honest remedy.
-    """
-    print("\n=== ACCEPTANCE CRITERIA ===")
-
-    total_nat_gp_wrong_usable = 0   # gate-passing AND wrong (natural only, usable)
-    total_nat_gp_wrong_all = 0      # gate-passing AND wrong (natural only, all sets)
-    total_corr_hard_neg = 0         # corruptor hard negatives (gate-pass AND wrong, usable)
-    total_corr_generated = 0
-    total_corr_gate_pass = 0
-    total_corr_oracle_wrong = 0
-    nat_union_usable: set[str] = set()
-    nat_union_all: set[str] = set()
-
-    for gen, stats in all_stats.items():
-        oc_usable = stats.get("gate_pass_by_oc", {})
-        oc_all = stats.get("gate_pass_by_oc_all", {})
-        corr_rows = stats.get("corruptor_rows", 0)
-        corr_gen = stats.get("corruptor_rows_pre_filter", 0)
-        corr_keys = stats.get("corruptor_generated_keys", 0)
-        nat_neg_usable = stats.get("n_nat_neg_usable", 0)
-        nat_neg_all = stats.get("n_nat_neg_all", 0)
-
-        # Natural gate-passing-and-wrong = wrong + valid_not_minimal
-        nat_gp_wrong_usable = oc_usable.get("wrong", 0) + oc_usable.get("valid_not_minimal", 0)
-        nat_gp_wrong_all = oc_all.get("wrong", 0) + oc_all.get("valid_not_minimal", 0)
-
-        pre_stats = stats.get("pre_filter_stats", {})
-        corr_gp = sum(int(round(s["gate_pass_rate"] * s["n"])) for s in pre_stats.values())
-        corr_ow = sum(int(round(s["oracle_wrong_rate"] * s["n"])) for s in pre_stats.values())
-
-        # Corruptor hard negatives from kept_stats
-        kept_stats = stats.get("kept_stats", {})
-        corr_hard_neg = sum(
-            int(round(s["hard_negative_rate"] * s["n"]))
-            for s in kept_stats.values()
-        )
-        dropped_types = stats.get("dropped_types", [])
-
-        print(f"\n[{gen}]")
-        print("  Natural gate-passing candidates:")
-        print(f"    USABLE (heldout empty):")
-        print(f"      minimal_correct       : {oc_usable.get('minimal_correct', 0)}")
-        print(f"      valid_not_minimal     : {oc_usable.get('valid_not_minimal', 0)}")
-        print(f"      wrong                 : {oc_usable.get('wrong', 0)}")
-        print(f"      unknown               : {oc_usable.get('unknown', 0)}")
-        print(f"      gate-pass-not-strict  : {nat_gp_wrong_usable}")
-        print(f"      natural neg clusters  : {nat_neg_usable}")
-        print(f"    ALL SETS (including held-out):")
-        print(f"      minimal_correct       : {oc_all.get('minimal_correct', 0)}")
-        print(f"      valid_not_minimal     : {oc_all.get('valid_not_minimal', 0)}")
-        print(f"      wrong                 : {oc_all.get('wrong', 0)}")
-        print(f"      unknown               : {oc_all.get('unknown', 0)}")
-        print(f"      gate-pass-not-strict  : {nat_gp_wrong_all}")
-        print(f"      natural neg clusters  : {nat_neg_all}")
-        print("  Corruptor:")
-        print(f"    generated             : {corr_gen}")
-        print(f"    gate-passing          : {corr_gp}")
-        print(f"    oracle-wrong          : {corr_ow}")
-        print(f"    hard negatives        : {corr_hard_neg} (gate-pass AND wrong)")
-        print(f"    clusters seeded       : {corr_keys}")
-        print(f"    kept rows (post-filter): {corr_rows}")
-        print(f"    dropped types (hn=0)  : {dropped_types}")
-
-        total_nat_gp_wrong_usable += nat_gp_wrong_usable
-        total_nat_gp_wrong_all += nat_gp_wrong_all
-        total_corr_hard_neg += corr_hard_neg
-        total_corr_generated += corr_gen
-        total_corr_gate_pass += corr_gp
-        total_corr_oracle_wrong += corr_ow
-        nat_union_usable.update(stats.get("nat_neg_clusters_usable", []))
-        nat_union_all.update(stats.get("nat_neg_clusters_all", []))
-
-    print("\n--- TOTALS ACROSS GENERATORS ---")
-    print(f"Natural negative clusters (usable union): {len(nat_union_usable)}")
-    print(f"Natural negative clusters (all sets union): {len(nat_union_all)}")
-    print(f"  Natural cluster threshold {NATURAL_CLUSTER_THRESHOLD}: "
-          f"{'PASS' if len(nat_union_usable) >= NATURAL_CLUSTER_THRESHOLD else 'BELOW THRESHOLD (shortfall: ' + str(NATURAL_CLUSTER_THRESHOLD - len(nat_union_usable)) + ')'}")
-    print(f"Corruptor totals: generated={total_corr_generated}, gate-passing={total_corr_gate_pass}, "
-          f"oracle-wrong={total_corr_oracle_wrong}, hard-negatives={total_corr_hard_neg}")
-
-    if root is not None:
-        p5_counts, p5_union = reproduce_phase5_natural_negatives(root)
-        expected = (21, 4, 1, 22)
-        actual = (p5_counts.get("zeroshot", 0), p5_counts.get("sft", 0), p5_counts.get("rft", 0), p5_union)
-        print(f"\nPhase 5 reproduced: zeroshot={actual[0]}, sft={actual[1]}, rft={actual[2]}, union={actual[3]}")
-        if actual == expected:
-            print("  PASS: reproduced 21 / 4 / 1 / union 22 exactly")
-        else:
-            print(f"  FAIL: expected {expected}, got {actual}")
-
-    # Pre-registered bar: >= 300 total gate-passing-and-wrong labeled negatives
-    bar_natural_usable = total_nat_gp_wrong_usable
-    bar_natural_all = total_nat_gp_wrong_all
-    bar_corruptor = total_corr_hard_neg
-    bar_total_usable = bar_natural_usable + bar_corruptor
-    bar_total_all = bar_natural_all + bar_corruptor
-    print(f"\n=== PRE-REGISTERED BAR ===")
-    print(f"  Natural gate-passing-and-wrong (usable, non-heldout): {bar_natural_usable}")
-    print(f"  Natural gate-passing-and-wrong (all sets):            {bar_natural_all}")
-    print(f"  Corruptor hard negatives (est):                       {bar_corruptor}")
-    print(f"  Total toward bar (usable nat + corr):                 {bar_total_usable}  (bar >= {BAR_TOTAL_NEGATIVES})")
-    print(f"  Total toward bar (all nat + corr):                    {bar_total_all}  (bar >= {BAR_TOTAL_NEGATIVES})")
-
-    if bar_total_usable < BAR_TOTAL_NEGATIVES:
-        shortfall = BAR_TOTAL_NEGATIVES - bar_total_usable
-        print(f"  *** SHORTFALL: {shortfall} below the {BAR_TOTAL_NEGATIVES} bar ***")
-        print("  Cheapest honest ways to close shortfall:")
-        print("    1. Add new corruptor types (C_new) with demonstrated hard_negative_rate > 0")
-        print("    2. Add more harvest inputs with references (increases corruptor seed pool)")
-        print("    3. Commission human labels on gate-passing harvest rows without references")
-        print("    NOTE: do NOT lower the bar or count escalated_ok rows.")
-    else:
-        print(f"  PASS: >= {BAR_TOTAL_NEGATIVES} labeled negatives")
-
-    if len(nat_union_usable) < NATURAL_CLUSTER_THRESHOLD:
-        shortfall_c = NATURAL_CLUSTER_THRESHOLD - len(nat_union_usable)
-        print(f"  *** NATURAL CLUSTER SHORTFALL: {shortfall_c} below {NATURAL_CLUSTER_THRESHOLD} threshold ***")
+def compute_acceptance(all_rows: Iterable[dict], root: Path | None = None) -> None:
+    """Print per-registered-bar acceptance results via accounting module (P3c)."""
+    ks = load_key_sets(root or repo_root())
+    rep = compute_accounting(all_rows, ks)
+    md = render_markdown(rep)
+    print("\n" + md)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -485,23 +312,22 @@ def main(argv: list[str] | None = None) -> int:
     # Build partition sets once
     partition_sets = load_partition_sets()
 
-    # F5: corruptor eligible inputs
-    corruptor_eligible = corruptor_seed_partition(partition_sets)
-    # Filter to those with a reference
+    # 2f: Corruptor seed partition cross-check
+    ks = load_key_sets(root)
+    p_part = corruptor_seed_partition(partition_sets)
+    lg_part = ks.corruptor_eligible()
     corruptor_eligible_with_ref = {
-        ik for ik in corruptor_eligible
+        ik for ik in p_part
         if ref_map.get(ik, {}).get("reference") is not None
+        and ref_map.get(ik, {}).get("route") == "fix"
     }
-    LOG.info(
-        "Corruptor eligible inputs (phase5_train, not A_val, not held-out, has ref): %d",
-        len(corruptor_eligible_with_ref),
-    )
-    print(f"\nCorruptor eligible inputs: {len(corruptor_eligible_with_ref)}")
+    print(f"\nCorruptor seed partition cross-check:")
+    print(f"  partitions.corruptor_seed_partition : {len(p_part)}")
+    print(f"  leakguard.KeySets.corruptor_eligible : {len(lg_part)}")
+    print(f"  eligible with fix reference          : {len(corruptor_eligible_with_ref)}")
 
+    all_rows: list[dict] = []
     all_stats: dict[str, dict] = {}
-    corruptor_cache: dict[str, list[dict]] = {}
-    all_pre_filter_stats: dict[str, dict] = {}
-    all_dropped_types: list[str] = []
 
     for generator in GENERATORS:
         LOG.info("Processing generator: %s", generator)
@@ -511,37 +337,10 @@ def main(argv: list[str] | None = None) -> int:
             ref_map=ref_map,
             hi_map=hi_map,
             partition_sets=partition_sets,
-            corruptor_eligible=corruptor_eligible_with_ref,
             seed=args.seed,
-            corrupt_cap_frac=args.corrupt_cap,
-            corruptor_cache=corruptor_cache,
         )
         all_stats[generator] = stats
-        # Accumulate pre-filter stats for table
-        for ctype, s in stats.get("pre_filter_stats", {}).items():
-            if ctype not in all_pre_filter_stats:
-                all_pre_filter_stats[ctype] = dict(s)
-            else:
-                existing = all_pre_filter_stats[ctype]
-                n_old, n_new = existing["n"], s["n"]
-                n_total = n_old + n_new
-                if n_total:
-                    existing["gate_pass_rate"] = (
-                        existing["gate_pass_rate"] * n_old + s["gate_pass_rate"] * n_new
-                    ) / n_total
-                    existing["oracle_wrong_rate"] = (
-                        existing["oracle_wrong_rate"] * n_old + s["oracle_wrong_rate"] * n_new
-                    ) / n_total
-                    existing["hard_negative_rate"] = (
-                        existing["hard_negative_rate"] * n_old + s["hard_negative_rate"] * n_new
-                    ) / n_total
-                    existing["oracle_unknown_count"] = (
-                        existing.get("oracle_unknown_count", 0) + s.get("oracle_unknown_count", 0)
-                    )
-                existing["n"] = n_total
-        for t in stats.get("dropped_types", []):
-            if t not in all_dropped_types:
-                all_dropped_types.append(t)
+        all_rows.extend(rows)
 
         out_path = out_dir / f"{generator}.jsonl"
         jsonl_write_atomic(out_path, rows)
@@ -560,35 +359,14 @@ def main(argv: list[str] | None = None) -> int:
             extra={
                 "generator": generator,
                 "candidate_sets": list(ALL_CANDIDATE_SETS),
-                "corruptor_eligible_count": len(corruptor_eligible_with_ref),
             },
         )
 
-    # Hard-negative table (F2: pre and post filter)
-    # Collect all corruptor rows from output files for the final table
-    all_corruptor_rows: list[dict] = []
-    for generator in GENERATORS:
-        out_path = out_dir / f"{generator}.jsonl"
-        if out_path.exists():
-            for r in jsonl_iter(out_path):
-                if r.get("train_only") and r.get("corruption_type"):
-                    all_corruptor_rows.append(r)
+    if root is not None:
+        p5_counts, p5_union = reproduce_phase5_natural_negatives(root)
+        print(f"\nPhase 5 reproduced: zeroshot={p5_counts.get('zeroshot', 0)}, sft={p5_counts.get('sft', 0)}, rft={p5_counts.get('rft', 0)}, union={p5_union}")
 
-    if all_corruptor_rows:
-        post_filter_stats = hard_negative_stats(all_corruptor_rows)
-        _, dropped = filter_hard_negative_types(all_pre_filter_stats)
-        hn_path = out_dir / "hard_negative_table.md"
-        md_text = write_hard_negative_table(
-            post_filter_stats,
-            str(hn_path),
-            pre_filter_stats=all_pre_filter_stats,
-            dropped_types=sorted(set(all_dropped_types)),
-        )
-        print("\n" + md_text)
-    else:
-        print("\n(c) No corruptor rows to compute hard-negative table")
-
-    compute_acceptance(all_stats, root=root)
+    compute_acceptance(all_rows, root=root)
     return 0
 
 

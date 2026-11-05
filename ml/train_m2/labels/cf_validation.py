@@ -82,7 +82,7 @@ def run_cf_validation(
     if root is None:
         root = repo_root()
     if out_dir is None:
-        out_dir = root / "ml" / "train_m2" / "out" / "labels"
+        out_dir = root / "ml" / "train_m2" / "out" / "reports"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
