@@ -288,7 +288,7 @@ def reproduce_phase5_natural_negatives(root: Path) -> tuple[dict[str, int], int]
 
 def compute_acceptance(all_rows: Iterable[dict], root: Path | None = None) -> None:
     """Print per-registered-bar acceptance results via accounting module (P3c)."""
-    ks = load_key_sets(root or repo_root())
+    ks = load_key_sets(root or repo_root(), strict=False)
     rep = compute_accounting(all_rows, ks)
     md = render_markdown(rep)
     print("\n" + md)
@@ -313,7 +313,7 @@ def main(argv: list[str] | None = None) -> int:
     partition_sets = load_partition_sets()
 
     # 2f: Corruptor seed partition cross-check
-    ks = load_key_sets(root)
+    ks = load_key_sets(root, strict=False)
     p_part = corruptor_seed_partition(partition_sets)
     lg_part = ks.corruptor_eligible()
     corruptor_eligible_with_ref = {
