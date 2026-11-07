@@ -42,11 +42,18 @@ distinct rows 151, hard negatives 144, seed clusters 103
 
 ## Pre-registered bar (natural and corruptor reported separately)
 
-- natural usable strict-negative clusters: 61 vs 59: **PASS**
+- natural usable strict-negative clusters, POOLED over all generators: 61 vs 59: **PASS** (pooled count, see deployment line)
 - natural usable strict-negative candidates: 66
 - corruptor hard negatives (distinct): 144
 - total 210 vs 300: **FAIL (shortfall 90)** (natural share 0.31)
 - Corruptor negatives are train-only and trivially separable unless shortcut_by_type says otherwise; evaluation and calibration use natural candidates only.
+
+## Deployment generator (sft)
+
+- usable strict-negative clusters: 3
+- calibration pool: 15 clusters, 0 strict negatives
+- **NO NEGATIVES IN THE CALIBRATION POOL: the auto-apply error rate of this generator cannot be estimated from it**
+- the pooled natural-cluster count includes non-deployed generators (e.g. rft_v2, zeroshot); it supports TRAINING M2 across generators, not the deployment error estimate
 
 ## Calibration pool: smallest error rate certifiable with 0 errors (binomial, delta 0.05)
 

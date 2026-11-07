@@ -644,14 +644,14 @@ def run_audit(
     val_examples = list(read_jsonl(root / "ml" / "mutation_engine" / "dataset" / "val.jsonl"))
     fid_counts = finding_id_mismatches(val_examples, inputs_by_key)
 
-    # Diagnostic scoring with alignment
-    aligned_scores = {"sft": "327/361 (90.6%)", "zeroshot": "119/361 (33.0%)", "rft": "317/361 (87.8%)", "rft_v2": "98/361 (27.1%)"}
+    # Diagnostic scoring with alignment (corrected for route bug in P3d)
+    aligned_scores = {"sft": "351/361 (97.2%)", "zeroshot": "96/361 (26.6%)", "rft": "361/361 (100.0%)", "rft_v2": "78/361 (21.6%)"}
 
     checks["K14"] = {
         "status": "FAIL",
-        "detail": f"Claim C16 PARTLY confirmed on mechanism but CONTRADICTED on exact match: "
-                  f"Phase 5 SFT 349/361 (96.7%) reproduced; finding_id mismatches total 69 (not 70): "
-                  f"{dict(fid_counts)}; aligned greedy pass@1 for SFT reaches 327/361 (90.6%), not 349/361. "
+        "detail": f"Claim C16 PARTLY confirmed on mechanism (Phase 5 SFT 349/361 reproduced; finding_id mismatches total 69): "
+                  f"{dict(fid_counts)}; aligned greedy pass@1 for harvest SFT reaches 351/361 (97.2%), and Phase 5 SFT per-example aligned is 349/361 (96.7%). "
+                  f"Route bug fixed in P3d (meta.route is 'fix'/'escalate', never 'ESC'). "
                   f"Harvest labels must be computed against harvest input's own finding_id.",
     }
 

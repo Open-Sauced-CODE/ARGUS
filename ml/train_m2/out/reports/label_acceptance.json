@@ -51,6 +51,14 @@
       }
     }
   },
+  "deployment": {
+    "calibration_clusters": 15,
+    "calibration_strict_negatives": 0,
+    "generator": "sft",
+    "pooled_bar_note": "the pooled natural-cluster count includes non-deployed generators (e.g. rft_v2, zeroshot); it supports TRAINING M2 across generators, not the deployment error estimate",
+    "usable_strict_negative_clusters": 3,
+    "verdict": "NO NEGATIVES IN THE CALIBRATION POOL: the auto-apply error rate of this generator cannot be estimated from it"
+  },
   "natural": {
     "all": {
       "rft": {

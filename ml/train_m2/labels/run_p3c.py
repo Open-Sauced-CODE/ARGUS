@@ -3,7 +3,7 @@
 Sub-commands (python -m ml.train_m2.labels.run_p3c <cmd> ...):
   cf-eval    confusion matrix of the reference-free counterfactual labeler vs the reference oracle
   lengths    harvest output lengths vs Phase 5 num_predict, and gate-pass vs Phase 5 on COMMON keys only
-  gap22      per-key (Phase 5 protocol) vs per-example (finding_id aligned) reconciliation on A_val
+  (gap22 moved to its own module: python -m ml.train_m2.labels.gap22 --gen sft)
   corruptor  build the generator-independent, de-duplicated, capped corruptor store
   shortcut   per-type single-feature separability of corruptor negatives vs natural minimal_correct
   audit      leak audit of label files (hard error on any violation)
@@ -50,7 +50,7 @@ def _examples(names=("train", "val")) -> Iterator[dict]:
 
 
 def _is_fix_ref(ex: dict) -> bool:
-    return bool(ex.get("target")) and (ex.get("meta") or {}).get("route") != "ESC" and \
+    return bool(ex.get("target")) and (ex.get("meta") or {}).get("route") == "fix" and \
         any(o.get("op") != "escalate" for o in ex["target"].get("ops", []))
 
 
@@ -129,46 +129,6 @@ def cmd_lengths(a: argparse.Namespace) -> None:
            sorted(str(Path(f).relative_to(ROOT).as_posix()) for f in glob.glob(str(ROOT / "ml" / "train_m2" / "harvest_out" / "*" / "A" / "MANIFEST.json"))))
 
 
-def cmd_gap22(a: argparse.Namespace) -> None:
-    from ml.mutation_engine.qa.gate_stub import gate_many
-    from ml.train_m1.eval.score import parse
-    val = list(common.jsonl_iter(DATASET / "val.jsonl"))
-    p5: dict[str, str] = {}
-    for row in common.jsonl_iter(ROOT / "ml" / "train_m1" / "eval" / "runs" / a.gen / "A_val.candidates.jsonl"):
-        p5[row["input_key"]] = row["contents"][0]
-    harv = {r["input_key"]: r["content"] for r in _harvest_rows(a.gen) if r.get("sample_idx") == 0}
-
-    def gate(ex: dict, patch: dict) -> tuple[bool, list[str]]:
-        want = "escalated" if (ex.get("meta") or {}).get("route") == "ESC" else "fixed"
-        v = gate_many([(ex["input"], patch)])[0]
-        return bool(v.passed and v.outcome == want), list(getattr(v, "reasons", []) or [])
-
-    out: dict[str, Any] = {}
-    for name, src in (("phase5", p5), ("harvest", harv)):
-        patches = {}
-        for k, text in src.items():
-            p, status = parse(text)
-            if status == "ok":
-                patches[k] = p
-        out[name] = hc.per_key_vs_per_example(val, patches, example_key, gate)
-    L = ["# A_val: per-key (Phase 5 protocol) vs per-example (finding_id aligned)", ""]
-    for name, r in out.items():
-        L.append(f"- {name}: examples {r['n_examples']}, per-key weighted pass {r['per_key_weighted_pass']}, "
-                 f"per-example aligned pass {r['per_example_aligned_pass']}, differing examples "
-                 f"{r['n_differing_examples']}")
-    L += ["", "## Differing examples (phase5 candidates)", "",
-          "| key | rule | finding_id | first finding_id | per-key | per-example | route | record fields differ | reference differs |",
-          "|---|---|---|---|---|---|---|---|---|"]
-    for d in out["phase5"]["differing_examples"]:
-        L.append(f"| {d['key']} | {d['rule_id']} | {d['finding_id']} | {d['first_finding_id']} | {d['per_key_pass']} | "
-                 f"{d['per_example_pass']} | {d['route']} | {','.join(d['record_fields_differ']) or '-'} | "
-                 f"{d['reference_differs']} |")
-    causes = Counter(("record_fields" if d["record_fields_differ"] else "reference" if d["reference_differs"]
-                      else "neither") for d in out["phase5"]["differing_examples"])
-    L += ["", f"cause counts among differing examples: {dict(causes)}", ""]
-    _write(REPORTS / "p3c_22_examples", "\n".join(L), out, ["ml/mutation_engine/dataset/val.jsonl"])
-
-
 def _natural_rows(paths: list[str]) -> Iterator[dict]:
     for p in sorted({f for g in paths for f in glob.glob(g)}):
         for r in common.jsonl_iter(p):
@@ -238,7 +198,6 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("cf-eval"); p.add_argument("--seed", type=int, default=1337); p.set_defaults(fn=cmd_cf_eval)
     p = sub.add_parser("lengths"); p.add_argument("--limit", type=int, default=400); p.set_defaults(fn=cmd_lengths)
-    p = sub.add_parser("gap22"); p.add_argument("--gen", default="sft"); p.set_defaults(fn=cmd_gap22)
     p = sub.add_parser("corruptor"); p.add_argument("--seed", type=int, default=1337)
     p.add_argument("--frac", type=float, default=0.35); p.add_argument("--n-natural", type=int, default=None)
     p.add_argument("--natural", nargs="*", default=[str(LABELS / "*.jsonl"), str(LABELS / "harvest" / "*.jsonl")])

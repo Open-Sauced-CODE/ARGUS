@@ -1,9 +1,9 @@
 {
   "aligned_scores": {
-    "rft": "317/361 (87.8%)",
-    "rft_v2": "98/361 (27.1%)",
-    "sft": "327/361 (90.6%)",
-    "zeroshot": "119/361 (33.0%)"
+    "rft": "361/361 (100.0%)",
+    "rft_v2": "78/361 (21.6%)",
+    "sft": "351/361 (97.2%)",
+    "zeroshot": "96/361 (26.6%)"
   },
   "checks": {
     "K1": {
@@ -27,7 +27,7 @@
       "status": "FAIL"
     },
     "K14": {
-      "detail": "Claim C16 PARTLY confirmed on mechanism but CONTRADICTED on exact match: Phase 5 SFT 349/361 (96.7%) reproduced; finding_id mismatches total 69 (not 70): {'dpdp.rule6_public_exposure': 26, '_total': 69, 'dpdp.rule6_logging': 5, 'cis.s3_public_access_block': 14, 'dpdp.rule6a': 24}; aligned greedy pass@1 for SFT reaches 327/361 (90.6%), not 349/361. Harvest labels must be computed against harvest input's own finding_id.",
+      "detail": "Claim C16 PARTLY confirmed on mechanism (Phase 5 SFT 349/361 reproduced; finding_id mismatches total 69): {'dpdp.rule6_public_exposure': 26, '_total': 69, 'dpdp.rule6_logging': 5, 'cis.s3_public_access_block': 14, 'dpdp.rule6a': 24}; aligned greedy pass@1 for harvest SFT reaches 351/361 (97.2%), and Phase 5 SFT per-example aligned is 349/361 (96.7%). Route bug fixed in P3d (meta.route is 'fix'/'escalate', never 'ESC'). Harvest labels must be computed against harvest input's own finding_id.",
       "status": "FAIL"
     },
     "K15": {

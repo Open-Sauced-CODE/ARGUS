@@ -8,6 +8,7 @@ import pytest
 
 from ml.train_m2.labels import counterfactual as cf
 from ml.train_m2.labels import corruptor_store as cs
+from ml.train_m2.labels import gap22 as g22
 from ml.train_m2.labels import harvest_checks as hc
 from ml.train_m2.labels import shortcut_by_type as sb
 from ml.train_m2.labels.accounting import compute_accounting, cp_upper_zero_errors, render_markdown
@@ -312,12 +313,77 @@ class TestHarvestChecks:
         r = hc.compare_common({"a": True, "b": False, "c": True}, {"b": True, "c": True, "d": True})
         assert r["n_common"] == 2 and r["a_pass"] == 1 and r["b_pass"] == 2 and r["b_only_pass"] == 1
 
-    def test_per_key_vs_per_example(self):
-        mk = lambda fid, extra=0: {"rule_id": "r", "input": {"finding_id": fid, "x": extra}, "target": {"t": extra},
-                                   "meta": {"route": "FIX"}}
-        exs = [mk("F-0"), mk("F-1"), mk("F-1", 7)]
-        gate = lambda ex, p: ((ex["input"]["x"] == 0) and p["finding_id"] == ex["input"]["finding_id"], [])
-        res = hc.per_key_vs_per_example(exs, {"k": {"finding_id": "F-0"}}, lambda e: "k", gate)
-        assert res["n_examples"] == 3 and res["per_key_weighted_pass"] == 3 and res["per_example_aligned_pass"] == 2
-        d = res["differing_examples"]
-        assert len(d) == 1 and d[0]["record_fields_differ"] == ["x"] and d[0]["reference_differs"] is True
+    def test_expected_outcome_rejects_readme_labels(self):
+        assert hc.expected_outcome("fix") == "fixed" and hc.expected_outcome("escalate") == "escalated"
+        for bad in ("ESC", "T0", "M1", None):
+            with pytest.raises(ValueError):
+                hc.expected_outcome(bad)
+
+    def test_reference_key_ignores_finding_id(self):
+        a = {"finding_id": "F-0", "resource_ref": "R", "ops": [{"op": "set_attr", "attr": "x", "value": True}], "rationale_ref": "r"}
+        b = dict(a, finding_id="F-9")
+        c = dict(a, ops=[{"op": "set_attr", "attr": "y", "value": True}])
+        assert hc.reference_key(a) == hc.reference_key(b) and hc.reference_key(a) != hc.reference_key(c)
+
+
+class TestGap22:
+    @staticmethod
+    def _ex(fid, route="fix", extra=0, target_attr="x"):
+        return {"rule_id": "r", "input": {"finding_id": fid, "x": extra}, "meta": {"route": route},
+                "target": {"finding_id": fid, "ops": [{"op": "set_attr", "attr": target_attr, "value": 1}], "rationale_ref": "r"}}
+
+    def test_aligned_matches_per_key_when_only_finding_id_differs(self):
+        exs = [self._ex("F-0"), self._ex("F-1"), self._ex("F-2")]
+        score = lambda ex, p: (p["finding_id"] == ex["input"]["finding_id"], [])
+        res = g22.reconcile(exs, {"k": {"finding_id": "F-0"}}, {"k": True}, lambda e: "k", score)
+        assert res["A_recorded_weighted"] == 3 and res["B_per_key_rescored_weighted"] == 3
+        assert res["B_equals_A"] is True and res["C_per_example_aligned"] == 3 and res["D_per_example_raw"] == 1
+        assert res["n_differing_B_vs_C"] == 0
+
+    def test_differences_are_classified_and_ignore_finding_id_in_references(self):
+        exs = [self._ex("F-0"), self._ex("F-1"), self._ex("F-1", extra=5), self._ex("F-1", target_attr="y")]
+        score = lambda ex, p: (ex["input"]["x"] == 0 and ex["target"]["ops"][0]["attr"] == "x", [])
+        res = g22.reconcile(exs, {"k": {"finding_id": "F-0"}}, None, lambda e: "k", score)
+        causes = {d["cause"] for d in res["differing_examples"]}
+        assert res["n_differing_B_vs_C"] == 2 and causes == {"record_fields", "reference"}
+        # F-1 with the same ops as the first example is NOT a reference difference
+        assert res["C_per_example_aligned"] == 2
+
+    def test_b_differs_from_a_is_reported(self):
+        exs = [self._ex("F-0")]
+        res = g22.reconcile(exs, {"k": {"finding_id": "F-0"}}, {"k": False}, lambda e: "k", lambda ex, p: (True, []))
+        assert res["B_equals_A"] is False and len(res["keys_where_B_differs_from_A"]) == 1
+
+    def test_unknown_route_raises(self):
+        with pytest.raises(ValueError):
+            g22.reconcile([self._ex("F-0", route="ESC")], {"k": {"finding_id": "F-0"}}, None, lambda e: "k",
+                          lambda ex, p: (True, []))
+
+    def test_escalate_examples_are_counted(self):
+        exs = [self._ex("F-0"), self._ex("F-1", route="escalate")]
+        res = g22.reconcile(exs, {"k": {"finding_id": "F-0"}}, None, lambda e: "k", lambda ex, p: (True, []))
+        assert res["examples_by_expected_outcome"] == {"fixed": 1, "escalated": 1}
+
+
+class TestDeploymentBar:
+    def test_sft_without_calibration_negatives_is_flagged(self):
+        ks = _ks()
+        rows = [_arow("sft", "v1", "a", "minimal_correct"), _arow("sft", "v2", "b", "minimal_correct"),
+                _arow("rft_v2", "t2", "c", "wrong"), _arow("rft_v2", "t3", "d", "wrong")]
+        rep = compute_accounting(rows, ks)
+        assert rep["deployment"]["generator"] == "sft"
+        assert rep["deployment"]["calibration_strict_negatives"] == 0
+        assert "NO NEGATIVES" in rep["deployment"]["verdict"]
+        assert rep["bar"]["natural_usable_strict_negative_clusters"] == 2           # pooled count is not the deployment count
+        assert "NO NEGATIVES IN THE CALIBRATION POOL" in render_markdown(rep)
+
+
+def test_no_esc_route_comparison_in_train_m2():
+    """meta.route is 'fix' or 'escalate'. 'ESC' is a README label; comparing meta.route with it mis-scores every escalate example."""
+    import pathlib
+    import re
+    root = pathlib.Path(__file__).resolve().parents[1]          # ml/train_m2
+    pat = re.compile(r"route[^\n]{0,40}[=!]=\s*[\"']ESC[\"']")
+    bad = [str(p.relative_to(root)) for p in root.rglob("*.py")
+           if p.name != "test_p3c.py" and pat.search(p.read_text(encoding="utf-8"))]
+    assert not bad, f"wrong route literal in: {bad}"

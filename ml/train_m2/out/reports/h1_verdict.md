@@ -36,13 +36,13 @@ The full harvest is ACCEPTED for downstream consumption by M2 feature extraction
 | K5 | UNVERIFIED | Model Lineage & Adapters: "Adapters untouched" UNVERIFIED. Baseline GGUF sha256 values: sft A6FD22E0..., rft FBEA2F22..., rft_v2 18557141... (reported by Prabhav, file not available to the audit). |
 | K6 | FAIL | Cluster Leakage: v2_train contains 230 distinct input keys. Row-hash overlap with held-out clusters is 0, but cluster overlap is severe: B1 (36/36), B2 (10/10), C_verifier (32/108), Gold (14/30). Mined keys (5) are 100% shared with v2_train. |
 | K7 | WARN | Manifest & Line Endings: Harvest files clean LF in repo working tree. verify_manifest passes 10/10 parts. Manifest inputs_sha256 and schema_sha256 match only the CRLF versions of the contract files, so the harvest ran on a CRLF tree. Proposed (text only): "*.jsonl text eol=lf" and "*.json text eol=lf" for .gitattributes and an append to docs/decisions-log.md; shared files remain unedited. |
-| K8 | PASS | Diversity & Rule 5.2: Mean distinct outputs per input (all 321 inputs / A_val n=70): Zeroshot 7.82 / 7.31; SFT 1.21 / 1.13; RFT 1.02 / 1.00; RFT-v2 7.56 / 6.81. RFT-v2 achieved 12.2% unaligned / 27.1% aligned greedy pass@1, missing the >=95.7% threshold. M1 strictly remains SFT per Rule 5.2. |
+| K8 | PASS | Diversity & Rule 5.2: Mean distinct outputs per input (all 321 inputs / A_val n=70): Zeroshot 7.82 / 7.31; SFT 1.21 / 1.13; RFT 1.02 / 1.00; RFT-v2 7.56 / 6.81. RFT-v2 achieved 12.2% unaligned (44/361) / 21.6% aligned (78/361) greedy pass@1, missing the >=95.7% threshold. M1 strictly remains SFT per Rule 5.2. |
 | K9 | WARN | Real Data Diagnostics: Tier-C mined data contains 37 rows from 12 repos, but only 5 distinct input keys, all 5 of which are already present in training/held-out sets. 1 copyleft row (MPL-2.0). Cannot serve as an independent generalization benchmark. |
 | K10 | PASS | Ownership & Immutability: check_ownership.py --who shaurya passes OK. Diff against commit b5d4467 is strictly empty across all frozen paths. |
 | K11 | UNVERIFIED | Pilot Artifacts: ml/train_m1/v2/out/pilot/harvest_out and pilot_results.json missing on disk. |
 | K12 | PASS | Generalization Inventory: 321 harvest inputs consist of 132 held-out union keys, 70 A_val keys, 104 additional training keys, and 15 clean unseen inputs for SFT/RFT/RFT-v2. Zeroshot has 189 clean unseen inputs. |
 | K13 | FAIL | Logprob Distribution: Claim C13 contradicted. Presence penalty applied after the reported logprobs is consistent with the data (mismatch tokens re-use an earlier token more often: 63.7% vs 47.0% on zeroshot) but grammar masking cannot be separated from it without Ollama. |
-| K14 | EXPLAINED, PARTLY | Alignment & Arithmetic: Claim C16 EXPLAINED, PARTLY: Prabhav's per-rule counts 20/26/16/8 are per-key broadcast counts (eval_v2.py scores the first example of each key and multiplies by example count); per-example mismatches are 5/26/24/14 = 69; with finding_id aligned the harvest SFT scores 327/361 (90.6%); Phase 5 349/361 comes from per-key scoring weighted by example count; Phase 5 frozen run_eval.py lines ~154-165 show the grouping. On strict per-example evaluation (finding_id aligned), 74 examples differ on SFT (causes: 41 neither, 33 reference). The A1-S K14 aligned numbers for rft (87.8%) and rft_v2 (27.1%) stay as measured. |
+| K14 | EXPLAINED, CONFIRMED | Alignment & Arithmetic: Claim C16 EXPLAINED, CONFIRMED: Prabhav's per-rule counts 20/26/16/8 are per-key broadcast counts (eval_v2.py scores the first example of each key and multiplies by example count); per-example mismatches are 5/26/24/14 = 69. With finding_id aligned and the route bug fixed (`meta.route` is 'fix'/'escalate', never 'ESC'), harvest SFT scores 351/361 (97.2%) and Phase 5 SFT per-example aligned scores 349/361 (96.7%), exactly matching Phase 5 recorded pass ($C = 349 = A$). Differing examples ($B$ vs $C$) on Phase 5 SFT is 0. Prior aligned numbers (SFT 90.6%, RFT 87.8%, RFT-v2 27.1%) were artifacts of comparing `meta.route == 'ESC'` which mis-scored all 44 escalate examples. Corrected aligned pass@1: SFT 351/361 (97.2%), RFT 361/361 (100.0%), RFT-v2 78/361 (21.6%), Zeroshot 96/361 (26.6%). |
 | K15 | UNVERIFIED | Provenance & Reproducibility: Harvest code was not committed in recording commit 0b5b4c9 (git_dirty=true on all manifests). Prabhav states run.py/client.py/profiles.py were not edited after the first harvest run started (four sha256 values supplied); marked UNVERIFIED as hashes match committed files today but cannot show run-time state. |
 
 ---
@@ -59,14 +59,14 @@ The full harvest is ACCEPTED for downstream consumption by M2 feature extraction
 | C6 | Generate-only | CONFIRMED | Generate-only is supported by reading run.py (no training calls); the output files cannot prove it. |
 | C7 | v2_train leak guard | PARTLY | Holds per example row-hash (0 matches); at cluster level, real overlaps are B1 36/36, B2 10/10, C_verifier 32/108, gold 14/30, row-hash overlap 0. These are also the SFT training-set overlaps (sft_train.jsonl: 2,507 rows, 230 distinct inputs, identical to the v2 replay keys). |
 | C8 | verify_manifest 10/10 | CONFIRMED | All 10 manifests pass verification. |
-| C9 | RFT-v2 missed bar, M1 stays SFT | CONFIRMED | RFT-v2 achieved 12.2% unaligned / 27.1% aligned pass@1. SFT retained as M1. |
+| C9 | RFT-v2 missed bar, M1 stays SFT | CONFIRMED | RFT-v2 achieved 12.2% unaligned (44/361) / 21.6% aligned pass@1 (78/361). SFT retained as M1. |
 | C10 | tierC_mined_v2 (37 rows, 12 repos) | CONFIRMED | Confirmed 37 rows and 12 repos, but only 5 distinct input keys exist. |
 | C11 | Ownership and 18 tests | CONFIRMED | check_ownership --who shaurya OK; Prabhav's 18 tests pass. |
 | C12 | format schema used | CONFIRMED | Format schema enforced via client.py:64. |
 | C13 | Logprobs describe sampled distribution | CONTRADICTED | Presence penalty is applied after logprobs in llama.cpp, altering sample distribution relative to returned logprobs. |
 | C14 | Parameters across modelfiles | PARTLY | Confirmed in custom Modelfiles. Stock qwen3.5:4b parameters unverified (no Modelfile in git). |
 | C15 | git_dirty on commit 0b5b4c9 | UNVERIFIED | git_dirty=true on all manifests. Prabhav states run.py/client.py/profiles.py were not edited after the first harvest run started (four sha256 values supplied); marked UNVERIFIED as hashes match committed files today but cannot show run-time state. |
-| C16 | Finding_id alignment = Phase 5 | EXPLAINED, PARTLY | Prabhav's per-rule counts 20/26/16/8 are per-key broadcast counts (eval_v2.py scores the first example of each key and multiplies by example count); per-example mismatches are 5/26/24/14 = 69; with finding_id aligned the harvest SFT scores 327/361 (90.6%); Phase 5 349/361 comes from per-key scoring weighted by example count (run_eval.py lines ~154-165). Aligned rft (87.8%) and rft_v2 (27.1%) stay as measured. |
+| C16 | Finding_id alignment = Phase 5 | EXPLAINED, CONFIRMED | Prabhav's per-rule counts 20/26/16/8 are per-key broadcast counts; per-example mismatches are 5/26/24/14 = 69. With finding_id aligned and route bug fixed (`meta.route` is 'fix'/'escalate', never 'ESC'), harvest SFT scores 351/361 (97.2%) and Phase 5 SFT per-example aligned scores 349/361 (96.7%), exactly matching Phase 5 recorded pass ($C = 349 = A$). Differing examples ($B$ vs $C$) on Phase 5 SFT is 0. Aligned pass@1 for RFT is 361/361 (100.0%) and RFT-v2 is 78/361 (21.6%). |
 | C17 | RFT-v2 training config | CONFIRMED | Trained from unsloth/Qwen3.5-4B, r=16, alpha=16, lr=2e-5, 18 steps. |
 
 ---
@@ -82,7 +82,7 @@ The full harvest is ACCEPTED for downstream consumption by M2 feature extraction
 | P5 | Held-out cluster overlap | REPRODUCED | B1 36/36, B2 10/10, C_verifier 32/108, Gold 14/30 in v2_train. |
 | P6 | Clean unseen harvest inputs | REPRODUCED | 15 clean unseen inputs for SFT/RFT/RFT-v2; 189 clean unseen for Zeroshot. |
 | P7 | Mined repos and licenses | REPRODUCED | 37 rows, 12 repos, 5 keys. MIT (16), Apache-2.0 (13), WTFPL (4), BSD-3-Clause (3), MPL-2.0 (1). |
-| P8 | Greedy pass@1 rates | REPRODUCED | SFT 77.8% unaligned / 90.6% aligned; RFT 79.5% unaligned / 87.8% aligned; RFT-v2 12.2% unaligned / 27.1% aligned. |
+| P8 | Greedy pass@1 rates | REPRODUCED | SFT 78.1% unaligned (282/361) / 97.2% aligned (351/361); RFT 80.1% unaligned (289/361) / 100.0% aligned (361/361); RFT-v2 12.2% unaligned (44/361) / 21.6% aligned (78/361); Zeroshot 26.6% aligned (96/361). |
 | P9 | Pilot harvest files | UNVERIFIED | Pilot harvest files missing on disk. |
 | P10 | Uncommitted harvest code | REPRODUCED | Commit 0b5b4c9 contains no harvest code; git_dirty=true on all manifests. |
 | P11 | Arithmetic discrepancy | REPRODUCED | 281 + 70 = 351, not 349. Gate stub enforces finding_id equality; eval_v2 has no alignment. |
@@ -107,7 +107,7 @@ The full harvest is ACCEPTED for downstream consumption by M2 feature extraction
 4. **Aligned Score Breakdown**:
    - Claim C16 states that Phase 5 SFT achieved 349/361 (96.7%) and attributes the 70 mismatches to specific rules (20/26/16/8).
    - Our exact count reveals 69 finding_id mismatches across 4 rules (rule6_exposure: 26, rule6a: 24, s3_access_block: 14, rule6_logging: 5).
-   - Evaluating SFT greedy with aligned finding_ids achieves 327/361 (90.6%), not 349/361. Please verify whether an additional rule normalizer was active during Phase 5 evaluations.
+   - Evaluating SFT greedy with aligned finding_ids achieves 351/361 (97.2%) on harvest and 349/361 (96.7%) on Phase 5 candidates once the route comparison bug (`meta.route == 'ESC'`) is fixed to test `'escalate'`, confirming Claim C16.
 
 5. **Presence Penalty and Logprob Timing**:
    - In sample 0 greedy, top-1 tokens match chosen tokens only 93.1% (zeroshot) and 91.6% (rft_v2). Mismatch tokens exhibit higher prior occurrence rates (63.7% vs 47.0% on zeroshot), proving that presence penalty (1.5) alters logits after Ollama records the token logprob distribution.
@@ -131,7 +131,7 @@ The full harvest is ACCEPTED for downstream consumption by M2 feature extraction
    - The 132 held-out cluster keys (B1, B2, C_verifier, Gold) must be sequestered strictly for final evaluation.
 
 4. **Model Selection: M1 Strictly Remains SFT**:
-   - RFT-v2 achieved only 12.2% unaligned and 27.1% aligned greedy pass@1, failing the Phase 5 baseline bar (>=95.7%).
+   - RFT-v2 achieved only 12.2% unaligned and 21.6% aligned greedy pass@1, failing the Phase 5 baseline bar (>=95.7%).
    - Per Project Rule 5.2, SFT is confirmed as M1. All M2 primary scoring models will calibrate SFT outputs.
 
 5. **Clean Unseen Generalization Benchmark (n=15)**:

@@ -85,7 +85,7 @@ def _summarise(cands: Mapping[tuple, str]) -> dict[str, Any]:
     }
 
 
-def compute_accounting(rows: Iterable[Mapping[str, Any]], ks: KeySets) -> dict[str, Any]:
+def compute_accounting(rows: Iterable[Mapping[str, Any]], ks: KeySets, deployment: str = "sft") -> dict[str, Any]:
     per: dict[tuple[str, str], dict[tuple, str]] = defaultdict(dict)   # (pool, generator|"union") -> cand -> class
     cor_all: dict[tuple, dict] = {}
     n_missing_ak = 0
@@ -129,6 +129,20 @@ def compute_accounting(rows: Iterable[Mapping[str, Any]], ks: KeySets) -> dict[s
     calib = {g: {"clusters": s["clusters"], "min_certifiable_alpha_at_0_errors_delta_0.05":
                  cp_upper_zero_errors(s["clusters"])}
              for g, s in natural.get("calibration", {}).items() if g != "union"}
+    dep_u = natural.get("usable", {}).get(deployment, {})
+    dep_c = natural.get("calibration", {}).get(deployment, {})
+    dep_neg_clusters = dep_u.get("clusters_with_strict_negative", 0)
+    dep_cal_neg = dep_c.get("strict_negatives", 0)
+    deployment_block = {
+        "generator": deployment,
+        "usable_strict_negative_clusters": dep_neg_clusters,
+        "calibration_clusters": dep_c.get("clusters", 0),
+        "calibration_strict_negatives": dep_cal_neg,
+        "verdict": ("NO NEGATIVES IN THE CALIBRATION POOL: the auto-apply error rate of this generator cannot be "
+                    "estimated from it" if dep_cal_neg == 0 else "calibration pool contains negatives"),
+        "pooled_bar_note": "the pooled natural-cluster count includes non-deployed generators (e.g. rft_v2, zeroshot); "
+                           "it supports TRAINING M2 across generators, not the deployment error estimate",
+    }
     bar = {
         "natural_usable_strict_negative_clusters": nat_clusters,
         "natural_cluster_threshold": NATURAL_CLUSTER_THRESHOLD,
@@ -143,7 +157,8 @@ def compute_accounting(rows: Iterable[Mapping[str, Any]], ks: KeySets) -> dict[s
         "note": "Corruptor negatives are train-only and trivially separable unless shortcut_by_type says "
                 "otherwise; evaluation and calibration use natural candidates only.",
     }
-    return {"natural": natural, "corruptor": cor_summary, "bar": bar, "calibration_alpha": calib,
+    return {"natural": natural, "corruptor": cor_summary, "bar": bar, "deployment": deployment_block,
+            "calibration_alpha": calib,
             "rows_missing_answer_key": n_missing_ak}
 
 
@@ -166,12 +181,18 @@ def render_markdown(rep: Mapping[str, Any]) -> str:
         L.append(f"| {t} | {v['distinct']} | {v['hard_negatives']} | {v['seed_clusters']} |")
     b = rep["bar"]
     L += ["", "## Pre-registered bar (natural and corruptor reported separately)", "",
-          f"- natural usable strict-negative clusters: {b['natural_usable_strict_negative_clusters']} vs "
-          f"{b['natural_cluster_threshold']}: **{b['natural_cluster_verdict']}**",
+          f"- natural usable strict-negative clusters, POOLED over all generators: "
+          f"{b['natural_usable_strict_negative_clusters']} vs {b['natural_cluster_threshold']}: "
+          f"**{b['natural_cluster_verdict']}** (pooled count, see deployment line)",
           f"- natural usable strict-negative candidates: {b['natural_usable_strict_negative_candidates']}",
           f"- corruptor hard negatives (distinct): {b['corruptor_hard_negatives_distinct']}",
           f"- total {b['total_negatives']} vs {b['negative_bar']}: **{b['total_verdict']}** "
           f"(natural share {b['natural_share_of_total']:.2f})", f"- {b['note']}", "",
+          f"## Deployment generator ({rep['deployment']['generator']})", "",
+          f"- usable strict-negative clusters: {rep['deployment']['usable_strict_negative_clusters']}",
+          f"- calibration pool: {rep['deployment']['calibration_clusters']} clusters, "
+          f"{rep['deployment']['calibration_strict_negatives']} strict negatives",
+          f"- **{rep['deployment']['verdict']}**", f"- {rep['deployment']['pooled_bar_note']}", "",
           "## Calibration pool: smallest error rate certifiable with 0 errors (binomial, delta 0.05)", "",
           "| generator | clusters | min alpha |", "|---|---|---|"]
     for g, v in rep["calibration_alpha"].items():

@@ -30,23 +30,24 @@
    - Filtered to types yielding hard negatives: kept C1, C2, C3; dropped C4–C8.
    - Capped deterministically at 35% of the natural usable training set (151 rows) via round-robin selection across kept types.
 
-5. **Accounting Protocol & Bar Pass**:
+5. **Accounting Protocol & Deployment Generator Bar**:
    - Accounting tracks distinct candidates and distinct clusters per pool (`all`, `usable`, `calibration`) and per generator. Generated rows are never summed across generators.
    - Natural and corruptor rows are reported separately.
-   - The pre-registered bar for natural usable strict-negative clusters is **PASSED**: 61 actual clusters vs 59 required.
+   - While the pooled natural usable strict-negative clusters count is 61 (vs 59 required), this is driven almost entirely by non-deployed generators (RFT-v2 contributes 55, Zeroshot 4).
+   - For the deployment generator (SFT), there are only 3 usable strict-negative clusters and ZERO natural negatives in its 15-cluster calibration pool. The auto-apply error rate of SFT cannot be estimated from its calibration pool alone.
    - Calibration pool certifies error rate $\alpha \le 0.181$ with 0 errors on 15 clusters under binomial Clopper-Pearson ($\delta=0.05$).
 
 ---
 
 ## 2. Retractions of Prior Interim Hypotheses
 
-1. **Retraction on Phase 5 Gap Resolution**:
-   - *Prior hypothesis*: "Finding_id alignment fully closes the Phase 5 gap."
-   - *Correction*: Alignment on the first example of each key closes the gap in Phase 5 eval because Phase 5 broadcast-scored only the first example per key and weighted by example count. On per-example evaluation with finding_id aligned to each individual example, 74 examples differ on SFT (41 `neither`, 33 `reference`).
+1. **Withdrawal of "Phase 5 Overstated" Claim & Route Bug Explanation**:
+   - *Prior hypothesis*: "Phase 5 headline was overstated; per-example aligned evaluation shows 74 differing examples on SFT (41 neither, 33 reference)."
+   - *Correction*: The 74 differing examples were an artifact of a route comparison bug: code checked `meta.route == 'ESC'` instead of `'escalate'`, causing all 44 escalate-route examples to be scored as if a fix were required. Once `meta.route` is properly evaluated (`'fix'` vs `'escalate'`), Phase 5 SFT per-example aligned pass is exactly 349/361 ($A = 349, B = 349, C = 349, D = 286, B == A: \text{True}$), with exactly 0 differing examples between per-key ($B$) and per-example aligned ($C$). Phase 5's headline of 349/361 was NOT overstated.
 
-2. **Retraction on Cluster Homogeneity**:
-   - *Prior hypothesis*: "Clusters are 100% homogeneous across examples."
-   - *Correction*: While rule IDs and resource fields are homogeneous, target references differ across examples for 17 keys (160 examples) in `A_val`.
+2. **Resolution of Target Reference Discrepancy Artifact**:
+   - *Prior hypothesis*: "Target references differ across examples for 17 keys (160 examples) in A_val."
+   - *Correction*: This was an artifact of comparing raw target JSON dictionaries including `finding_id` and `resource_ref`. When target references are compared using canonical operations via `harvest_checks.reference_key`, exactly 1 key (20 examples, `cis.s3_default_encryption`) has two valid minimal variants (one setting `default_encryption=True`, the other adding `encryption_algorithm='aws:kms'`); all other 69 keys have 100% identical references across examples.
 
 3. **Retraction on Corruptor Row Multiplicity**:
    - *Prior hypothesis*: "Corruptor yielded 504 C1 rows in P3b."
@@ -60,9 +61,9 @@
    - *Prior hypothesis*: "`cis.s3_public_access_block` and `dpdp.rule6_public_exposure` disagreements were due to compound policy semantics."
    - *Correction*: Disagreements were an artifact of search depth capped at 3 and untyped value domains. Extending depth to 4+ and typing domains yielded 100.0% agreement (2,868/2,868).
 
-6. **Retraction on Summing Negative Clusters Across Generators**:
-   - *Prior hypothesis*: "Natural negative clusters can be summed across generators to meet the 59-cluster bar."
-   - *Correction*: Summing across generators double-counts shared clusters. Evaluated on distinct clusters, natural usable strict-negatives stand at 61 distinct clusters, independently passing the 59 bar without summation.
+6. **Honest Accounting on Pooled Negative Clusters vs Deployment Generator Bar**:
+   - *Prior hypothesis*: "Natural usable negative clusters independently pass the 59 bar with 61 clusters."
+   - *Correction*: The pooled count of 61 clusters is dominated by rejected non-deployment models (RFT-v2 contributes 55, Zeroshot 4). The actual deployment generator (SFT) has only 3 usable strict-negative clusters and 0 negatives in its 15-cluster calibration pool. The pooled count supports multi-generator training of M2, but does not provide adequate calibration negatives for SFT auto-apply thresholding.
 
 7. **Retraction on Phase 5 Sample Size for Confidence Intervals**:
    - *Prior hypothesis*: "Phase 5 validation sample size was $n=361$."
@@ -117,11 +118,18 @@ distinct rows 151, hard negatives 144, seed clusters 103
 
 ## Pre-registered bar (natural and corruptor reported separately)
 
-- natural usable strict-negative clusters: 61 vs 59: **PASS**
+- natural usable strict-negative clusters, POOLED over all generators: 61 vs 59: **PASS** (pooled count, see deployment line)
 - natural usable strict-negative candidates: 66
 - corruptor hard negatives (distinct): 144
 - total 210 vs 300: **FAIL (shortfall 90)** (natural share 0.31)
 - Corruptor negatives are train-only and trivially separable unless shortcut_by_type says otherwise; evaluation and calibration use natural candidates only.
+
+## Deployment generator (sft)
+
+- usable strict-negative clusters: 3
+- calibration pool: 15 clusters, 0 strict negatives
+- **NO NEGATIVES IN THE CALIBRATION POOL: the auto-apply error rate of this generator cannot be estimated from it**
+- the pooled natural-cluster count includes non-deployed generators (e.g. rft_v2, zeroshot); it supports TRAINING M2 across generators, not the deployment error estimate
 
 ## Calibration pool: smallest error rate certifiable with 0 errors (binomial, delta 0.05)
 

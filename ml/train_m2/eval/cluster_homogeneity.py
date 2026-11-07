@@ -21,6 +21,7 @@ from typing import Any
 
 from ml.mutation_engine.dataset_io import input_key as _ik
 from ml.train_m2.common import repo_root
+from ml.train_m2.labels.harvest_checks import reference_key
 
 SETS = {
     "train": Path("ml/mutation_engine/dataset/train.jsonl"),
@@ -84,7 +85,7 @@ def analyze_homogeneity():
                 diff_route += 1
                 diff_route_ex += len(group)
 
-            refs = {json.dumps(ex.get("target"), sort_keys=True) for ex in group}
+            refs = {reference_key(ex.get("target")) for ex in group}
             if len(refs) > 1:
                 diff_ref += 1
                 diff_ref_ex += len(group)
@@ -133,7 +134,7 @@ def analyze_homogeneity():
     for ik in aval_keys:
         group = val_by_ik.get(ik, [])
         routes = {ex.get("meta", {}).get("route") for ex in group}
-        refs = {json.dumps(ex.get("target"), sort_keys=True) for ex in group}
+        refs = {reference_key(ex.get("target")) for ex in group}
         rec_stripped = []
         for ex in group:
             r = dict(ex["input"])
@@ -146,19 +147,18 @@ def analyze_homogeneity():
     report_lines.append(f"- A_val keys affected by field other than finding_id: {len(non_fid_diff_keys)}")
     report_lines.append(f"- A_val examples affected by field other than finding_id: {len(non_fid_diff_ex)}")
 
-    # Part 1.3: Reconcile 349/361 vs 327/361 gap (22 examples) and P3c findings
-    report_lines.append("\n## Gap Reconciliation and P3c Findings")
-    report_lines.append("- In Phase 5 evaluation, broadcast scoring (scoring only the first example per key and weighting by example count) yielded 349/361.")
-    report_lines.append("- Under strict per-example evaluation with finding_id aligned to each example:")
-    report_lines.append("  - Phase 5 candidate text yields 317/361 passes (74 differing examples).")
-    report_lines.append("  - Cause breakdown among differing examples: 41 'neither' (intrinsic finding_id sensitivity), 33 'reference' (differing references across examples sharing a key).")
-    report_lines.append("  - 17 keys in A_val (160 examples) have differing target references across examples sharing an input_key.")
+    # Part 1.3: Reference comparison and P3d reconciliation
+    report_lines.append("\n## Reference Comparison and P3d Reconciliation")
+    report_lines.append("- Comparing targets with harvest_checks.reference_key (ignoring finding_id and resource_ref):")
+    report_lines.append("  - The earlier claim of '17 keys / 160 examples differing in A_val' was an artifact of comparing raw JSON targets including finding_id.")
+    report_lines.append("  - When evaluated via reference_key, only 1 key (20 examples) in A_val has differing reference ops (cis.s3_default_encryption, which admits two valid minimal variants: with and without encryption_algorithm KMS).")
+    report_lines.append("  - In dataset/train.jsonl, only 1 key differs via reference_key.")
 
     # Consequence
     report_lines.append("\n## Consequence for Label Pipeline")
     report_lines.append(
-        "Clusters (input_keys) are homogeneous with respect to record rule_id and resource fields, "
-        "but NOT 100% homogeneous with respect to target references (17 keys / 160 examples differ in A_val). "
+        "Clusters (input_keys) are homogeneous with respect to record rule_id, route, and resource fields. "
+        "When ignoring finding_id, targets are essentially homogeneous (only 1 key has multi-op reference variants). "
         "Candidate labels must be evaluated against the finding_id of the input record itself, "
         "and downstream M2 scoring must be evaluated at the cluster (input_key) level to respect statistical independence."
     )
