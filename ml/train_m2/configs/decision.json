@@ -1,0 +1,2 @@
+{"alpha": 0.05, "delta": 0.05, "c_FA": 20.0, "c_esc": 1.0, "ood_missing_frac": 0.30, "ood_range_margin": 0.25,
+ "model_path": "ml/train_m2/out/m2/m2.joblib", "tau_path": "ml/train_m2/out/tau_star.json", "model_version": "m2-v1"}

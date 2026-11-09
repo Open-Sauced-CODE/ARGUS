@@ -1,0 +1,9 @@
+{"agreement_rate": {"up": "the drafts agreed with each other ({v:.2f} of the cohort)", "down": "the drafts disagreed with each other (agreement {v:.2f})"},
+ "n_distinct_patches": {"up": "few distinct drafts ({v:.0f})", "down": "many distinct drafts ({v:.0f})"},
+ "lp_min": {"up": "no token was a low-confidence guess", "down": "at least one token was a low-confidence guess"},
+ "lp_mean": {"up": "the model was confident on average", "down": "the model was unsure on average"},
+ "n_ops": {"up": "a small patch", "down": "a larger patch with more edits"},
+ "writes_only_rule_fields_frac": {"up": "the patch only edits fields the rule reads", "down": "the patch edits fields the rule does not read"},
+ "uses_placeholder": {"up": "the patch uses the internal CIDR placeholder", "down": "the patch does not use the internal CIDR placeholder"},
+ "greedy_is_modal": {"up": "the first draft is also the most common draft", "down": "the first draft is not the most common draft"},
+ "_default": {"up": "{name} raised confidence", "down": "{name} lowered confidence"}}

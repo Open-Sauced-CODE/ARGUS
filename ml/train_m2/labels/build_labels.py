@@ -313,7 +313,7 @@ def main(argv: list[str] | None = None) -> int:
     partition_sets = load_partition_sets()
 
     # 2f: Corruptor seed partition cross-check
-    ks = load_key_sets(root, strict=False)
+    ks = load_key_sets(root, strict=True)
     p_part = corruptor_seed_partition(partition_sets)
     lg_part = ks.corruptor_eligible()
     corruptor_eligible_with_ref = {
