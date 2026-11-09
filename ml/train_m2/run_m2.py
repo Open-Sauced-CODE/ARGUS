@@ -18,6 +18,7 @@ from ml.train_m2.eval import run_once as RO
 from ml.train_m2.features import registry as R
 from ml.train_m2.labels.leakguard import load_key_sets
 from ml.train_m2.models import dataset as DS
+from ml.train_m2.models import diagnostics as DG
 from ml.train_m2.models import train_m2 as T
 from ml.train_m2.risk import calibrate_tau as CT
 from ml.train_m2.risk.decisions import select_decisions
@@ -90,6 +91,39 @@ def cmd_tau(a):
     print(json.dumps({k: out[k] for k in ("certified", "tau", "n_total", "n_min", "n_errors", "ucb", "coverage")}, default=str))
 
 
+def cmd_diag(a):
+    """TRAIN/VAL/CAL only. Writes out/reports/m2_diagnostics.{md,json}. Never opens a held-out set."""
+    s = S.read_splits(M2 / "splits.json")
+    art = T.joblib.load(M2 / "m2.joblib")
+    gens = a.generators.split(",")
+    parts = {p: _frame(gens, p, s) for p in ("train", "val", "cal")}
+    meta_all = pd.concat([m.assign(partition=p) for p, (X, m) in parts.items()], ignore_index=True)
+    (Xtr, mtr), (Xva, mva), (Xca, mca) = parts["train"], parts["val"], parts["cal"]
+    prev = DG.prevalence_table(meta_all)
+    p_val = T.predict(art, Xva)
+    pooled = DG.M.auroc(p_val, mva["y"].to_numpy())
+    gonly = DG.generator_only_baseline(Xtr, mtr["y"].to_numpy(), Xva, mva["y"].to_numpy())
+    within = DG.within_generator(p_val, mva["y"].to_numpy(), mva)
+    abl = DG.ablation(Xtr, mtr["y"].to_numpy(), Xva, mva["y"].to_numpy(),
+                      {"no_generator": DG.GEN_COLS, "no_consensus": R.names(("C",)), "no_logprob": R.names(("U",)),
+                       "structure_and_rule_only": [n for n in R.names() if n not in R.names(("S", "R"))]})
+    oos = DG.out_of_sample_calibration(art, Xca, mca["y"].to_numpy(), mca)
+    single = DG.single_feature_aurocs(Xtr, mtr["y"].to_numpy())
+    neg = meta_all[meta_all["y"] == 0].groupby(["generator", "rule_id"])["input_key"].nunique().reset_index(name="negative_clusters")
+    rep = {"prevalence": prev.to_dict("records"), "negative_clusters_by_rule": neg.to_dict("records"), "pooled_val_auroc": pooled, "generator_only": gonly, "within_generator_val": within,
+           "ablation": abl, "calibration_on_cal": oos, "top_single_feature_auroc_train": single,
+           "verdict": DG.verdict(pooled, gonly["auroc"], within, a.deployment)}
+    REPORTS.mkdir(parents=True, exist_ok=True)
+    md = ["# M2 diagnostics (TRAIN/VAL/CAL only)", "", f"**{rep['verdict']}**", "", "## Prevalence", "", "```\n" + prev.to_string(index=False) + "\n```",
+          "", "## Negative clusters by generator and rule (train+val+cal)", "", "```\n" + neg.to_string(index=False) + "\n```", "", "## Ablation (val)", ""] + [f"- {k}: AUROC {v['auroc']:.4f}, log-loss {v['log_loss']:.4f}, features {v['n_features']}" for k, v in abl.items()] + \
+         ["", "## Within-generator val AUROC", ""] + [f"- {g}: {json.dumps(v)}" for g, v in within.items()] + \
+         ["", "## Calibration on CAL (calibrator fitted on VAL)", ""] + [f"- {g}: {json.dumps(v)}" for g, v in oos.items()] + \
+         ["", "## Top single-feature AUROC (train)", ""] + [f"- {n}: {v:.3f}" for n, v in single]
+    (REPORTS / "m2_diagnostics.md").write_text("\n".join(md) + "\n", encoding="utf-8", newline="\n")
+    (REPORTS / "m2_diagnostics.json").write_text(json.dumps(rep, indent=1, sort_keys=True, default=str) + "\n", encoding="utf-8", newline="\n")
+    print(rep["verdict"])
+
+
 def cmd_eval(a):
     s = S.read_splits(M2 / "splits.json")
     art = T.joblib.load(M2 / "m2.joblib")
@@ -114,7 +148,7 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("spec").set_defaults(fn=cmd_spec)
     p = sub.add_parser("splits"); p.add_argument("--seed", type=int, default=1337); p.set_defaults(fn=cmd_splits)
-    for n, fn in (("train", cmd_train), ("tau", cmd_tau), ("eval", cmd_eval)):
+    for n, fn in (("train", cmd_train), ("tau", cmd_tau), ("diag", cmd_diag), ("eval", cmd_eval)):
         p = sub.add_parser(n)
         p.add_argument("--generators", default=",".join(GENS)); p.add_argument("--deployment", default="sft")
         p.add_argument("--seed", type=int, default=1337); p.add_argument("--alpha", type=float, default=0.05)
