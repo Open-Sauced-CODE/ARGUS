@@ -124,6 +124,45 @@ def cmd_diag(a):
     print(rep["verdict"])
 
 
+def cmd_diag2(a):
+    """TRAIN/VAL/CAL only. Does M2 beat a (generator, rule) base-rate predictor? Writes out/reports/m2_diagnostics2.{md,json}."""
+    s = S.read_splits(M2 / "splits.json")
+    art = T.joblib.load(M2 / "m2.joblib")
+    gens = a.generators.split(",")
+    Xtr, mtr = _frame(gens, "train", s)
+    Xva, mva = _frame(gens, "val", s)
+    Xca, mca = _frame(gens, "cal", s)
+    Xev = pd.concat([Xva, Xca], ignore_index=True)
+    mev = pd.concat([mva, mca], ignore_index=True)
+    p_m2 = T.predict(art, Xev)
+    p_prior = DG.cell_prior_scores(mtr, mev)
+    y = mev["y"].to_numpy()
+    pooled = DG.beats_prior(p_m2, p_prior, y, mev["input_key"].to_numpy())
+    by_gen = {}
+    for g in sorted(mev["generator"].unique()):
+        m = (mev["generator"] == g).to_numpy()
+        if len(set(y[m])) == 2:
+            by_gen[g] = DG.beats_prior(p_m2[m], p_prior[m], y[m], mev["input_key"].to_numpy()[m], reps=500)
+        else:
+            by_gen[g] = {"note": "single class", "rows": int(m.sum())}
+    strat = DG.stratified_auroc(p_m2, y, mev)
+    strat_prior = DG.stratified_auroc(p_prior, y, mev)
+    ncls = DG.negative_class_table(pd.concat([mtr, mev], ignore_index=True))
+    rep = {"eval_rows": int(len(mev)), "eval_clusters": int(mev["input_key"].nunique()), "eval_negative_clusters": int(mev[mev["y"] == 0]["input_key"].nunique()),
+           "pooled": pooled, "by_generator": by_gen, "stratified_m2": strat, "stratified_prior": strat_prior,
+           "negatives_by_class": ncls.to_dict("records"), "verdict": DG.verdict_prior(pooled)}
+    L = ["# M2 vs the (generator, rule) base-rate predictor (VAL + CAL pooled; prior fitted on TRAIN only)", "", f"**{rep['verdict']}**", "",
+         f"eval rows {rep['eval_rows']}, clusters {rep['eval_clusters']}, negative clusters {rep['eval_negative_clusters']}", "",
+         "## By generator (model AUROC, prior AUROC, difference CI)", ""] + [f"- {g}: {json.dumps(v)}" for g, v in by_gen.items()] + \
+        ["", "## Within (generator, rule) cells (M2); AUROC only where >= 3 positive and >= 3 negative clusters", ""] + [f"- {json.dumps(r)}" for r in strat] + \
+        ["", "## Same cells, base-rate predictor", ""] + [f"- {json.dumps(r)}" for r in strat_prior if r["auroc"] is not None] + \
+        ["", "## Negatives by oracle class (train+val+cal)", "", "```\n" + ncls.to_string(index=False) + "\n```"]
+    REPORTS.mkdir(parents=True, exist_ok=True)
+    (REPORTS / "m2_diagnostics2.md").write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
+    (REPORTS / "m2_diagnostics2.json").write_text(json.dumps(rep, indent=1, sort_keys=True, default=str) + "\n", encoding="utf-8", newline="\n")
+    print(rep["verdict"])
+
+
 def cmd_eval(a):
     s = S.read_splits(M2 / "splits.json")
     art = T.joblib.load(M2 / "m2.joblib")
@@ -148,7 +187,7 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("spec").set_defaults(fn=cmd_spec)
     p = sub.add_parser("splits"); p.add_argument("--seed", type=int, default=1337); p.set_defaults(fn=cmd_splits)
-    for n, fn in (("train", cmd_train), ("tau", cmd_tau), ("diag", cmd_diag), ("eval", cmd_eval)):
+    for n, fn in (("train", cmd_train), ("tau", cmd_tau), ("diag", cmd_diag), ("diag2", cmd_diag2), ("eval", cmd_eval)):
         p = sub.add_parser(n)
         p.add_argument("--generators", default=",".join(GENS)); p.add_argument("--deployment", default="sft")
         p.add_argument("--seed", type=int, default=1337); p.add_argument("--alpha", type=float, default=0.05)

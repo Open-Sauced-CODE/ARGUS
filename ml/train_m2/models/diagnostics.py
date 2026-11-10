@@ -97,3 +97,62 @@ def verdict(pooled_auroc: float, generator_only_auroc: float, within: Mapping[st
         return base + f" The deployment generator ({deployment}) has {dep.get('n_negative_clusters', 0)} negative cluster(s) here: its discrimination cannot be assessed."
     return base + (f" Within {deployment}: AUROC {dep['auroc']:.3f} (95% CI {dep['ci95'][0]:.3f}-{dep['ci95'][1]:.3f}) on "
                    f"{dep['n_negative_clusters']} negative cluster(s).")
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Does M2 beat "who wrote it and which rule is it"?  (P6c)
+# ---------------------------------------------------------------------------------------------------------------------
+def cell_prior_scores(meta_train: pd.DataFrame, meta_eval: pd.DataFrame) -> np.ndarray:
+    """Smoothed P(correct) per (generator, rule) cell from TRAIN only; falls back to the generator rate, then the global rate."""
+    glob = float(meta_train["y"].mean())
+    cell = meta_train.groupby(["generator", "rule_id"])["y"].agg(["sum", "count"])
+    gen = meta_train.groupby("generator")["y"].mean()
+    out = []
+    for g, r in zip(meta_eval["generator"], meta_eval["rule_id"]):
+        if (g, r) in cell.index:
+            s, c = cell.loc[(g, r)]
+            out.append((s + glob) / (c + 1.0))
+        else:
+            out.append(float(gen.get(g, glob)))
+    return np.asarray(out, float)
+
+
+def beats_prior(p_model, p_prior, y, clusters, reps: int = 1000, seed: int = 1337) -> dict[str, Any]:
+    """AUROC of the model and of the prior on the same rows, plus a cluster-bootstrap CI of the difference (model - prior)."""
+    p_model, p_prior, y = np.asarray(p_model, float), np.asarray(p_prior, float), np.asarray(y, int)
+    diff = lambda a, b, yy: M.auroc(a, yy) - M.auroc(b, yy)
+    pt, lo, hi = M.cluster_bootstrap(diff, clusters, p_model, p_prior, y, reps=reps, seed=seed)
+    return {"auroc_model": M.auroc(p_model, y), "auroc_prior": M.auroc(p_prior, y), "diff": pt, "diff_ci95": [lo, hi],
+            "model_beats_prior": bool(lo > 0)}
+
+
+def stratified_auroc(scores, y, meta: pd.DataFrame, by=("generator", "rule_id"), min_clusters: int = 3, reps: int = 300) -> list[dict[str, Any]]:
+    """AUROC inside each (generator, rule) cell that has >= min_clusters positive AND negative clusters; others are listed as untestable."""
+    scores, y = np.asarray(scores, float), np.asarray(y, int)
+    ck = meta["input_key"].to_numpy()
+    rows = []
+    for key, idx in meta.groupby(list(by)).indices.items():
+        yy, ss, cc = y[idx], scores[idx], ck[idx]
+        pos_c, neg_c = len(set(cc[yy == 1])), len(set(cc[yy == 0]))
+        rec: dict[str, Any] = {"cell": "/".join(map(str, key)), "positive_clusters": pos_c, "negative_clusters": neg_c, "rows": int(len(idx))}
+        if pos_c >= min_clusters and neg_c >= min_clusters:
+            pt, lo, hi = M.cluster_bootstrap(M.auroc, cc, ss, yy, reps=reps)
+            rec.update({"auroc": pt, "ci95": [lo, hi]})
+        else:
+            rec["auroc"] = None
+        rows.append(rec)
+    return sorted(rows, key=lambda r: -r["negative_clusters"])
+
+
+def negative_class_table(meta: pd.DataFrame) -> pd.DataFrame:
+    """Negatives split by oracle class (wrong vs valid_not_minimal) per generator: shows whether 'errors' are harmful or just thorough."""
+    neg = meta[meta["y"] == 0]
+    return neg.groupby(["generator", "oracle_class"])["input_key"].agg(rows="size", clusters="nunique").reset_index()
+
+
+def verdict_prior(res: Mapping[str, Any]) -> str:
+    if res["model_beats_prior"]:
+        return (f"M2 adds signal beyond the (generator, rule) base rate: AUROC {res['auroc_model']:.3f} vs {res['auroc_prior']:.3f} "
+                f"(difference {res['diff']:+.3f}, 95% cluster-bootstrap CI {res['diff_ci95'][0]:+.3f} to {res['diff_ci95'][1]:+.3f}).")
+    return (f"M2 does NOT beat a (generator, rule) base-rate predictor: AUROC {res['auroc_model']:.3f} vs {res['auroc_prior']:.3f} "
+            f"(difference {res['diff']:+.3f}, 95% CI {res['diff_ci95'][0]:+.3f} to {res['diff_ci95'][1]:+.3f}). Its score is who-and-what, not draft quality.")
