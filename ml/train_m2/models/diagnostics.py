@@ -117,13 +117,21 @@ def cell_prior_scores(meta_train: pd.DataFrame, meta_eval: pd.DataFrame) -> np.n
     return np.asarray(out, float)
 
 
-def beats_prior(p_model, p_prior, y, clusters, reps: int = 1000, seed: int = 1337) -> dict[str, Any]:
-    """AUROC of the model and of the prior on the same rows, plus a cluster-bootstrap CI of the difference (model - prior)."""
+def beats_prior(p_model, p_prior, y, clusters, reps: int = 1000, seed: int = 1337, min_negative_clusters: int = 5) -> dict[str, Any]:
+    """AUROC of the model and of the prior on the same rows, a cluster-bootstrap CI of the difference (model - prior) and of the model alone.
+
+    model_beats_prior is True ONLY if (i) the difference CI excludes 0, (ii) the model's own AUROC CI lies above 0.5 (a cross-validated base-rate
+    predictor can score below 0.5 by chance, so 'beating' it proves nothing alone) and (iii) there are >= min_negative_clusters negative clusters.
+    """
     p_model, p_prior, y = np.asarray(p_model, float), np.asarray(p_prior, float), np.asarray(y, int)
+    clusters = np.asarray(clusters)
     diff = lambda a, b, yy: M.auroc(a, yy) - M.auroc(b, yy)
     pt, lo, hi = M.cluster_bootstrap(diff, clusters, p_model, p_prior, y, reps=reps, seed=seed)
-    return {"auroc_model": M.auroc(p_model, y), "auroc_prior": M.auroc(p_prior, y), "diff": pt, "diff_ci95": [lo, hi],
-            "model_beats_prior": bool(lo > 0)}
+    m_pt, m_lo, m_hi = M.cluster_bootstrap(M.auroc, clusters, p_model, y, reps=reps, seed=seed)
+    n_neg = int(len(set(clusters[y == 0])))
+    return {"auroc_model": M.auroc(p_model, y), "auroc_model_ci95": [m_lo, m_hi], "auroc_prior": M.auroc(p_prior, y), "diff": pt,
+            "diff_ci95": [lo, hi], "negative_clusters": n_neg, "evidence_ok": n_neg >= min_negative_clusters,
+            "model_beats_prior": bool(lo > 0 and m_lo > 0.5 and n_neg >= min_negative_clusters)}
 
 
 def stratified_auroc(scores, y, meta: pd.DataFrame, by=("generator", "rule_id"), min_clusters: int = 3, reps: int = 300) -> list[dict[str, Any]]:
@@ -151,8 +159,90 @@ def negative_class_table(meta: pd.DataFrame) -> pd.DataFrame:
 
 
 def verdict_prior(res: Mapping[str, Any]) -> str:
+    if not res.get("evidence_ok", True):
+        return (f"INSUFFICIENT EVIDENCE: only {res['negative_clusters']} negative cluster(s); no claim about M2 versus the (generator, rule) base rate "
+                f"(AUROC {res['auroc_model']:.3f} vs {res['auroc_prior']:.3f}).")
     if res["model_beats_prior"]:
         return (f"M2 adds signal beyond the (generator, rule) base rate: AUROC {res['auroc_model']:.3f} vs {res['auroc_prior']:.3f} "
-                f"(difference {res['diff']:+.3f}, 95% cluster-bootstrap CI {res['diff_ci95'][0]:+.3f} to {res['diff_ci95'][1]:+.3f}).")
+                f"(difference {res['diff']:+.3f}, 95% cluster-bootstrap CI {res['diff_ci95'][0]:+.3f} to {res['diff_ci95'][1]:+.3f}; "
+                f"own AUROC CI {res['auroc_model_ci95'][0]:.3f} to {res['auroc_model_ci95'][1]:.3f}).")
     return (f"M2 does NOT beat a (generator, rule) base-rate predictor: AUROC {res['auroc_model']:.3f} vs {res['auroc_prior']:.3f} "
             f"(difference {res['diff']:+.3f}, 95% CI {res['diff_ci95'][0]:+.3f} to {res['diff_ci95'][1]:+.3f}). Its score is who-and-what, not draft quality.")
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Grouped cross-validation and gate-only certification (P6d). Non-test clusters only; never a held-out set.
+# ---------------------------------------------------------------------------------------------------------------------
+HARMFUL = {"wrong", "fixed_should_escalate"}
+
+
+def fold_of(key: str, k: int, seed: int) -> int:
+    import hashlib
+    return int(hashlib.sha256(f"{seed}:{key}".encode("utf-8")).hexdigest(), 16) % k
+
+
+def grouped_cv(X: pd.DataFrame, meta: pd.DataFrame, k: int = 5, seed: int = 1337) -> pd.DataFrame:
+    """Out-of-fold M2 (standardised logistic) and base-rate-prior scores; folds are CLUSTERS. Folds with a single training class are skipped."""
+    folds = meta["input_key"].map(lambda c: fold_of(c, k, seed)).to_numpy()
+    out = meta.copy()
+    out["score_m2"], out["score_prior"], out["fold"] = np.nan, np.nan, folds
+    y = meta["y"].to_numpy()
+    for f in range(k):
+        te, tr = folds == f, folds != f
+        if te.sum() == 0 or len(np.unique(y[tr])) < 2:
+            continue
+        m = zoo.fit_logistic(X[tr].reset_index(drop=True), y[tr])
+        out.loc[te, "score_m2"] = zoo.predict_logistic(m, X[te])
+        out.loc[te, "score_prior"] = cell_prior_scores(meta[tr], meta[te].reset_index(drop=True))
+    return out
+
+
+def cv_report(oof: pd.DataFrame, reps: int = 500) -> dict[str, Any]:
+    """Pooled and per-generator comparison of the out-of-fold M2 score with the base-rate prior, plus (generator, rule) cells and a reliability table."""
+    ok = oof.dropna(subset=["score_m2"])
+    y, ck = ok["y"].to_numpy(), ok["input_key"].to_numpy()
+    rep: dict[str, Any] = {"rows": int(len(ok)), "clusters": int(ok["input_key"].nunique()),
+                           "negative_clusters": int(ok[ok["y"] == 0]["input_key"].nunique()), "skipped_rows": int(len(oof) - len(ok))}
+    if len(ok) == 0:
+        return rep | {"pooled": {"note": "no scored rows"}, "by_generator": {}, "cells_m2": [], "reliability": [], "brier": None, "log_loss": None}
+    rep["pooled"] = beats_prior(ok["score_m2"], ok["score_prior"], y, ck, reps=reps) if len(set(y)) == 2 else {"note": "single class"}
+    rep["by_generator"] = {}
+    for g, d in ok.groupby("generator"):
+        yy = d["y"].to_numpy()
+        if len(set(yy)) == 2:
+            rep["by_generator"][g] = beats_prior(d["score_m2"], d["score_prior"], yy, d["input_key"].to_numpy(), reps=reps) | {
+                "rows": int(len(d)), "negative_clusters": int(d[d["y"] == 0]["input_key"].nunique())}
+        else:
+            rep["by_generator"][g] = {"note": "single class", "rows": int(len(d)), "negative_clusters": 0}
+    rep["cells_m2"] = stratified_auroc(ok["score_m2"].to_numpy(), y, ok.reset_index(drop=True), reps=200)
+    p = ok["score_m2"].to_numpy()
+    bins = np.array_split(np.argsort(p), min(10, len(p)))
+    rep["reliability"] = [{"n": int(len(b)), "mean_score": float(p[b].mean()), "observed_correct": float(y[b].mean())} for b in bins if len(b)]
+    rep["brier"], rep["log_loss"] = M.brier(p, y), M.log_loss(p, y)
+    return rep
+
+
+def cp_upper(k: int, n: int, delta: float = 0.05) -> float:
+    """One-sided Clopper-Pearson upper bound on an error rate after k errors in n clusters."""
+    from scipy.stats import beta
+    return 1.0 if n <= 0 or k >= n else float(beta.ppf(1 - delta, k + 1, n - k))
+
+
+def gate_only_table(meta: pd.DataFrame, seen_fn, alpha: float = 0.05, delta: float = 0.05) -> list[dict[str, Any]]:
+    """Per generator and scope (all / seen / unseen by that generator): decision-level (first gate-passing draft per cluster)
+    errors under the STRICT and HARMFUL definitions, a Clopper-Pearson bound, and the clean clusters still needed to certify alpha."""
+    from ml.train_m2.risk import ltt
+    from ml.train_m2.risk.decisions import select_decisions
+    rows = []
+    for g, d in meta.groupby("generator"):
+        sel = select_decisions(d)
+        seen = sel["input_key"].map(lambda k: bool(seen_fn(g, k))).to_numpy()
+        for scope, m in (("all", np.ones(len(sel), bool)), ("seen", seen), ("unseen", ~seen)):
+            s = sel[m]
+            n = int(len(s))
+            k_strict = int((s["y"] == 0).sum())
+            k_harm = int(s["oracle_class"].isin(HARMFUL).sum())
+            rows.append({"generator": g, "scope": scope, "clusters": n, "strict_errors": k_strict, "harmful_errors": k_harm,
+                         "ucb_strict": cp_upper(k_strict, n, delta) if n else None, "ucb_harmful": cp_upper(k_harm, n, delta) if n else None,
+                         "clean_clusters_still_needed_for_alpha": max(0, ltt.rule_of_n(alpha, delta) - n) if k_harm == 0 else None})
+    return rows

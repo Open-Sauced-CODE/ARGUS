@@ -6,10 +6,10 @@ eval rows 1402, clusters 84, negative clusters 23
 
 ## By generator (model AUROC, prior AUROC, difference CI)
 
-- rft: {"auroc_model": 0.4992481203007519, "auroc_prior": 0.5721804511278196, "diff": -0.07293233082706768, "diff_ci95": [-0.11597984322508396, -0.03684210526315784], "model_beats_prior": false}
-- rft_v2: {"auroc_model": 0.9944444444444445, "auroc_prior": 0.9182539682539682, "diff": 0.07619047619047625, "diff_ci95": [0.012256112852664619, 0.15791580400276045], "model_beats_prior": true}
-- sft: {"auroc_model": 1.0, "auroc_prior": 0.5715350223546944, "diff": 0.42846497764530556, "diff_ci95": [0.386736214605067, 0.45958845976489127], "model_beats_prior": true}
-- zeroshot: {"auroc_model": 1.0, "auroc_prior": 0.4, "diff": 0.6, "diff_ci95": [0.09999999999999998, 1.0], "model_beats_prior": true}
+- rft: {"auroc_model": 0.4992481203007519, "auroc_model_ci95": [0.4976958525345622, 0.4992481203007519], "auroc_prior": 0.5721804511278196, "diff": -0.07293233082706768, "diff_ci95": [-0.11597984322508396, -0.03684210526315784], "negative_clusters": 1, "evidence_ok": false, "model_beats_prior": false}
+- rft_v2: {"auroc_model": 0.9944444444444445, "auroc_model_ci95": [0.9743935751748252, 1.0], "auroc_prior": 0.9182539682539682, "diff": 0.07619047619047625, "diff_ci95": [0.012256112852664619, 0.15791580400276045], "negative_clusters": 21, "evidence_ok": true, "model_beats_prior": true}
+- sft: {"auroc_model": 1.0, "auroc_model_ci95": [1.0, 1.0], "auroc_prior": 0.5715350223546944, "diff": 0.42846497764530556, "diff_ci95": [0.386736214605067, 0.45958845976489127], "negative_clusters": 1, "evidence_ok": false, "model_beats_prior": false}
+- zeroshot: {"auroc_model": 1.0, "auroc_model_ci95": [1.0, 1.0], "auroc_prior": 0.4, "diff": 0.6, "diff_ci95": [0.09999999999999998, 1.0], "negative_clusters": 2, "evidence_ok": false, "model_beats_prior": false}
 
 ## Within (generator, rule) cells (M2); AUROC only where >= 3 positive and >= 3 negative clusters
 

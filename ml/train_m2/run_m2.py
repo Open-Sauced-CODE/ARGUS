@@ -163,6 +163,50 @@ def cmd_diag2(a):
     print(rep["verdict"])
 
 
+def _noholdout_frame(gens, s):
+    X, meta = _frame(gens, None, s)
+    keep = ~meta["input_key"].isin(set(s["parts"]["test"])).to_numpy()
+    return X[keep].reset_index(drop=True), meta[keep].reset_index(drop=True)
+
+
+def cmd_cv(a):
+    """Grouped K-fold over the NON-TEST clusters (train+val+cal). Exploratory, logged as such; never opens a held-out set."""
+    s = S.read_splits(M2 / "splits.json")
+    X, meta = _noholdout_frame(a.generators.split(","), s)
+    oof = DG.grouped_cv(X, meta, a.folds, a.seed)
+    rep = DG.cv_report(oof)
+    rep.update({"folds": a.folds, "generators": a.generators.split(","), "seed": a.seed})
+    L = [f"# Grouped {a.folds}-fold CV over non-test clusters (generators: {a.generators})", "",
+         f"rows {rep['rows']}, clusters {rep['clusters']}, negative clusters {rep['negative_clusters']}, skipped rows {rep['skipped_rows']}", "",
+         "## Pooled and per generator (out-of-fold M2 vs base-rate prior)", "", f"- pooled: {json.dumps(rep['pooled'])}"] + \
+        [f"- {g}: {json.dumps(v)}" for g, v in rep["by_generator"].items()] + \
+        ["", "## (generator, rule) cells with >= 3 positive and >= 3 negative clusters", ""] + [f"- {json.dumps(r)}" for r in rep["cells_m2"] if r["auroc"] is not None] + \
+        ["", "## Reliability of the out-of-fold score (10 equal-mass bins)", ""] + [f"- {json.dumps(r)}" for r in rep["reliability"]] + \
+        ["", f"Brier {rep['brier']}, log-loss {rep['log_loss']}"]
+    REPORTS.mkdir(parents=True, exist_ok=True)
+    tag = a.generators.replace(",", "+")
+    (REPORTS / f"m2_cv_{tag}.md").write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
+    (REPORTS / f"m2_cv_{tag}.json").write_text(json.dumps(rep, indent=1, sort_keys=True, default=str) + "\n", encoding="utf-8", newline="\n")
+    print(json.dumps(rep["pooled"], default=str)[:300])
+
+
+def cmd_gateonly(a):
+    """Gate-only certification evidence per generator (seen vs unseen). Non-test clusters only."""
+    s = S.read_splits(M2 / "splits.json")
+    ks = load_key_sets(ROOT)
+    _, meta = _noholdout_frame(a.generators.split(","), s)
+    rows = DG.gate_only_table(meta, ks.generator_seen, a.alpha, a.delta)
+    f = lambda v: "n/a" if v is None else f"{v:.3f}"
+    L = ["# Gate-only evidence (first gate-passing draft per cluster; non-test clusters; Clopper-Pearson one-sided, delta 0.05)", "",
+         "| generator | scope | clusters | strict errors | harmful errors | UCB strict | UCB harmful | clean clusters still needed (alpha 0.05) |", "|---|---|---|---|---|---|---|---|"]
+    L += [f"| {r['generator']} | {r['scope']} | {r['clusters']} | {r['strict_errors']} | {r['harmful_errors']} | {f(r['ucb_strict'])} | {f(r['ucb_harmful'])} | {r['clean_clusters_still_needed_for_alpha']} |" for r in rows]
+    L += ["", "seen = the generator was trained on that input (its error rate is understated); unseen is the honest column."]
+    REPORTS.mkdir(parents=True, exist_ok=True)
+    (REPORTS / "m2_gate_only.md").write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
+    (REPORTS / "m2_gate_only.json").write_text(json.dumps(rows, indent=1, sort_keys=True, default=str) + "\n", encoding="utf-8", newline="\n")
+    print("\n".join(L[3:]))
+
+
 def cmd_eval(a):
     s = S.read_splits(M2 / "splits.json")
     art = T.joblib.load(M2 / "m2.joblib")
@@ -187,11 +231,11 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("spec").set_defaults(fn=cmd_spec)
     p = sub.add_parser("splits"); p.add_argument("--seed", type=int, default=1337); p.set_defaults(fn=cmd_splits)
-    for n, fn in (("train", cmd_train), ("tau", cmd_tau), ("diag", cmd_diag), ("diag2", cmd_diag2), ("eval", cmd_eval)):
+    for n, fn in (("train", cmd_train), ("tau", cmd_tau), ("diag", cmd_diag), ("diag2", cmd_diag2), ("cv", cmd_cv), ("gateonly", cmd_gateonly), ("eval", cmd_eval)):
         p = sub.add_parser(n)
         p.add_argument("--generators", default=",".join(GENS)); p.add_argument("--deployment", default="sft")
         p.add_argument("--seed", type=int, default=1337); p.add_argument("--alpha", type=float, default=0.05)
-        p.add_argument("--delta", type=float, default=0.05); p.add_argument("--repeat-reason", default=None)
+        p.add_argument("--delta", type=float, default=0.05); p.add_argument("--repeat-reason", default=None); p.add_argument("--folds", type=int, default=5)
         p.set_defaults(fn=fn)
     a = ap.parse_args(argv)
     a.fn(a)
