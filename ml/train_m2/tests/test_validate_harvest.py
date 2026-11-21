@@ -398,3 +398,38 @@ def test_report_files_are_ascii(tmp_path: Path, base_a: list[dict]) -> None:
     vh.main(["--root", str(tmp_path / "out"), "--inputs", str(SMALL_PATH), "--manifests", str(tmp_path / "m"), "--phase5-runs", str(tmp_path / "n"), "--out", str(out)])
     for ext in (".md", ".json"):
         Path(str(out) + ext).read_bytes().decode("ascii")
+
+
+def test_sft_oof_fixture_accepted_with_crossfit_fold(tmp_path: Path) -> None:
+    lines = [make_line(inp, "sft_oof", "A", idx) for inp in SMALL for idx in range(8)]
+    paths = write_folder(tmp_path / "out", "sft_oof", "A", lines)
+    write_manifest(tmp_path / "man", "sft_oof", "A", paths, crossfit_fold=0)
+    result = VR(tmp_path, require_manifests=True)
+    assert result["accepted"], f"Validation failed: {result['summary_line']}"
+    assert statuses(result, "sft_oof", "A")["MANIFEST"] == vh.PASS
+    assert statuses(result, "sft_oof", "A")["SCHEMA"] == vh.PASS
+
+
+def test_crossfit_fold_on_non_sft_oof_rejected(tmp_path: Path, base_a: list[dict]) -> None:
+    paths = write_folder(tmp_path / "out", "sft", "A", base_a)
+    write_manifest(tmp_path / "man", "sft", "A", paths, crossfit_fold=0)
+    result = VR(tmp_path, require_manifests=True)
+    assert not result["accepted"]
+    assert statuses(result, "sft", "A")["MANIFEST"] == vh.FAIL
+
+
+def test_sft_oof_invalid_crossfit_fold_rejected(tmp_path: Path) -> None:
+    lines = [make_line(inp, "sft_oof", "A", idx) for inp in SMALL for idx in range(8)]
+    paths = write_folder(tmp_path / "out", "sft_oof", "A", lines)
+    # crossfit_fold must be 0..4; 5 is out of range
+    write_manifest(tmp_path / "man", "sft_oof", "A", paths, crossfit_fold=5)
+    result = VR(tmp_path, require_manifests=True)
+    assert not result["accepted"]
+    assert statuses(result, "sft_oof", "A")["MANIFEST"] == vh.FAIL
+
+    # boolean or string must also be rejected
+    write_manifest(tmp_path / "man", "sft_oof", "A", paths, crossfit_fold="1")
+    result2 = VR(tmp_path, require_manifests=True)
+    assert not result2["accepted"]
+    assert statuses(result2, "sft_oof", "A")["MANIFEST"] == vh.FAIL
+

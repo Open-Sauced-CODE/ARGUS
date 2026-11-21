@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": {"const": "m2.harvest.v1"},
     "input_key": {"type": "string", "minLength": 2},
-    "generator": {"enum": ["zeroshot", "sft", "rft", "rft_v2"]},
+    "generator": {"enum": ["zeroshot", "sft", "rft", "rft_v2", "sft_oof"]},
     "profile": {"enum": ["A", "B"]},
     "sample_idx": {"type": "integer", "minimum": 0, "maximum": 7},
     "temperature": {"type": "number", "minimum": 0},

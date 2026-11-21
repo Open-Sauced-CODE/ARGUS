@@ -38,7 +38,7 @@ from jsonschema import Draft202012Validator
 from ml.train_m2.common import load_inputs, repo_root, sha256_file, write_provenance
 
 PASS, WARN, FAIL, INFO = "PASS", "WARN", "FAIL", "INFO"
-GENERATORS = ("zeroshot", "sft", "rft", "rft_v2")
+GENERATORS = ("zeroshot", "sft", "rft", "rft_v2", "sft_oof")
 PROFILES = ("A", "B")
 N_SAMPLES = 8
 TEXT_MISMATCH_FAIL = 0.005
@@ -201,6 +201,12 @@ def check_manifest(
             problems.append(f"{name}: sha256 differs from the manifest")
         if lines is not None and count_nonblank_lines(on_disk[name]) != int(lines):
             problems.append(f"{name}: {count_nonblank_lines(on_disk[name])} lines on disk, manifest says {lines}")
+    if "crossfit_fold" in manifest:
+        cf = manifest["crossfit_fold"]
+        if generator != "sft_oof":
+            problems.append(f"crossfit_fold is only valid for generator 'sft_oof', found on '{generator}'")
+        elif not isinstance(cf, int) or isinstance(cf, bool) or cf not in range(5):
+            problems.append(f"crossfit_fold must be an integer in 0..4, got {cf!r}")
     if problems:
         return Check("MANIFEST", FAIL, f"{len(problems)} manifest problem(s)", problems[:5])
     notes = []

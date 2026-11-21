@@ -22,13 +22,14 @@ Everything else (system prompt, Patch-IR JSON-schema `format`, `num_predict`) is
 
 ## Generators
 `zeroshot` (base model `qwen3.5:4b` with the same prompt and schema), `sft` (`argus-m1-sft`), `rft` (`argus-m1-rft`),
-`rft_v2` (the repaired model, when it exists).
+`rft_v2` (the repaired model, when it exists), `sft_oof` (out-of-fold SFT fold adapters).
 
 ## Files
 `ml/train_m2/harvest_out/<generator>/<profile>/part-<NNNN>.jsonl` (git-ignored). Exchanged through the shared Drive folder
 `argus/m2_harvest/` with the same relative paths. Each (generator, profile) folder also gets `MANIFEST.json`
 (copied into git under `ml/train_m2/harvest_manifests/<generator>_<profile>.json`) listing each part's sha256, line count,
-the Ollama version, the model digest and the exact command used.
+the Ollama version, the model digest and the exact command used. For generator `sft_oof`, the manifest includes
+`crossfit_fold`: integer (0-4) indicating the fold index.
 
 ## One line = one generation
 Validated by `harvest_line.schema.json` (this folder). Key rules:
@@ -46,3 +47,4 @@ is returned with the list of problems.
 
 ## Change log
 - m2.harvest.v1 (25 Oct 2026): initial version.
+- m2.harvest.v1 additive update (21 Nov 2026): added generator `sft_oof` and manifest field `crossfit_fold` (integer 0-4).

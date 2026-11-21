@@ -163,12 +163,11 @@ print(f"fold {f}: train {len(train_rows)} rows, excluded {len(hold_out)} rows (s
 | Context length rule | `MAX_LEN = max(1024, ((lens[-1] + 63) // 64) * 64)` | Cell 4 |
 | Save strategy | epoch | Cell 5 |
 
-> **Recipe Note:** Remove every 1-epoch / 2e-5 / seed 1337 statement. Those settings belonged to RFT-v2 (`ml/train_m1/v2/notebooks/03_rft_v2.ipynb`), NOT the SFT recipe.
+These settings are the SFT recipe from 01_sft.ipynb, not the rft_v2 recipe.
 
 **NO Checkpoint Selection:**
 Use the final epoch-3 checkpoint. Do NOT perform checkpoint selection using `val_distinct.jsonl` (A_val).
 - **Reason:** `val_distinct.jsonl` (A_val) shares 55 inputs with the train set. Selecting checkpoints on A_val would allow fold-f training inputs to influence fold model selection, violating out-of-fold separation and causing data leakage.
-- Remove any "best A_val pass@1" line.
 
 ### Step 3 - Serve the fold-f adapter in Ollama
 
@@ -227,8 +226,6 @@ ollama show argus-m1-sft-fold{f} --modelinfo  # record model_digest
 3. **Commit before harvest and record commit:**
    Commit the harvest code before running and record `crossfit_code_commit` in the manifest.
 
-> **Ownership Rule Notice:** Shaurya owns only the schema enum edit proposal (shared file `ml/train_m2/contract/harvest_line.schema.json`), applied after both agree. Shaurya does not touch Prabhav-owned files or shared files without agreement.
-
 Output layout:
 ```
 ml/train_m2/harvest_out/sft_oof/A/part-{fold}-{NNNN}.jsonl
@@ -243,6 +240,8 @@ Add to each harvest line:
 ---
 
 ## Acceptance checklist (Prabhav must satisfy ALL before delivering)
+
+59 clean clusters certify only at zero errors; ~95 are needed with one error and ~126 with two (Clopper-Pearson, alpha 0.05, delta 0.05; computed with `ml/train_m2/risk/ltt.py` `cp_upper`: `cp_upper(0, 59, 0.05) = 0.0495`, `cp_upper(1, 95, 0.05) = 0.0490`, `cp_upper(2, 126, 0.05) = 0.0491`). With 168 clean unseen clusters from all 5 folds (183 total with the existing 15), or 102 from the 3-fold fallback (117 total), the harvest provides sufficient margin to absorb candidate errors while certifying.
 
 | Check | Requirement |
 |---|---|

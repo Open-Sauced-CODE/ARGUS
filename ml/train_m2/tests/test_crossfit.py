@@ -421,3 +421,75 @@ def test_crossfit_package_md_exact_counts():
     # Verify no "~" in fold definitions or clean cluster sections
     fold_section = text.split("## Fold definitions")[1].split("## For each fold")[0]
     assert "~" not in fold_section, f"Approximate count '~' found in fold definitions: {fold_section}"
+
+
+def test_fold_key_files_disjoint_and_union_230():
+    """Verify docs/phase6_shaurya/crossfit/fold_{0..4}_keys.txt are disjoint, union = 230 keys, LF, ASCII."""
+    root = repo_root()
+    crossfit_dir = root / "docs" / "phase6_shaurya" / "crossfit"
+    folds_json_path = crossfit_dir / "folds.json"
+    assert folds_json_path.is_file()
+    folds_data = json.loads(folds_json_path.read_text(encoding="utf-8"))
+
+    key_sets: list[set[str]] = []
+    total_lines = 0
+
+    for f in range(5):
+        key_file = crossfit_dir / f"fold_{f}_keys.txt"
+        assert key_file.is_file(), f"Missing fold key file: {key_file}"
+        raw = key_file.read_bytes()
+        # Verify LF line endings (no CR) and valid ASCII
+        assert b"\r" not in raw, f"CRLF line endings detected in {key_file.name}"
+        text = raw.decode("ascii")
+        lines = [line for line in text.splitlines() if line.strip()]
+
+        # Verify sorted
+        assert lines == sorted(lines), f"Lines in {key_file.name} are not sorted"
+
+        # Verify matching folds.json
+        expected_keys = sorted(folds_data["folds"][str(f)]["input_keys"])
+        assert lines == expected_keys, f"Keys in {key_file.name} differ from folds.json fold {f}"
+
+        key_set = set(lines)
+        assert len(key_set) == len(lines), f"Duplicates within {key_file.name}"
+        key_sets.append(key_set)
+        total_lines += len(lines)
+
+        # Check provenance
+        prov_file = crossfit_dir / f"fold_{f}_keys.txt.provenance.json"
+        assert prov_file.is_file(), f"Missing provenance file: {prov_file}"
+
+    # Verify pairwise disjoint
+    for i in range(5):
+        for j in range(i + 1, 5):
+            overlap = key_sets[i].intersection(key_sets[j])
+            assert not overlap, f"Folds {i} and {j} have overlapping keys: {overlap}"
+
+    # Verify union is exactly 230 keys
+    union_keys = set.union(*key_sets)
+    assert len(union_keys) == 230, f"Union has {len(union_keys)} keys, expected 230"
+    assert total_lines == 230
+
+
+def test_crossfit_package_md_no_remove_lines_and_tolerance_paragraph():
+    """Verify CROSSFIT_PACKAGE.md has no line starting with 'Remove' and contains required content."""
+    root = repo_root()
+    pkg_path = root / "docs" / "phase6_shaurya" / "crossfit" / "CROSSFIT_PACKAGE.md"
+    assert pkg_path.is_file()
+    text = pkg_path.read_text(encoding="utf-8")
+
+    # Verify no line starts with "Remove"
+    for idx, line in enumerate(text.splitlines(), start=1):
+        stripped = line.strip().lstrip("-").strip().lstrip(">").strip()
+        assert not stripped.startswith("Remove"), f"Line {idx} starts with 'Remove': {line}"
+
+    # Verify neutral recipe note sentence
+    assert "These settings are the SFT recipe from 01_sft.ipynb, not the rft_v2 recipe." in text
+
+    # Verify error tolerance paragraph with Clopper-Pearson and quoted cp_upper values
+    assert "59 clean clusters certify only at zero errors" in text
+    assert "~95 are needed with one error" in text
+    assert "~126 with two" in text
+    assert "Clopper-Pearson" in text
+    assert "cp_upper" in text
+

@@ -254,6 +254,39 @@ def render_markdown(folds_out: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def write_fold_keys_from_json(
+    folds_path: Path | None = None,
+    out_dir: Path | None = None,
+) -> list[Path]:
+    """Generate docs/phase6_shaurya/crossfit/fold_{0..4}_keys.txt from folds.json.
+
+    Each file contains one input_key per line, sorted, LF line endings, ASCII only.
+    Writes a provenance JSON next to each output file.
+    """
+    root = repo_root()
+    if folds_path is None:
+        folds_path = root / "docs" / "phase6_shaurya" / "crossfit" / "folds.json"
+    if out_dir is None:
+        out_dir = folds_path.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    folds_data = json.loads(folds_path.read_text(encoding="utf-8"))
+    seed = folds_data.get("seed", SEED)
+    k_folds = folds_data.get("K", K)
+
+    written: list[Path] = []
+    for f in range(k_folds):
+        keys = sorted(folds_data["folds"][str(f)]["input_keys"])
+        p = out_dir / f"fold_{f}_keys.txt"
+        content = "\n".join(keys) + "\n"
+        p.write_bytes(content.encode("ascii"))
+        write_provenance(p, seed=seed, inputs=[folds_path])
+        written.append(p)
+        LOG.info("Written: %s (%d keys)", p, len(keys))
+
+    return written
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, stream=sys.stderr)
     root = repo_root()
@@ -272,8 +305,12 @@ def main() -> None:
     md_path = out_dir / "folds.md"
     md_path.write_text(render_markdown(folds_out), encoding="utf-8")
 
+    key_paths = write_fold_keys_from_json(folds_path, out_dir)
+
     LOG.info("Written: %s", folds_path)
     LOG.info("Written: %s", md_path)
+    for kp in key_paths:
+        LOG.info("Written: %s", kp)
     print(render_markdown(folds_out))
 
 
