@@ -3,7 +3,7 @@
 Scans:
   1. Python packages declared in requirements*.txt using importlib.metadata.
   2. Dataset licenses from C-mined manifest (ml/real_data/diagnostics/out/tierC_mined_v2.jsonl).
-  3. Base model license (Qwen3.5 Apache-2.0).
+  3. Base model license from ml/train_m1/notebooks/01_sft.ipynb.
 
 Outputs:
   ml/train_m2/out/reports/licence_audit.md
@@ -197,14 +197,83 @@ def audit_dataset_licenses(root: Path) -> dict[str, Any]:
     }
 
 
-def audit_base_model() -> dict[str, Any]:
-    """Return base model licensing information."""
+def audit_base_model(root: Path | None = None) -> dict[str, Any]:
+    """Return base model licensing information by inspecting ml/train_m1/notebooks/01_sft.ipynb.
+
+    Reports the licence as UNVERIFIED unless a licence file or manifest in the repository states it.
+    """
+    root = root or repo_root()
+    nb_path = root / "ml" / "train_m1" / "notebooks" / "01_sft.ipynb"
+
+    base_model = "unknown"
+    if nb_path.is_file():
+        try:
+            nb = json.loads(nb_path.read_text(encoding="utf-8"))
+            for cell in nb.get("cells", []):
+                if cell.get("cell_type") == "code":
+                    source = "".join(cell.get("source", []))
+                    m = re.search(r'BASE_MODEL\s*=\s*["\']([^"\']+)["\']', source)
+                    if m:
+                        base_model = m.group(1).strip()
+                        break
+        except Exception as e:
+            LOG.warning("Failed to parse %s: %s", nb_path, e)
+
+    # Check if a licence file or manifest in the repo states the licence for this model
+    declared_license: str | None = None
+
+    manifest_dirs = [
+        root / "ml" / "train_m2" / "harvest_manifests",
+        root / "harvest_manifests",
+    ]
+    for md in manifest_dirs:
+        if md.is_dir():
+            for mf in md.glob("*.json"):
+                try:
+                    data = json.loads(mf.read_text(encoding="utf-8"))
+                    if (
+                        data.get("base_model") == base_model
+                        or data.get("model") == base_model
+                    ) and data.get("license"):
+                        declared_license = str(data["license"]).strip()
+                        break
+                except Exception:
+                    continue
+        if declared_license:
+            break
+
+    if not declared_license:
+        sanitized = re.sub(r"[^\w\-\.]", "_", base_model)
+        candidates = [
+            root / f"LICENSE.{sanitized}",
+            root / "models" / sanitized / "LICENSE",
+            root / "ml" / "models" / sanitized / "LICENSE",
+        ]
+        for c in candidates:
+            if c.is_file():
+                declared_license = c.read_text(encoding="utf-8").strip().splitlines()[0]
+                break
+
+    if declared_license:
+        cat = categorize_license(declared_license)
+        return {
+            "model_name": base_model,
+            "license": declared_license,
+            "commercial_use_allowed": cat == "permissive",
+            "status": "APPROVED" if cat == "permissive" else "UNVERIFIED",
+            "notes": f"Licence declared in repository for base model '{base_model}'.",
+        }
+
     return {
-        "model_name": "Qwen3.5-4B / Qwen2.5",
-        "license": "Apache-2.0",
-        "commercial_use_allowed": True,
-        "status": "APPROVED",
-        "notes": "Permissive Apache-2.0 license compatible with commercial redistribution and research.",
+        "model_name": base_model,
+        "license": "UNVERIFIED",
+        "commercial_use_allowed": False,
+        "status": "UNVERIFIED",
+        "notes": (
+            f"Base model '{base_model}' read from ml/train_m1/notebooks/01_sft.ipynb. "
+            "No licence file or manifest in the repository states the licence for this model; "
+            "licence is UNVERIFIED."
+        ),
     }
 
 
@@ -213,7 +282,7 @@ def run_licence_audit(root: Path | None = None) -> dict[str, Any]:
     root = root or repo_root()
     pkg_audit = audit_packages(root)
     dataset_audit = audit_dataset_licenses(root)
-    base_model_audit = audit_base_model()
+    base_model_audit = audit_base_model(root)
 
     return {
         "dependencies": pkg_audit,

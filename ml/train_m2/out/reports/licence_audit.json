@@ -2561,10 +2561,10 @@
     ]
   },
   "base_model": {
-    "model_name": "Qwen3.5-4B / Qwen2.5",
-    "license": "Apache-2.0",
-    "commercial_use_allowed": true,
-    "status": "APPROVED",
-    "notes": "Permissive Apache-2.0 license compatible with commercial redistribution and research."
+    "model_name": "unsloth/Qwen3.5-4B",
+    "license": "UNVERIFIED",
+    "commercial_use_allowed": false,
+    "status": "UNVERIFIED",
+    "notes": "Base model 'unsloth/Qwen3.5-4B' read from ml/train_m1/notebooks/01_sft.ipynb. No licence file or manifest in the repository states the licence for this model; licence is UNVERIFIED."
   }
 }

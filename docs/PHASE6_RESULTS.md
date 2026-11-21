@@ -45,9 +45,9 @@ Regimes evaluated: 4  |  Reps per regime: 2000
 | Regime | n_cal | true_err | certified_frac | LTT_coverage | CRC_coverage | CRC_exceeds_alpha | max_cond_error |
 |---|---|---|---|---|---|---|---|
 | exchangeable_low_error | 80 | 0.02 | 0.9715 | 1.0 | 1.0 | False | 0.02 |
-| exchangeable_at_alpha | 80 | 0.05 | 0.6295 | 1.0 | 0.9965 | True | 0.0503 |
+| exchangeable_at_alpha | 80 | 0.05 | 0.6295 | 1.0 | 0.9965 | False | 0.0503 |
 | label_shift_adversarial | 80 | 0.02 | 0.3755 | 1.0 | 1.0 | False | 0.0212 |
-| covariate_shift_small_n | 30 | 0.08 | 0.0 | 0.0 | 0.9035 | True | 0.0754 |
+| covariate_shift_small_n | 30 | 0.08 | 0.0 | None | 0.9035 | True | 0.0754 |
 
 ## 6. Feature Parity Check (parity_500.json)
 
@@ -61,5 +61,5 @@ Regimes evaluated: 4  |  Reps per regime: 2000
   - Permissive: 250
   - Copyleft: 4
   - Unverified / Not Installed: 10
-- Base model (Qwen3.5-4B / Qwen2.5): Apache-2.0 (APPROVED)
+- Base model (unsloth/Qwen3.5-4B): UNVERIFIED (UNVERIFIED)
 - C-mined dataset rows: 37 (Copyleft rows: 1)

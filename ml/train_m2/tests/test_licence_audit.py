@@ -63,9 +63,63 @@ def test_get_package_license_installed():
 
 def test_audit_base_model():
     bm = audit_base_model()
-    assert bm["license"] == "Apache-2.0"
-    assert bm["commercial_use_allowed"] is True
-    assert bm["status"] == "APPROVED"
+    assert bm["model_name"] == "unsloth/Qwen3.5-4B"
+    assert bm["license"] == "UNVERIFIED"
+    assert bm["commercial_use_allowed"] is False
+    assert bm["status"] == "UNVERIFIED"
+    # Ensure Qwen2.5 is not present anywhere in the base model audit
+    assert "Qwen2.5" not in json.dumps(bm)
+
+
+def test_audit_base_model_with_declared_manifest(tmp_path: Path):
+    """When a harvest manifest explicitly declares a permissive license for the model, it is approved."""
+    # Create fake notebook
+    nb_dir = tmp_path / "ml" / "train_m1" / "notebooks"
+    nb_dir.mkdir(parents=True)
+    nb_path = nb_dir / "01_sft.ipynb"
+    nb_content = {
+        "cells": [
+            {
+                "cell_type": "code",
+                "source": ['BASE_MODEL = "custom/test-model-4b"\n'],
+            }
+        ]
+    }
+    nb_path.write_text(json.dumps(nb_content), encoding="utf-8")
+
+    # Before manifest: should be UNVERIFIED
+    bm_unverified = audit_base_model(root=tmp_path)
+    assert bm_unverified["model_name"] == "custom/test-model-4b"
+    assert bm_unverified["license"] == "UNVERIFIED"
+    assert bm_unverified["status"] == "UNVERIFIED"
+
+    # Add manifest declaring Apache-2.0
+    man_dir = tmp_path / "harvest_manifests"
+    man_dir.mkdir(parents=True)
+    man_path = man_dir / "test_manifest.json"
+    man_path.write_text(
+        json.dumps({"base_model": "custom/test-model-4b", "license": "Apache-2.0"}),
+        encoding="utf-8",
+    )
+
+    bm_approved = audit_base_model(root=tmp_path)
+    assert bm_approved["model_name"] == "custom/test-model-4b"
+    assert bm_approved["license"] == "Apache-2.0"
+    assert bm_approved["commercial_use_allowed"] is True
+    assert bm_approved["status"] == "APPROVED"
+
+
+def test_no_qwen25_in_licence_audit():
+    """Ensure Qwen2.5 text is completely removed from licence_audit module and report."""
+    from ml.train_m2 import licence_audit
+    import inspect
+    source = inspect.getsource(licence_audit)
+    assert "Qwen2.5" not in source
+
+    root = repo_root()
+    audit = run_licence_audit(root)
+    md = render_markdown(audit)
+    assert "Qwen2.5" not in md
 
 
 def test_audit_dataset_licenses():

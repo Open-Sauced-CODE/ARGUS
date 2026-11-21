@@ -7,15 +7,15 @@
   - Permissive: 250
   - Copyleft: 4
   - Unverified / Not Installed: 10
-- Base model (Qwen3.5-4B / Qwen2.5): Apache-2.0 (APPROVED)
+- Base model (unsloth/Qwen3.5-4B): UNVERIFIED (UNVERIFIED)
 - C-mined dataset rows: 37 (Copyleft rows: 1)
 
 ## 2. Base Model Licence
 
-- **Model**: Qwen3.5-4B / Qwen2.5
-- **Licence**: Apache-2.0
-- **Commercial Use**: Yes
-- **Notes**: Permissive Apache-2.0 license compatible with commercial redistribution and research.
+- **Model**: unsloth/Qwen3.5-4B
+- **Licence**: UNVERIFIED
+- **Commercial Use**: No
+- **Notes**: Base model 'unsloth/Qwen3.5-4B' read from ml/train_m1/notebooks/01_sft.ipynb. No licence file or manifest in the repository states the licence for this model; licence is UNVERIFIED.
 
 ## 3. Dataset Licences (C-Mined Manifest)
 

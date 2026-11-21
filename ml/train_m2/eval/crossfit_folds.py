@@ -105,12 +105,16 @@ def build_folds(seed: int = SEED) -> dict[str, Any]:
 
         overlap = [k for k in keys if k in heldout_keys]
         in_av = [k for k in keys if k in aval_keys]
+        both = [k for k in keys if k in heldout_keys and k in aval_keys]
+        clean = [k for k in keys if k not in heldout_keys and k not in aval_keys]
 
         folds_out["folds"][str(f)] = {
             "input_keys": keys,
             "per_rule": dict(sorted(per_rule.items())),
             "heldout_overlap": overlap,
             "in_a_val": in_av,
+            "overlap_of_those_two": both,
+            "clean_unseen": clean,
             "note": (
                 "OOF drafts for input_keys in heldout_overlap are labelled "
                 "heldout_overlap and are NEVER used to train or calibrate M2; "
@@ -135,6 +139,8 @@ def build_folds(seed: int = SEED) -> dict[str, Any]:
             "total": len(folds_out["folds"][str(f)]["input_keys"]),
             "heldout_overlap": len(folds_out["folds"][str(f)]["heldout_overlap"]),
             "in_a_val": len(folds_out["folds"][str(f)]["in_a_val"]),
+            "overlap_of_those_two": len(folds_out["folds"][str(f)]["overlap_of_those_two"]),
+            "clean_unseen": len(folds_out["folds"][str(f)]["clean_unseen"]),
         }
         for f in range(K)
     }
@@ -155,14 +161,70 @@ def render_markdown(folds_out: dict[str, Any]) -> str:
         "",
         "## Per-fold summary",
         "",
-        "| Fold | Total | Heldout overlap | In A_val |",
-        "|---|---|---|---|",
+        "| Fold | Inputs | Heldout overlap | In A_val | Overlap of those two | Clean unseen clusters |",
+        "|---|---|---|---|---|---|",
     ]
+    tot_inputs = 0
+    tot_heldout = 0
+    tot_aval = 0
+    tot_both = 0
+    tot_clean = 0
+
+    fallback_inputs = 0
+    fallback_heldout = 0
+    fallback_aval = 0
+    fallback_both = 0
+    fallback_clean = 0
+
     for f in range(folds_out["K"]):
         c = folds_out["counts_per_fold"][str(f)]
-        lines.append(f"| {f} | {c['total']} | {c['heldout_overlap']} | {c['in_a_val']} |")
+        inputs_cnt = c["total"]
+        heldout_cnt = c["heldout_overlap"]
+        aval_cnt = c["in_a_val"]
+        both_cnt = c.get("overlap_of_those_two", 0)
+        clean_cnt = c.get("clean_unseen", 0)
+
+        tot_inputs += inputs_cnt
+        tot_heldout += heldout_cnt
+        tot_aval += aval_cnt
+        tot_both += both_cnt
+        tot_clean += clean_cnt
+
+        if f in (0, 1, 2):
+            fallback_inputs += inputs_cnt
+            fallback_heldout += heldout_cnt
+            fallback_aval += aval_cnt
+            fallback_both += both_cnt
+            fallback_clean += clean_cnt
+
+        lines.append(
+            f"| {f} | {inputs_cnt} | {heldout_cnt} | {aval_cnt} | {both_cnt} | {clean_cnt} |"
+        )
+
+    lines.append(
+        f"| Total (5 folds) | {tot_inputs} | {tot_heldout} | {tot_aval} | {tot_both} | {tot_clean} |"
+    )
+    lines.append(
+        f"| 3-fold fallback (0, 1, 2) | {fallback_inputs} | {fallback_heldout} | {fallback_aval} | {fallback_both} | {fallback_clean} |"
+    )
 
     lines += [
+        "",
+        "## Clean unseen cluster totals vs S4 requirement (59 needed)",
+        "",
+        "- CLEAN unseen clusters = inputs not in any held-out set and not in A_val.",
+        "- Existing clean unseen clusters in production: 15.",
+        "- Required clean unseen clusters to certify stop rule S4: 59.",
+        "",
+        "### 5-fold totals:",
+        f"- OOF clean unseen clusters: {tot_clean}",
+        f"- Plus existing 15: {tot_clean} + 15 = {tot_clean + 15} clean unseen clusters",
+        f"- Target comparison: {tot_clean + 15} vs 59 needed (margin: +{tot_clean + 15 - 59})",
+        "",
+        "### 3-fold fallback totals (folds 0, 1, 2):",
+        f"- OOF clean unseen clusters: {fallback_clean}",
+        f"- Plus existing 15: {fallback_clean} + 15 = {fallback_clean + 15} clean unseen clusters",
+        f"- Target comparison: {fallback_clean + 15} vs 59 needed (margin: +{fallback_clean + 15 - 59})",
         "",
         "## Rule-id distribution across all folds",
         "",

@@ -354,3 +354,70 @@ def test_stable_hash_differs_from_python_hash():
     py_hash = hash(key)
     # They could theoretically match but it's astronomically unlikely
     assert stable != py_hash or stable > 2**63  # stable is always a large int
+
+
+# ---------------------------------------------------------------------------
+# Exact clean-unseen cluster counts (P6f-Fix Requirement 2)
+# ---------------------------------------------------------------------------
+
+def test_exact_clean_unseen_cluster_counts():
+    """Verify exact per-fold and total counts: inputs, heldout_overlap, in_a_val, overlap, clean unseen."""
+    folds = build_folds(SEED)
+
+    expected_per_fold = {
+        "0": {"total": 55, "heldout_overlap": 17, "in_a_val": 16, "both": 15, "clean": 37},
+        "1": {"total": 50, "heldout_overlap": 15, "in_a_val": 13, "both": 13, "clean": 35},
+        "2": {"total": 43, "heldout_overlap": 12, "in_a_val": 11, "both": 10, "clean": 30},
+        "3": {"total": 41, "heldout_overlap": 6, "in_a_val": 7, "both": 5, "clean": 33},
+        "4": {"total": 41, "heldout_overlap": 6, "in_a_val": 8, "both": 6, "clean": 33},
+    }
+
+    for f_str, exp in expected_per_fold.items():
+        c = folds["counts_per_fold"][f_str]
+        assert c["total"] == exp["total"], f"Fold {f_str} total"
+        assert c["heldout_overlap"] == exp["heldout_overlap"], f"Fold {f_str} heldout"
+        assert c["in_a_val"] == exp["in_a_val"], f"Fold {f_str} in_a_val"
+        assert c["overlap_of_those_two"] == exp["both"], f"Fold {f_str} both"
+        assert c["clean_unseen"] == exp["clean"], f"Fold {f_str} clean"
+        # Consistency: clean = total - (heldout + in_a_val - both)
+        assert c["clean_unseen"] == c["total"] - (c["heldout_overlap"] + c["in_a_val"] - c["overlap_of_those_two"])
+
+    # 5-fold totals
+    total_clean_5 = sum(folds["counts_per_fold"][str(f)]["clean_unseen"] for f in range(5))
+    assert total_clean_5 == 168
+    assert total_clean_5 + 15 == 183
+    assert total_clean_5 + 15 >= 59  # 183 vs 59 needed
+
+    # 3-fold fallback (folds 0, 1, 2)
+    fallback_clean_3 = sum(folds["counts_per_fold"][str(f)]["clean_unseen"] for f in (0, 1, 2))
+    assert fallback_clean_3 == 102
+    assert fallback_clean_3 + 15 == 117
+    assert fallback_clean_3 + 15 >= 59  # 117 vs 59 needed
+
+    # Render markdown and verify no "~" in the summary table
+    md = render_markdown(folds)
+    assert "| Total (5 folds) | 230 | 56 | 55 | 49 | 168 |" in md
+    assert "| 3-fold fallback (0, 1, 2) | 148 | 44 | 40 | 38 | 102 |" in md
+    assert "183 vs 59 needed" in md
+    assert "117 vs 59 needed" in md
+    assert "~" not in md
+
+
+def test_crossfit_package_md_exact_counts():
+    """Verify that CROSSFIT_PACKAGE.md contains exact counts and no approximations for clean clusters."""
+    root = repo_root()
+    pkg_path = root / "docs" / "phase6_shaurya" / "crossfit" / "CROSSFIT_PACKAGE.md"
+    assert pkg_path.is_file()
+    text = pkg_path.read_text(encoding="utf-8")
+
+    # Verify exact numbers are documented
+    assert "168" in text
+    assert "183" in text
+    assert "102" in text
+    assert "117" in text
+    assert "2,507" in text or "2507" in text
+    assert "1,840" in text or "1840" in text
+
+    # Verify no "~" in fold definitions or clean cluster sections
+    fold_section = text.split("## Fold definitions")[1].split("## For each fold")[0]
+    assert "~" not in fold_section, f"Approximate count '~' found in fold definitions: {fold_section}"

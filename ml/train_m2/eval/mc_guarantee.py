@@ -47,15 +47,16 @@ class RegimeResult:
     true_error_rate: float
     reps: int
     # LTT
-    ltt_coverage: float          # fraction of reps where LTT certifies risk <= alpha
-    ltt_certified_frac: float    # fraction of reps where tau is not None
-    ltt_mean_risk: float         # mean realised selective risk when tau is not None
-    ltt_max_risk: float          # max realised selective risk when tau is not None
+    ltt_coverage: float | None    # fraction of reps where LTT certifies risk <= alpha; None when certified_frac == 0
+    ltt_certified_frac: float     # fraction of reps where tau is not None
+    ltt_mean_risk: float          # mean realised selective risk when tau is not None
+    ltt_max_risk: float           # max realised selective risk when tau is not None
     # CRC baseline
-    crc_coverage: float          # fraction of reps where CRC error rate <= alpha
-    crc_mean_cond_error: float   # mean realised P(wrong|accepted)
-    crc_max_cond_error: float    # max realised P(wrong|accepted)
-    crc_exceeds_alpha: bool      # does at least one rep show CRC conditional error > alpha?
+    crc_coverage: float           # fraction of reps where CRC error rate <= alpha
+    crc_mean_cond_error: float    # mean realised P(wrong|accepted)
+    crc_max_cond_error: float     # max realised P(wrong|accepted)
+    crc_se: float                 # Monte-Carlo standard error of conditional error across reps
+    crc_exceeds_alpha: bool       # does max conditional error exceed alpha by more than the Monte-Carlo standard error?
     alpha: float
     delta: float
 
@@ -156,10 +157,20 @@ def run_regime(
             crc_cond_errors.append(crc_err)
 
     certified = [t for t in ltt_taus if t is not None]
-    ltt_coverage = sum(r <= ALPHA for r in ltt_risks) / max(len(ltt_risks), 1)
     ltt_certified_frac = len(certified) / reps
+    if ltt_certified_frac == 0 or len(ltt_risks) == 0:
+        ltt_coverage = None
+    else:
+        ltt_coverage = round(sum(r <= ALPHA for r in ltt_risks) / len(ltt_risks), 4)
+
     crc_coverage = sum(e <= ALPHA for e in crc_cond_errors) / max(len(crc_cond_errors), 1)
-    crc_exceeds = any(e > ALPHA for e in crc_cond_errors)
+    crc_mean = float(np.mean(crc_cond_errors)) if crc_cond_errors else float("nan")
+    crc_max = float(np.max(crc_cond_errors)) if crc_cond_errors else float("nan")
+    # Monte-Carlo standard error of the test error evaluation on n_test draws at rate alpha:
+    # SE = sqrt(alpha * (1 - alpha) / n_test) = sqrt(0.05 * 0.95 / 500) = 0.0097
+    crc_se = float(np.sqrt(ALPHA * (1.0 - ALPHA) / 500))
+    # report CRC "exceeds alpha" only when max conditional error exceeds alpha by more than the Monte-Carlo standard error
+    crc_exceeds = bool(crc_max > (ALPHA + crc_se)) if not np.isnan(crc_max) else False
 
     return RegimeResult(
         name=name,
@@ -168,13 +179,14 @@ def run_regime(
         n_test=500,
         true_error_rate=true_error_rate,
         reps=reps,
-        ltt_coverage=round(ltt_coverage, 4),
+        ltt_coverage=ltt_coverage,
         ltt_certified_frac=round(ltt_certified_frac, 4),
         ltt_mean_risk=round(float(np.mean(ltt_risks)) if ltt_risks else float("nan"), 4),
         ltt_max_risk=round(float(np.max(ltt_risks)) if ltt_risks else float("nan"), 4),
         crc_coverage=round(crc_coverage, 4),
-        crc_mean_cond_error=round(float(np.mean(crc_cond_errors)) if crc_cond_errors else float("nan"), 4),
-        crc_max_cond_error=round(float(np.max(crc_cond_errors)) if crc_cond_errors else float("nan"), 4),
+        crc_mean_cond_error=round(crc_mean, 4),
+        crc_max_cond_error=round(crc_max, 4),
+        crc_se=round(crc_se, 4),
         crc_exceeds_alpha=crc_exceeds,
         alpha=ALPHA,
         delta=DELTA,
@@ -211,9 +223,10 @@ def run_all_regimes(seed: int = SEED, reps: int = REPS) -> list[RegimeResult]:
         LOG.info("Running regime: %s", kwargs["name"])
         result = run_regime(rng=rng, reps=reps, **kwargs)
         results.append(result)
+        cov_disp = f"{result.ltt_coverage:.3f}" if result.ltt_coverage is not None else "null"
         LOG.info(
-            "  LTT coverage=%.3f certified=%.3f | CRC coverage=%.3f exceeds_alpha=%s",
-            result.ltt_coverage, result.ltt_certified_frac,
+            "  LTT coverage=%s certified=%.3f | CRC coverage=%.3f exceeds_alpha=%s",
+            cov_disp, result.ltt_certified_frac,
             result.crc_coverage, result.crc_exceeds_alpha,
         )
 
@@ -237,9 +250,10 @@ def render_markdown(results: list[RegimeResult]) -> str:
         "|---|---|---|---|---|---|---|",
     ]
     for r in results:
+        cov_str = "n/a (nothing certified)" if r.ltt_coverage is None or r.ltt_certified_frac == 0 else f"{r.ltt_coverage:.3f}"
         lines.append(
             f"| {r.name} | {r.n_cal} | {r.true_error_rate:.2f} | "
-            f"{r.ltt_certified_frac:.3f} | {r.ltt_coverage:.3f} | "
+            f"{r.ltt_certified_frac:.3f} | {cov_str} | "
             f"{r.ltt_mean_risk} | {r.ltt_max_risk} |"
         )
 
@@ -248,15 +262,15 @@ def render_markdown(results: list[RegimeResult]) -> str:
         "## v3-CRC conditional error baseline",
         "",
         "CRC controls E[1(accepted and wrong)] <= alpha over ALL patches, NOT P(wrong|accepted).",
-        "At least one regime should show CRC conditional error > alpha (not a failure of LTT).",
+        "At least one regime should show CRC conditional error > alpha by more than Monte-Carlo SE (not a failure of LTT).",
         "",
-        "| Regime | CRC_coverage | mean_cond_error | max_cond_error | exceeds_alpha |",
-        "|---|---|---|---|---|",
+        "| Regime | CRC_coverage | mean_cond_error | max_cond_error | MC_SE | exceeds_alpha |",
+        "|---|---|---|---|---|---|",
     ]
     for r in results:
         lines.append(
             f"| {r.name} | {r.crc_coverage:.3f} | "
-            f"{r.crc_mean_cond_error} | {r.crc_max_cond_error} | {r.crc_exceeds_alpha} |"
+            f"{r.crc_mean_cond_error} | {r.crc_max_cond_error} | {r.crc_se:.4f} | {r.crc_exceeds_alpha} |"
         )
 
     # Find first regime where CRC exceeds alpha
@@ -265,13 +279,14 @@ def render_markdown(results: list[RegimeResult]) -> str:
         lines += [
             "",
             f"**CRC exceeds alpha in regime '{crc_violation.name}'**: max conditional error "
-            f"{crc_violation.crc_max_cond_error:.3f} > alpha={ALPHA}. This demonstrates that "
-            f"CRC's marginal joint-error control does NOT imply conditional error control.",
+            f"{crc_violation.crc_max_cond_error:.4f} exceeds alpha={ALPHA} by more than "
+            f"the Monte-Carlo standard error (SE = {crc_violation.crc_se:.4f}, alpha + SE = {ALPHA + crc_violation.crc_se:.4f}). "
+            f"This demonstrates that CRC's marginal joint-error control does NOT imply conditional error control.",
         ]
     else:
         lines += [
             "",
-            "**Honest note**: No regime showed CRC conditional error > alpha in this simulation.",
+            "**Honest note**: No regime showed CRC conditional error > alpha by more than Monte-Carlo SE in this simulation.",
             "This is consistent with the low-error-rate regimes tested. With heavier label shift",
             "or low n_cal, CRC violations are expected; they were not observed in these regimes.",
         ]
@@ -325,9 +340,8 @@ where the probability is over a fresh test cluster drawn from the SAME distribut
 
 The Monte-Carlo simulation (mc_guarantee.py) confirms that:
 - In the exchangeable, low-error-rate regime, LTT coverage is >= 1 - delta - 0.01 = 0.94.
-- In the small-n / high-error regime, LTT correctly withholds certification (tau = None).
-- The v3-CRC baseline (crc_joint_threshold) does NOT control P(wrong | accepted); in at least
-  one regime its conditional error exceeds alpha (see mc_guarantee.md).
+- In the small-n / high-error regime, LTT correctly withholds certification (tau = None; coverage is reported as null / "n/a (nothing certified)").
+- The v3-CRC baseline (crc_joint_threshold) does NOT control P(wrong | accepted); in regime 'covariate_shift_small_n', its conditional error exceeds alpha by more than the Monte-Carlo standard error (see mc_guarantee.md).
 
 ## What is NOT proved
 

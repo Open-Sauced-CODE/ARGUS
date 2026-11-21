@@ -33,9 +33,8 @@ where the probability is over a fresh test cluster drawn from the SAME distribut
 
 The Monte-Carlo simulation (mc_guarantee.py) confirms that:
 - In the exchangeable, low-error-rate regime, LTT coverage is >= 1 - delta - 0.01 = 0.94.
-- In the small-n / high-error regime, LTT correctly withholds certification (tau = None).
-- The v3-CRC baseline (crc_joint_threshold) does NOT control P(wrong | accepted); in at least
-  one regime its conditional error exceeds alpha (see mc_guarantee.md).
+- In the small-n / high-error regime, LTT correctly withholds certification (tau = None; coverage is reported as null / "n/a (nothing certified)").
+- The v3-CRC baseline (crc_joint_threshold) does NOT control P(wrong | accepted); in regime 'covariate_shift_small_n', its conditional error exceeds alpha by more than the Monte-Carlo standard error (see mc_guarantee.md).
 
 ## What is NOT proved
 
