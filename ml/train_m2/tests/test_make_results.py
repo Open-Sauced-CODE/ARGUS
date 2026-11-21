@@ -31,7 +31,8 @@ def test_load_functions_return_dicts_or_lists():
 
     tau = load_tau_star(root)
     assert isinstance(tau, dict)
-    assert tau.get("alpha") == 0.05
+    if tau:
+        assert tau.get("alpha") == 0.05
 
     mc = load_mc_guarantee(root)
     assert isinstance(mc, list)
@@ -81,8 +82,64 @@ def test_numbers_come_from_input_files():
     assert str(folds["seed"]) in md
 
     tau = load_tau_star(root)
-    assert str(tau["n_total"]) in md
-    assert str(tau["n_min"]) in md
+    if tau:
+        assert str(tau["n_total"]) in md
+        assert str(tau["n_min"]) in md
+    else:
+        assert "tau_star.json not available." in md
 
     parity = load_parity_check(root)
     assert str(parity["total_rows_checked"]) in md
+
+
+def test_synthetic_tau_star_rendered(tmp_path: Path):
+    """When tau_star.json exists, its numbers are rendered into the report."""
+    root = tmp_path
+    tau_file = root / "ml" / "train_m2" / "out" / "tau_star.json"
+    tau_file.parent.mkdir(parents=True, exist_ok=True)
+    tau_file.write_text(
+        json.dumps({
+            "certified": False,
+            "alpha": 0.05,
+            "delta": 0.05,
+            "n_total": 50,
+            "n_min": 59,
+            "tau": None,
+            "message": "test-tau-msg",
+        }),
+        encoding="utf-8",
+    )
+    loaded = load_tau_star(root)
+    assert loaded["alpha"] == 0.05
+    assert loaded["n_min"] == 59
+
+    md = render_phase6_results(root)
+    assert "test-tau-msg" in md
+    assert "50" in md
+    assert "59" in md
+
+
+def test_corrupt_files_handled_gracefully(tmp_path: Path):
+    """Corrupted json files do not crash the loaders or renderer."""
+    root = tmp_path
+    reports_dir = root / "ml" / "train_m2" / "out" / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write broken JSON files
+    (reports_dir / "mc_guarantee.json").write_text("{corrupt json", encoding="utf-8")
+    (reports_dir / "parity_500.json").write_text("not json at all", encoding="utf-8")
+    (reports_dir / "licence_audit.json").write_text("---broken---", encoding="utf-8")
+
+    tau_file = root / "ml" / "train_m2" / "out" / "tau_star.json"
+    tau_file.write_text("{'invalid': json}", encoding="utf-8")
+
+    assert load_mc_guarantee(root) == []
+    assert load_parity_check(root) == {}
+    assert load_licence_audit(root) == {}
+    assert load_tau_star(root) == {}
+
+    # Renderer should succeed even with corrupted inputs
+    md = render_phase6_results(root)
+    assert "Phase 6 Results Summary" in md
+    assert "tau_star.json not available." in md
+    assert "parity_500.json not available." in md

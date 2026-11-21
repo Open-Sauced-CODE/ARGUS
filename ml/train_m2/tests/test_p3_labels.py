@@ -575,6 +575,10 @@ class TestProvenanceLeak:
         """build_labels.main() produces clean output (repo-relative paths only)."""
         import re
 
+        root = repo_root()
+        if not (root / "ml" / "mutation_engine" / "dataset" / "val.jsonl").is_file():
+            pytest.skip("val.jsonl not present in checkout (gitignored data)")
+
         from ml.train_m2.labels.build_labels import main
 
         out_dir = tmp_path / "labels_out"

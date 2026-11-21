@@ -44,7 +44,11 @@ def load_crossfit_folds(root: Path) -> dict[str, Any]:
     path = root / "docs" / "phase6_shaurya" / "crossfit" / "folds.json"
     if not path.is_file():
         return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        LOG.warning("Failed to load crossfit folds from %s: %s", path, e)
+        return {}
 
 
 def load_tau_star(root: Path) -> dict[str, Any]:
@@ -52,7 +56,11 @@ def load_tau_star(root: Path) -> dict[str, Any]:
     path = root / "ml" / "train_m2" / "out" / "tau_star.json"
     if not path.is_file():
         return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        LOG.warning("Failed to load tau_star from %s: %s", path, e)
+        return {}
 
 
 def load_mc_guarantee(root: Path) -> list[dict[str, Any]]:
@@ -61,10 +69,14 @@ def load_mc_guarantee(root: Path) -> list[dict[str, Any]]:
     if not path.is_file():
         return []
     rows: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if line:
-            rows.append(json.loads(line))
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line:
+                rows.append(json.loads(line))
+    except (json.JSONDecodeError, OSError) as e:
+        LOG.warning("Failed to load mc_guarantee from %s: %s", path, e)
+        return []
     return rows
 
 
@@ -73,7 +85,11 @@ def load_parity_check(root: Path) -> dict[str, Any]:
     path = root / "ml" / "train_m2" / "out" / "reports" / "parity_500.json"
     if not path.is_file():
         return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        LOG.warning("Failed to load parity check from %s: %s", path, e)
+        return {}
 
 
 def load_licence_audit(root: Path) -> dict[str, Any]:
@@ -81,7 +97,11 @@ def load_licence_audit(root: Path) -> dict[str, Any]:
     path = root / "ml" / "train_m2" / "out" / "reports" / "licence_audit.json"
     if not path.is_file():
         return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        LOG.warning("Failed to load licence audit from %s: %s", path, e)
+        return {}
 
 
 def load_heldout_results(root: Path) -> dict[str, Any] | None:

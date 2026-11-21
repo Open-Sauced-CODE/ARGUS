@@ -501,6 +501,11 @@ class TestProvenanceLeak:
     def test_build_labels_no_absolute_path(self, tmp_path: Path) -> None:
         """build_labels.main() produces no absolute paths in output files."""
         import re
+
+        root = repo_root()
+        if not (root / "ml" / "mutation_engine" / "dataset" / "val.jsonl").is_file():
+            pytest.skip("val.jsonl not present in checkout (gitignored data)")
+
         from ml.train_m2.labels.build_labels import main
 
         out_dir = tmp_path / "labels_out"
