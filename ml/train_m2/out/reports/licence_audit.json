@@ -1,0 +1,2570 @@
+{
+  "dependencies": {
+    "requirements_files_scanned": [
+      "requirements-ci.txt",
+      "requirements-m1v2.txt",
+      "requirements-phase3.txt",
+      "requirements-phase4.txt",
+      "requirements-phase5.txt",
+      "requirements-phase6.txt",
+      "requirements.txt"
+    ],
+    "total_declared_packages": 264,
+    "category_counts": {
+      "permissive": 250,
+      "unverified": 10,
+      "copyleft": 4
+    },
+    "unverified_packages": [
+      {
+        "name": "cartography",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "highspy",
+        "declared_in": [
+          "requirements-phase3.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "jupyter-lsp",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "jupyter_server",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "jupyterlab",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "jupyterlab_server",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "notebook_shim",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "orloge",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.0.0",
+        "license_text": "UNKNOWN",
+        "category": "unverified"
+      },
+      {
+        "name": "pagerduty",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "7.0.1",
+        "license_text": "UNKNOWN",
+        "category": "unverified"
+      },
+      {
+        "name": "presidio-analyzer",
+        "declared_in": [
+          "requirements-phase4.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      }
+    ],
+    "copyleft_packages": [
+      {
+        "name": "certifi",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2026.7.22",
+        "license_text": "Mozilla Public License 2.0 (MPL 2.0)",
+        "category": "copyleft"
+      },
+      {
+        "name": "crc32c",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.8",
+        "license_text": "GNU Lesser General Public License v2 or later (LGPLv2+)",
+        "category": "copyleft"
+      },
+      {
+        "name": "fqdn",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.6.0",
+        "license_text": "MPL-2.0",
+        "category": "copyleft"
+      },
+      {
+        "name": "jwcrypto",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.6.1",
+        "license_text": "LGPL-3.0-or-later",
+        "category": "copyleft"
+      }
+    ],
+    "all_packages": [
+      {
+        "name": "adal",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.2.7",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "aenum",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.1.17",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "aioboto3",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "15.5.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "aiobotocore",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.25.1",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "aiofiles",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "25.1.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "aiohappyeyeballs",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.7.1",
+        "license_text": "Python Software Foundation License",
+        "category": "permissive"
+      },
+      {
+        "name": "aiohttp",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.14.3",
+        "license_text": "Apache-2.0 AND MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "aioitertools",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.13.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "aiosignal",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.4.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "annotated-doc",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.0.5",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "annotated-types",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.8.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "anyio",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.15.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "argon2-cffi",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "25.1.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "argon2-cffi-bindings",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "26.1.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "arrow",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.4.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "asttokens",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.0.2",
+        "license_text": "Apache 2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "async-lru",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.3.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "attrs",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "26.1.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-common",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.1.28",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-core",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.41.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-identity",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.25.3",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-keyvault-certificates",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.11.2",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-keyvault-keys",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.11.2",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-keyvault-secrets",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.11.2",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-authorization",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.0.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-compute",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "38.4.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-containerinstance",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "10.1.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-containerservice",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "41.6.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-core",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.6.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-cosmosdb",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "10.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-datafactory",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "10.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-eventgrid",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "10.4.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-eventhub",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "12.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-keyvault",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "14.0.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-logic",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "10.0.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-managementgroups",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-monitor",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "7.0.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-network",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "33.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-resource",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "26.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-resource-subscriptions",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-security",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "7.0.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-sql",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-storage",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "25.2.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-synapse",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.0.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-mgmt-web",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "11.0.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-storage-blob",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "12.30.3",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "azure-synapse-artifacts",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.22.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "babel",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.18.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "backoff",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.2.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "beautifulsoup4",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.15.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "bleach",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "6.4.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "blinker",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.9.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "boto3",
+        "declared_in": [
+          "requirements-ci.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "1.40.61",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "botocore",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.40.61",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "cartography",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "cbor2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "6.1.4",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "certifi",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2026.7.22",
+        "license_text": "Mozilla Public License 2.0 (MPL 2.0)",
+        "category": "copyleft"
+      },
+      {
+        "name": "cffi",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.1.1",
+        "license_text": "MIT-0",
+        "category": "permissive"
+      },
+      {
+        "name": "charset-normalizer",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.5.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "circuitbreaker",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.1.3",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "click",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "8.5.0",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "cloudflare",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "5.8.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "colorama",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.4.6",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "comm",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.2.3",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "cpsat-logutils",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "crc32c",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.8",
+        "license_text": "GNU Lesser General Public License v2 or later (LGPLv2+)",
+        "category": "copyleft"
+      },
+      {
+        "name": "crowdstrike-falconpy",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.6.5",
+        "license_text": "The Unlicense (Unlicense)",
+        "category": "permissive"
+      },
+      {
+        "name": "cryptography",
+        "declared_in": [
+          "requirements-ci.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "50.0.1",
+        "license_text": "Apache-2.0 OR BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "debugpy",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.8.22",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "defusedxml",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.7.1",
+        "license_text": "Python Software Foundation License",
+        "category": "permissive"
+      },
+      {
+        "name": "distro",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.9.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "dnspython",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.8.0",
+        "license_text": "ISC License (ISCL)",
+        "category": "permissive"
+      },
+      {
+        "name": "docstring_parser",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.18.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "duo_client",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "5.7.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "durationpy",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.11",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "executing",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.2.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "fastjsonschema",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.22.2",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "fqdn",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.6.0",
+        "license_text": "MPL-2.0",
+        "category": "copyleft"
+      },
+      {
+        "name": "frozenlist",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.8.0",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "google-api-core",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.39.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-api-python-client",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.200.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-auth",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.58.1",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-auth-httplib2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.4.2",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-access-context-manager",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.6.1",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-artifact-registry",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.22.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-bigquery",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.45.2",
+        "license_text": "Apache 2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-core",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.7.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-org-policy",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.18.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-os-config",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.25.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-resource-manager",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.18.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-run",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.16.1",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-cloud-storage",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.15.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "google-crc32c",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.9.0",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "google-genai",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.25.0",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "google-resumable-media",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.10.2",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "googleapis-common-protos",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.75.4",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "grpc-google-iam-v1",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.14.5",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "grpcio",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.84.0",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "grpcio-status",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.84.0",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "grpclib",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.4.9",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "h11",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.16.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "h2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.4.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "highspy",
+        "declared_in": [
+          "requirements-phase3.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "hpack",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.2.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "httpcore",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.0.9",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "httpcore2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.13.1",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "httplib2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.32.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "httpx",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.28.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "httpx2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.13.1",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "hyperframe",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "6.1.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "idna",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.20",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "iniconfig",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.3.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "ipykernel",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "7.3.0",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "ipython",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "9.17.1",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "ipython_pygments_lexers",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.1.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "isodate",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.7.2",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "isoduration",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "20.11.0",
+        "license_text": "ISC License (ISCL)",
+        "category": "permissive"
+      },
+      {
+        "name": "jedi",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.20.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "Jinja2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.1.6",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "jmespath",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.1.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "joblib",
+        "declared_in": [
+          "requirements-phase6.txt"
+        ],
+        "installed_version": "1.6.0",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "json5",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.15.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "jsonpointer",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.1.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "jsonschema",
+        "declared_in": [
+          "requirements-ci.txt",
+          "requirements-m1v2.txt",
+          "requirements-phase6.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "4.26.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "jsonschema-specifications",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2025.9.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "jupyter-events",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.12.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "jupyter-lsp",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "jupyter_builder",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.2.3",
+        "license_text": "Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND ISC AND MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "jupyter_client",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "8.10.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "jupyter_core",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "5.9.1",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "jupyter_server",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "jupyter_server_terminals",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.5.4",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "jupyterlab",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "jupyterlab_pygments",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.3.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "jupyterlab_server",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "jwcrypto",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.6.1",
+        "license_text": "LGPL-3.0-or-later",
+        "category": "copyleft"
+      },
+      {
+        "name": "kubernetes",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "36.0.3",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "lark",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.3.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "lightgbm",
+        "declared_in": [
+          "requirements-phase6.txt"
+        ],
+        "installed_version": "4.7.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "markdown-it-py",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.2.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "MarkupSafe",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.0.3",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "marshmallow",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.3.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "matplotlib",
+        "declared_in": [
+          "requirements-phase6.txt"
+        ],
+        "installed_version": "3.10.8",
+        "license_text": "Python Software Foundation License",
+        "category": "permissive"
+      },
+      {
+        "name": "matplotlib-inline",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.2.2",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "mdurl",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.1.2",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "microsoft-kiota-abstractions",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.14.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "microsoft-kiota-authentication-azure",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.14.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "microsoft-kiota-http",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.14.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "microsoft-kiota-serialization-form",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.14.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "microsoft-kiota-serialization-json",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.14.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "microsoft-kiota-serialization-multipart",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.14.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "microsoft-kiota-serialization-text",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.14.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "mistune",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.3.4",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "modal",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.5.5",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "msal",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.39.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "msal-extensions",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.3.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "msgraph-core",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.5.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "msrest",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.7.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "msrestazure",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.6.4.post1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "multidict",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "6.9.1",
+        "license_text": "Apache License 2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "nbclient",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.11.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "nbconvert",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "7.17.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "nbformat",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "5.11.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "neo4j",
+        "declared_in": [
+          "requirements-ci.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "6.3.1",
+        "license_text": "Apache-2.0 AND Python-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "nest-asyncio2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.7.3",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "networkx",
+        "declared_in": [
+          "requirements-ci.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "3.7",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "notebook_shim",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "numpy",
+        "declared_in": [
+          "requirements-ci.txt",
+          "requirements-phase6.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "2.5.3",
+        "license_text": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+        "category": "permissive"
+      },
+      {
+        "name": "oauthlib",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.0.0",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "oci",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.187.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "okta",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.4.6",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "opentelemetry-api",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.45.0",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "opentelemetry-sdk",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.45.0",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "opentelemetry-semantic-conventions",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.66b0",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "orloge",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.0.0",
+        "license_text": "UNKNOWN",
+        "category": "unverified"
+      },
+      {
+        "name": "packageurl-python",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.17.6",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "packaging",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "26.3",
+        "license_text": "Apache-2.0 OR BSD-2-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "pagerduty",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "7.0.1",
+        "license_text": "UNKNOWN",
+        "category": "unverified"
+      },
+      {
+        "name": "pandas",
+        "declared_in": [
+          "requirements-phase6.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "3.0.6",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "pandocfilters",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.5.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "parso",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.8.7",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "platformdirs",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.12.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "pluggy",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.6.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "policyuniverse",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.5.1.20231109",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "presidio-analyzer",
+        "declared_in": [
+          "requirements-phase4.txt"
+        ],
+        "installed_version": null,
+        "license_text": "NOT INSTALLED",
+        "category": "unverified"
+      },
+      {
+        "name": "prometheus_client",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.26.0",
+        "license_text": "Apache-2.0 AND BSD-2-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "prompt_toolkit",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.0.53",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "propcache",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.5.4",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "proto-plus",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.28.4",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "protobuf",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "6.33.6",
+        "license_text": "3-Clause BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "psutil",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "7.2.2",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "PuLP",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "pure_eval",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.2.4",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "pyasn1",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.6.4",
+        "license_text": "BSD-2-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "pyasn1_modules",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.4.2",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "pycparser",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.0",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "pycryptodomex",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.23.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "pydantic",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.13.5",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "pydantic_core",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.46.5",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "pydash",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "8.1.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "pydo",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.41.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "Pygments",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.21.0",
+        "license_text": "BSD-2-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "PyJWT",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.15.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "pyOpenSSL",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "26.4.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "pyparsing",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.3.3",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "pytest",
+        "declared_in": [
+          "requirements-ci.txt",
+          "requirements-m1v2.txt",
+          "requirements-phase6.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "9.1.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "python-dateutil",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.9.0.post0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "python-hcl2",
+        "declared_in": [
+          "requirements-phase5.txt"
+        ],
+        "installed_version": "8.1.4",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "python-json-logger",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.2.0",
+        "license_text": "BSD-2-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "pytz",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2026.4",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "pywinpty",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.0.5",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "PyYAML",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "6.0.3",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "pyzmq",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "27.2.0",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "referencing",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.37.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "requests",
+        "declared_in": [
+          "requirements-m1v2.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "2.34.2",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "requests-oauthlib",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.0.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "rfc3339-validator",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.1.4",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "rfc3986-validator",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.1.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "rfc3987-syntax",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.1.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "rich",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "15.0.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "rpds-py",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2026.6.3",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "s3transfer",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.14.0",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "scaleway",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.12.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "scaleway-core",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.12.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "scikit-learn",
+        "declared_in": [
+          "requirements-phase6.txt"
+        ],
+        "installed_version": "1.9.1",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "scipy",
+        "declared_in": [
+          "requirements-ci.txt",
+          "requirements-phase6.txt",
+          "requirements.txt"
+        ],
+        "installed_version": "1.18.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "Send2Trash",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.1.0",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "setuptools",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "84.0.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "shellingham",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.5.4",
+        "license_text": "ISC License (ISCL)",
+        "category": "permissive"
+      },
+      {
+        "name": "six",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.17.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "slack_sdk",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.44.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "sniffio",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.3.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "soupsieve",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.10",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "stack-data",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.6.3",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "statsd",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.0.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "std-uritemplate",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.0.12",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "synchronicity",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.12.5",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "tenacity",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "9.1.4",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "terminado",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.18.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "tinycss2",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.5.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "toml",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.10.2",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "tornado",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "6.5.10",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "traitlets",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "5.16.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "truststore",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.10.4",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "typer",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.27.2",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "types-aiobotocore-ecr",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "3.9.1",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "types-certifi",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2021.10.8.3",
+        "license_text": "Apache Software License",
+        "category": "permissive"
+      },
+      {
+        "name": "types-toml",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.10.8.20260518",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "typing-inspection",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.4.4",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "typing_extensions",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.16.0",
+        "license_text": "PSF-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "tzdata",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2026.4",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "uri-template",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.3.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "uritemplate",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "4.2.0",
+        "license_text": "BSD 3-Clause OR Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "urllib3",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "2.8.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "watchfiles",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.3.0",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "wcwidth",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.9.1",
+        "license_text": "MIT License",
+        "category": "permissive"
+      },
+      {
+        "name": "webcolors",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "25.10.0",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "webencodings",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "0.6.1",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "websocket-client",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.9.2",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      },
+      {
+        "name": "websockets",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "16.1.1",
+        "license_text": "BSD-3-Clause",
+        "category": "permissive"
+      },
+      {
+        "name": "workos",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "10.5.0",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "wrapt",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.17.3",
+        "license_text": "BSD License",
+        "category": "permissive"
+      },
+      {
+        "name": "xmltodict",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.0.4",
+        "license_text": "MIT",
+        "category": "permissive"
+      },
+      {
+        "name": "yarl",
+        "declared_in": [
+          "requirements.txt"
+        ],
+        "installed_version": "1.25.1",
+        "license_text": "Apache-2.0",
+        "category": "permissive"
+      }
+    ]
+  },
+  "c_mined_dataset": {
+    "present": true,
+    "path": "ml/real_data/diagnostics/out/tierC_mined_v2.jsonl",
+    "total_rows": 37,
+    "licenses": {
+      "WTFPL": 4,
+      "MIT": 16,
+      "MPL-2.0": 1,
+      "BSD-3-Clause": 3,
+      "Apache-2.0": 13
+    },
+    "copyleft_count": 1,
+    "copyleft_rows": [
+      {
+        "id": "m-000010",
+        "repo": "mozmeao/infra",
+        "license": "MPL-2.0"
+      }
+    ]
+  },
+  "base_model": {
+    "model_name": "Qwen3.5-4B / Qwen2.5",
+    "license": "Apache-2.0",
+    "commercial_use_allowed": true,
+    "status": "APPROVED",
+    "notes": "Permissive Apache-2.0 license compatible with commercial redistribution and research."
+  }
+}
