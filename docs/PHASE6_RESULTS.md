@@ -1,10 +1,13 @@
 # Phase 6 Results Summary
 
-## 1. Held-Out Evaluation Status
+## 1. Held-Out Evaluation Status (PENDING)
 
 held-out: not yet run
 
+### Status: PENDING
+
 > Per Hard Rule 5 and stop rule S4: held-out test sets remain sealed and un-opened.
+> Run log (ml/train_m2/eval/RUN_LOG_M2.md) is absent: evaluation is PENDING.
 > Held-out evaluation will be run only after OOF harvest ingestion is completed.
 
 ## 2. Baseline Test Verification
@@ -28,7 +31,11 @@ held-out: not yet run
 | 3 | 41 | 6 | 7 |
 | 4 | 41 | 6 | 8 |
 
-## 4. Calibration & LTT Guarantee Status (tau_star.json)
+## 4. Calibration & LTT Guarantee Status (tau_star.json) (PENDING)
+
+### Certification Status: PENDING
+
+- Certification: PENDING (autonomy OFF, awaiting OOF harvest delivery and one-shot evaluation)
 
 - Certified: False
 - Alpha: 0.05

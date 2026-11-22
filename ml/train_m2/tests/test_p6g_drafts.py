@@ -68,9 +68,12 @@ def test_no_absolute_paths_in_drafts(root_dir: Path) -> None:
         text = (root_dir / rel_path).read_text(encoding="utf-8")
         assert "C:\\" not in text, f"Absolute Windows path found in {rel_path}"
         assert "c:\\" not in text, f"Absolute Windows path found in {rel_path}"
+        assert "C:/" not in text, f"Absolute Windows path found in {rel_path}"
+        assert "c:/" not in text, f"Absolute Windows path found in {rel_path}"
         assert "/home/" not in text, f"Absolute Linux home path found in {rel_path}"
         assert "Users\\" not in text, f"Absolute Users path found in {rel_path}"
         assert "Users/" not in text, f"Absolute Users path found in {rel_path}"
+        assert "/Users/" not in text, f"Absolute Users path found in {rel_path}"
 
 
 def test_no_forbidden_usernames_in_drafts(root_dir: Path) -> None:

@@ -124,11 +124,16 @@ def resplit_proposal_step(
     test_only = set(base_splits["parts"]["test"])
 
     # Base forced cal: clusters originally forced into cal (e.g. A_val-only inputs)
-    existing_cal = set(base_splits["parts"]["cal"])
-    force_cal = set(existing_cal) | set(new_clean_clusters)
+    base_forced = set(base_splits.get("forced_cal", []))
+    if not base_forced:
+        try:
+            from ml.train_m2.labels.leakguard import load_key_sets
+            ks = load_key_sets(repo_root())
+            base_forced = (ks.a_val - ks.phase5_train - ks.held_out_union) & set(clusters)
+        except Exception:
+            base_forced = set()
 
-    # Clean clusters cannot be in test
-    force_cal = force_cal - test_only
+    force_cal = (base_forced | set(new_clean_clusters)) - test_only
 
     new_splits = build_splits(
         clusters=clusters,
@@ -317,16 +322,31 @@ def run_post_oof(
         X_va, y_va = td["X_va"], td["y_va"]
         meta_va = td["meta_va"]
     else:
-        # Load synthetic fallback if real frames are not supplied
-        feature_names = [s.name for s in R.REGISTRY]
-        rng = np.random.RandomState(seed)
-        n_tr = max(10, len(new_splits["parts"]["train"]))
-        n_va = max(5, len(new_splits["parts"]["val"]))
-        X_tr = pd.DataFrame(rng.randn(n_tr, len(feature_names)), columns=feature_names)
-        y_tr = rng.choice([0, 1], size=n_tr, p=[0.2, 0.8])
-        X_va = pd.DataFrame(rng.randn(n_va, len(feature_names)), columns=feature_names)
-        y_va = rng.choice([0, 1], size=n_va, p=[0.2, 0.8])
-        meta_va = pd.DataFrame({"input_key": [f"val_k_{i}" for i in range(n_va)], "y": y_va})
+        # Check if real harvest labels exist for generator
+        real_label_path = root / "ml" / "train_m2" / "out" / "labels" / "harvest" / f"{generator}.jsonl"
+        X_tr, y_tr, X_va, y_va, meta_va = None, None, None, None, None
+        if real_label_path.is_file() and not synthetic_fixture:
+            try:
+                from ml.train_m2.run_m2 import _frame
+                X_tr, meta_tr = _frame([generator], "train", new_splits)
+                y_tr = meta_tr["y"].to_numpy()
+                X_va, meta_va = _frame([generator], "val", new_splits)
+                y_va = meta_va["y"].to_numpy()
+            except Exception as e:
+                LOG.warning("Failed to load real frames for %s (%s); falling back to synthetic", generator, e)
+                X_tr, y_tr, X_va, y_va, meta_va = None, None, None, None, None
+
+        if X_tr is None or y_tr is None or X_va is None or y_va is None:
+            # Synthetic fallback if real frames are not supplied or cannot be loaded
+            feature_names = [s.name for s in R.REGISTRY]
+            rng = np.random.RandomState(seed)
+            n_tr = max(10, len(new_splits["parts"]["train"]))
+            n_va = max(5, len(new_splits["parts"]["val"]))
+            X_tr = pd.DataFrame(rng.randn(n_tr, len(feature_names)), columns=feature_names)
+            y_tr = rng.choice([0, 1], size=n_tr, p=[0.2, 0.8])
+            X_va = pd.DataFrame(rng.randn(n_va, len(feature_names)), columns=feature_names)
+            y_va = rng.choice([0, 1], size=n_va, p=[0.2, 0.8])
+            meta_va = pd.DataFrame({"input_key": [f"val_k_{i}" for i in range(n_va)], "y": y_va})
 
     art, val_report = retrain_model_step(
         X_tr, y_tr, X_va, y_va, meta_va, new_splits["sha256"], out_path, generator=generator, seed=seed
@@ -337,10 +357,27 @@ def run_post_oof(
         cd = synthetic_fixture["cal_data"]
         scores, wrong = cd["scores"], cd["wrong"]
     else:
-        rng = np.random.RandomState(seed)
-        n_cal = len(new_splits["parts"]["cal"])
-        scores = rng.uniform(0.7, 0.99, size=n_cal)
-        wrong = rng.choice([0, 1], size=n_cal, p=[0.95, 0.05])
+        # Check if real cal data can be computed
+        real_label_path = root / "ml" / "train_m2" / "out" / "labels" / "harvest" / f"{generator}.jsonl"
+        scores, wrong = None, None
+        if real_label_path.is_file() and not synthetic_fixture:
+            try:
+                from ml.train_m2.risk.decisions import select_decisions
+                from ml.train_m2.run_m2 import _frame
+                X_ca, meta_ca = _frame([generator], "cal", new_splits)
+                fr_ca = meta_ca.assign(score=T.predict(art, X_ca))
+                sel = select_decisions(fr_ca[fr_ca["generator"] == generator])
+                scores = sel["score"].to_numpy()
+                wrong = (1 - sel["y"]).to_numpy()
+            except Exception as e:
+                LOG.warning("Failed to score real cal partition (%s); falling back to synthetic", e)
+                scores, wrong = None, None
+
+        if scores is None or wrong is None:
+            rng = np.random.RandomState(seed)
+            n_cal = len(new_splits["parts"]["cal"])
+            scores = rng.uniform(0.7, 0.99, size=n_cal)
+            wrong = rng.choice([0, 1], size=n_cal, p=[0.95, 0.05])
 
     tau_info = calibrate_tau_step(
         scores,

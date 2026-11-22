@@ -21,7 +21,9 @@ from ml.train_m2.common import repo_root
 from ml.train_m2.eval.post_oof import (
     check_execution_guards,
     emit_changelog_entry,
+    ingest_step,
     main,
+    resplit_proposal_step,
     run_post_oof,
 )
 from ml.train_m2.features import registry as R
@@ -213,3 +215,56 @@ def test_emit_changelog_entry_format():
     assert "tau certified: false (n_cal=50, tau=null)" in entry
     assert "OOF harvest ingested to close S4" in entry
     assert entry.endswith("| no |")
+
+
+def test_resplit_proposal_empty_clean_clusters_matches_base_splits(tmp_path: Path):
+    """When zero new clean clusters are provided, re-split proposal reproduces base splits exactly."""
+    root = repo_root()
+    base_splits = json.loads((root / "ml" / "train_m2" / "out" / "m2" / "splits.json").read_text(encoding="utf-8"))
+    out_dir = tmp_path / "resplit_identity"
+
+    prop = resplit_proposal_step(base_splits, [], out_dir)
+
+    assert prop["sha256"] == base_splits["sha256"]
+    assert len(prop["parts"]["train"]) == len(base_splits["parts"]["train"]) == 105
+    assert len(prop["parts"]["val"]) == len(base_splits["parts"]["val"]) == 34
+    assert len(prop["parts"]["cal"]) == len(base_splits["parts"]["cal"]) == 50
+    assert len(prop["parts"]["test"]) == len(base_splits["parts"]["test"]) == 132
+    assert (out_dir / "re_split_proposal.json").is_file()
+    assert (out_dir / "re_split_proposal.md").is_file()
+
+
+def test_ingest_step_with_corrupt_harvest_raises_assertion(tmp_path: Path):
+    """Corrupt OOF harvest where fold assignment is violated raises AssertionError."""
+    root = repo_root()
+    folds_path = root / "docs" / "phase6_shaurya" / "crossfit" / "folds.json"
+    folds = json.loads(folds_path.read_text(encoding="utf-8"))
+    # Pick a real train key assigned to fold 0
+    fold_0_key = folds["folds"]["0"]["input_keys"][0]
+
+    # Create corrupt harvest directory where fold_0_key claims crossfit_fold = 1
+    harvest_dir = tmp_path / "corrupt_harvest"
+    harvest_dir.mkdir(parents=True)
+    corrupt_part = harvest_dir / "part-00000.jsonl"
+    corrupt_row = {
+        "input_key": fold_0_key,
+        "crossfit_fold": 1,  # Mismatch: assigned to 0, claims 1
+        "generator": "sft",
+    }
+    corrupt_part.write_text(json.dumps(corrupt_row) + "\n", encoding="utf-8")
+
+    out_dir = tmp_path / "corrupt_out"
+    with pytest.raises(AssertionError, match="crossfit_fold=1 but assigned to fold 0"):
+        ingest_step(harvest_dir, folds_path, out_dir)
+
+
+def test_main_cli_dry_run_execution(tmp_path: Path):
+    """Verify main() CLI execution succeeds in dry-run mode and writes artifacts."""
+    out_dir = tmp_path / "cli_dry_run_out"
+    exit_code = main(["--dry-run", "--out-dir", str(out_dir)])
+    assert exit_code == 0
+    assert (out_dir / "oof_unseen_clean.json").is_file()
+    assert (out_dir / "re_split_proposal.json").is_file()
+    assert (out_dir / "tau_star.json").is_file()
+    assert (out_dir / "m2" / "m2.joblib").is_file()
+
