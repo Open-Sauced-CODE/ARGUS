@@ -96,7 +96,23 @@ def discover(root: Path) -> tuple[list[tuple[str, str, list[Path]]], list[str]]:
         return [], [f"root folder not found: {root}"]
     found: list[tuple[str, str, list[Path]]] = []
     odd: list[str] = []
+    # Case 1: root is already a (generator, profile) folder, e.g. harvest_out/sft_oof/A
+    if root.name in PROFILES and root.parent.name in GENERATORS:
+        return [(root.parent.name, root.name, sorted(root.glob("part-*.jsonl")))], []
+    # Case 2: root is a generator folder, e.g. harvest_out/sft_oof
+    if root.name in GENERATORS:
+        for pdir in sorted(p for p in root.iterdir() if p.is_dir()):
+            if pdir.name in ("manifests", ".git", "__pycache__"):
+                continue
+            if pdir.name not in PROFILES:
+                odd.append(f"unknown profile folder {root.name}/{pdir.name!r} (allowed: A, B)")
+                continue
+            found.append((root.name, pdir.name, sorted(pdir.glob("part-*.jsonl"))))
+        return found, odd
+    # Case 3: root is a multi-generator root, e.g. harvest_out/
     for gdir in sorted(p for p in root.iterdir() if p.is_dir()):
+        if gdir.name in ("manifests", ".git", "__pycache__"):
+            continue
         if gdir.name not in GENERATORS:
             odd.append(f"unknown generator folder {gdir.name!r} (allowed: {', '.join(GENERATORS)})")
             continue
