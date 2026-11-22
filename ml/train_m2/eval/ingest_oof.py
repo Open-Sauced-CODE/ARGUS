@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -70,6 +71,22 @@ def _build_key_flags(inputs: list[dict[str, Any]]) -> dict[str, dict[str, bool]]
     return flags
 
 
+def _extract_fold(row: dict[str, Any]) -> int | None:
+    """Extract fold index from explicit row field crossfit_fold or infer from model name."""
+    cf = row.get("crossfit_fold")
+    if cf is not None:
+        try:
+            return int(cf)
+        except (ValueError, TypeError):
+            pass
+    model = row.get("model")
+    if model:
+        m = re.search(r"fold_?([0-4])", str(model))
+        if m:
+            return int(m.group(1))
+    return None
+
+
 def assert_fold_disjointness(rows: list[dict[str, Any]], fold_membership: dict[str, int]) -> None:
     """Assert that each row's input_key was assigned to fold crossfit_fold (not another).
 
@@ -80,15 +97,15 @@ def assert_fold_disjointness(rows: list[dict[str, Any]], fold_membership: dict[s
     seen_folds: dict[str, set[int]] = defaultdict(set)
     for row in rows:
         ik = row.get("input_key")
-        cf = row.get("crossfit_fold")
+        cf = _extract_fold(row)
         if ik is None or cf is None:
             continue
         expected = fold_membership.get(ik)
-        if expected is not None and expected != int(cf):
+        if expected is not None and expected != cf:
             raise AssertionError(
                 f"input_key {ik!r}: crossfit_fold={cf} but assigned to fold {expected}"
             )
-        seen_folds[ik].add(int(cf))
+        seen_folds[ik].add(cf)
 
     for ik, folds_seen in seen_folds.items():
         if len(folds_seen) > 1:
@@ -132,7 +149,8 @@ def compute_unseen_clean_counts(
         assigned_fold = fold_membership.get(ik)
 
         # Determine the crossfit_fold from rows (should be consistent)
-        cf_values = {r.get("crossfit_fold") for r in cluster_rows if r.get("crossfit_fold") is not None}
+        cf_values = {_extract_fold(r) for r in cluster_rows}
+        cf_values.discard(None)
         if not cf_values:
             unknown_clusters.append(ik)
             continue

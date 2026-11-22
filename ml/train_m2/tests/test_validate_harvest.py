@@ -433,3 +433,16 @@ def test_sft_oof_invalid_crossfit_fold_rejected(tmp_path: Path) -> None:
     assert not result2["accepted"]
     assert statuses(result2, "sft_oof", "A")["MANIFEST"] == vh.FAIL
 
+
+def test_sft_oof_multiple_fold_models_accepted(tmp_path: Path) -> None:
+    half = len(SMALL) // 2
+    l0 = [dict(make_line(inp, "sft_oof", "A", idx), model="argus-m1-sft-fold0", model_digest="sha256:000") for inp in SMALL[:half] for idx in range(8)]
+    l1 = [dict(make_line(inp, "sft_oof", "A", idx), model="argus-m1-sft-fold1", model_digest="sha256:111") for inp in SMALL[half:] for idx in range(8)]
+    paths = write_folder(tmp_path / "out", "sft_oof", "A", l0 + l1)
+    write_manifest(tmp_path / "man", "sft_oof", "A", paths, crossfit_fold=0, model="argus-m1-sft-fold0", digest="sha256:000")
+    result = VR(tmp_path, require_manifests=True)
+    assert result["accepted"], f"Validation failed: {result['summary_line']}"
+    assert statuses(result, "sft_oof", "A")["VERSIONS"] == vh.PASS
+    assert statuses(result, "sft_oof", "A")["MANIFEST"] == vh.PASS
+
+

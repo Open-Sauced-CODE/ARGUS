@@ -307,6 +307,31 @@ def test_ingest_oof_synthetic_fixture(tmp_path):
     assert counts["unseen_heldout_count"] == len(folds["folds"]["0"]["heldout_overlap"])
 
 
+def test_ingest_oof_model_based_fold_inference():
+    """Verify that rows without explicit crossfit_fold field infer the fold from model name."""
+    from ml.train_m2.common import load_inputs
+    from ml.train_m2.eval.ingest_oof import compute_unseen_clean_counts, assert_fold_disjointness, _build_key_flags
+
+    inputs = load_inputs()
+    folds = build_folds(SEED)
+    fold_membership = {ik: int(f_str) for f_str, d in folds["folds"].items() for ik in d["input_keys"]}
+    key_flags = _build_key_flags(inputs)
+
+    # Real harvest schema compliant rows (no crossfit_fold field, only model='argus-m1-sft-fold{f}')
+    f0_keys = folds["folds"]["0"]["input_keys"]
+    real_rows = [
+        {"input_key": ik, "generator": "sft_oof", "model": "argus-m1-sft-fold0", "sample_idx": 0}
+        for ik in f0_keys
+    ]
+    # Disjointness check must succeed
+    assert_fold_disjointness(real_rows, fold_membership)
+
+    counts = compute_unseen_clean_counts(real_rows, fold_membership, key_flags)
+    assert counts["unknown_count"] == 0
+    assert counts["unseen_clean_count"] == 37  # exactly 37 clean unseen clusters for fold 0
+
+
+
 # ---------------------------------------------------------------------------
 # render functions do not crash
 # ---------------------------------------------------------------------------

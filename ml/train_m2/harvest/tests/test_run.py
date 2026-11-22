@@ -347,3 +347,63 @@ def test_cli_with_input_keys_file(env, tmp_path, capsys):
     manifest = json.loads((env["out"] / "manifests" / "sft_oof_A.json").read_text())
     assert manifest["generator"] == "sft_oof"
     assert manifest["crossfit_fold"] == 0
+
+
+def test_input_keys_file_json_dict_formatting_and_comments(tmp_path):
+    keys_file = tmp_path / "formatted_keys.txt"
+    keys_file.write_text(
+        "# Header comment\n"
+        '{"rule_id": "dpdp.rule6", "resource_ref": "RESOURCE_1", "fields": {"account_mfa_enabled": false}}\n'
+        "\n"
+        "# Another comment\n"
+        '{"fields": {"account_mfa_enabled": false}, "resource_ref": "RESOURCE_1", "rule_id": "dpdp.rule6"}\n',
+        encoding="utf-8"
+    )
+    loaded = harvest_run.load_input_keys(keys_file)
+    assert len(loaded) == 1
+    # Both formatted dicts must normalize to the exact same canonical JSON key
+    expected = json.dumps({"fields": {"account_mfa_enabled": False}, "resource_ref": "RESOURCE_1", "rule_id": "dpdp.rule6"},
+                          separators=(",", ":"), sort_keys=True)
+    assert list(loaded)[0] == expected
+
+
+def test_out_path_normalization_with_generator_profile_suffix(env, tmp_path):
+    chosen_keys = [env["rows"][0]["input_key"]]
+    keys_file = tmp_path / "f_keys.txt"
+    keys_file.write_text("\n".join(chosen_keys) + "\n", encoding="utf-8")
+    nested_out = env["out"] / "sft_oof" / "A"
+    with FakeOllama() as fake:
+        summary = go(env, fake, generator="sft_oof", model="argus-m1-sft-fold0",
+                     crossfit_fold=0, input_keys_file=keys_file, out_root=nested_out)
+    assert summary.folder == nested_out
+    assert not (nested_out / "sft_oof" / "A").exists()
+    assert (nested_out / "part-0000.jsonl").is_file()
+
+
+def test_fold_shard_separation_and_per_fold_manifests(env, tmp_path):
+    k0 = [env["rows"][0]["input_key"]]
+    k1 = [env["rows"][1]["input_key"]]
+    f0_keys = tmp_path / "f0_keys.txt"
+    f1_keys = tmp_path / "f1_keys.txt"
+    f0_keys.write_text("\n".join(k0) + "\n", encoding="utf-8")
+    f1_keys.write_text("\n".join(k1) + "\n", encoding="utf-8")
+
+    with FakeOllama() as fake:
+        go(env, fake, generator="sft_oof", model="argus-m1-sft-fold0", crossfit_fold=0, input_keys_file=f0_keys)
+        go(env, fake, generator="sft_oof", model="argus-m1-sft-fold1", crossfit_fold=1, input_keys_file=f1_keys)
+
+    folder = env["out"] / "sft_oof" / "A"
+    part0 = folder / "part-0000.jsonl"
+    part1 = folder / "part-1000.jsonl"
+    assert part0.is_file(), "Fold 0 must write to part-0000.jsonl"
+    assert part1.is_file(), "Fold 1 must write to part-1000.jsonl"
+    assert harvest_run.count_lines(part0) == 8
+    assert harvest_run.count_lines(part1) == 8
+
+    # Check per-fold manifests
+    m_dir = env["mf"]
+    assert (m_dir / "sft_oof_A_fold0.json").is_file()
+    assert (m_dir / "sft_oof_A_fold1.json").is_file()
+    assert (folder / "MANIFEST_fold0.json").is_file()
+    assert (folder / "MANIFEST_fold1.json").is_file()
+

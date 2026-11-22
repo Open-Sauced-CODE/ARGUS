@@ -116,7 +116,7 @@ def load_inputs(path: Path = INPUTS_PATH) -> List[Dict[str, Any]]:
 
 
 def load_input_keys(path: Path) -> Set[str]:
-    """Read a file of input keys. Supports JSON array or one key string per line."""
+    """Read a file of input keys. Supports JSON array or one key string/JSON object per line."""
     p = Path(path)
     if not p.is_file():
         raise HarvestError("input keys file not found: %s" % path)
@@ -138,13 +138,20 @@ def load_input_keys(path: Path) -> Set[str]:
     keys = set()
     for line in text.splitlines():
         line = line.strip()
-        if not line:
+        if not line or line.startswith("#"):
             continue
         if line.startswith('"') and line.endswith('"'):
             try:
                 parsed_line = json.loads(line)
                 if isinstance(parsed_line, str):
                     line = parsed_line
+            except Exception:
+                pass
+        elif line.startswith("{") and line.endswith("}"):
+            try:
+                parsed_dict = json.loads(line)
+                if isinstance(parsed_dict, dict):
+                    line = json.dumps(parsed_dict, separators=(",", ":"), sort_keys=True)
             except Exception:
                 pass
         keys.add(line)
@@ -347,6 +354,10 @@ def write_manifest(cfg: HarvestConfig, folder: Path, meta: Dict[str, Any], all_i
     write_json(existing, manifest)
     copy_path = cfg.manifest_dir / ("%s_%s.json" % (cfg.generator, cfg.profile))
     write_json(copy_path, manifest)
+    if fold is not None and cfg.generator == "sft_oof":
+        per_fold_copy = cfg.manifest_dir / ("%s_%s_fold%d.json" % (cfg.generator, cfg.profile, fold))
+        write_json(per_fold_copy, manifest)
+        write_json(folder / ("MANIFEST_fold%d.json" % fold), manifest)
     return copy_path, manifest
 
 
@@ -379,7 +390,13 @@ def run_harvest(
         if not all_inputs:
             raise HarvestError("no inputs matched keys in %s" % cfg.input_keys_file)
     selected = select_inputs(all_inputs, cfg.limit, cfg.stratify, cfg.shard)
-    folder = Path(cfg.out_root) / cfg.generator / cfg.profile
+    out_p = Path(cfg.out_root)
+    if out_p.name == cfg.profile and out_p.parent.name == cfg.generator:
+        folder = out_p
+    elif out_p.name == cfg.generator:
+        folder = out_p / cfg.profile
+    else:
+        folder = out_p / cfg.generator / cfg.profile
     folder.mkdir(parents=True, exist_ok=True)
 
     repaired = sum(repair_truncated_tail(p) for p in part_files(folder))
@@ -470,7 +487,16 @@ def run_harvest(
                 return
 
     def writer() -> None:
-        part_writer = PartWriter(folder, base_index=cfg.shard[0] * SHARD_STRIDE, part_size=cfg.part_size)
+        base_index = cfg.shard[0] * SHARD_STRIDE
+        fold = cfg.crossfit_fold
+        if fold is None and cfg.generator == "sft_oof":
+            target_str = str(cfg.input_keys_file or cfg.model)
+            m = re.search(r"fold_?([0-4])", target_str)
+            if m:
+                fold = int(m.group(1))
+        if fold is not None and cfg.generator == "sft_oof" and cfg.shard == (0, 1):
+            base_index = fold * SHARD_STRIDE
+        part_writer = PartWriter(folder, base_index=base_index, part_size=cfg.part_size)
         consecutive = 0
         try:
             while True:

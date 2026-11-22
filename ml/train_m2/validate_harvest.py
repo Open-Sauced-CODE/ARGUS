@@ -213,8 +213,10 @@ def check_manifest(
     mver, mdig = manifest.get("ollama_version"), manifest.get("model_digest")
     if mver and versions and versions != {mver}:
         notes.append(f"ollama_version in lines {sorted(versions)} differs from manifest {mver}")
-    if mdig and digests and digests != {mdig}:
+    if generator != "sft_oof" and mdig and digests and digests != {mdig}:
         notes.append(f"model_digest in lines {sorted(digests)} differs from manifest {mdig}")
+    elif generator == "sft_oof" and mdig and digests and mdig not in digests:
+        notes.append(f"model_digest in manifest {mdig} not found in lines {sorted(digests)}")
     if notes:
         return Check("MANIFEST", WARN, "hashes and line counts match, but versions differ", notes)
     return Check("MANIFEST", PASS, f"{len(parts)} part(s): sha256 and line counts match")
@@ -342,7 +344,12 @@ def validate_folder(
         add("ERRORS", WARN, f"error-line rate {err_rate:.1%} is above {ERROR_WARN:.0%}")
     else:
         add("ERRORS", PASS, f"error-line rate {err_rate:.2%}")
-    if len(versions) > 1 or len(digests) > 1 or len(models) > 1:
+    if generator == "sft_oof":
+        if len(versions) > 1:
+            add("VERSIONS", FAIL, f"mixed values: ollama_version {sorted(versions)}")
+        else:
+            add("VERSIONS", PASS, f"ollama_version {sorted(versions) or '-'}, {len(digests)} fold model(s)")
+    elif len(versions) > 1 or len(digests) > 1 or len(models) > 1:
         add("VERSIONS", FAIL, f"mixed values: ollama_version {sorted(versions)}, model_digest {sorted(digests)}, model {sorted(models)}")
     else:
         add("VERSIONS", PASS, f"ollama_version {sorted(versions) or '-'}, model_digest {sorted(digests) or '-'}")
@@ -383,9 +390,14 @@ def validate_root(
     global_checks: list[Check] = [Check("LAYOUT", FAIL, message) for message in odd]
     if not folders and not odd:
         global_checks.append(Check("LAYOUT", FAIL, f"no <generator>/<profile> folders found under {root}"))
+    train_keys = {row["input_key"] for row in inputs if "train" in row.get("sets", {})}
     reports = [
-        validate_folder(g, p, paths, input_keys, validator, allow_partial=allow_partial, require_manifests=require_manifests,
-                        manifests_dir=manifests_dir, phase5=phase5, max_examples=max_examples)
+        validate_folder(
+            g, p, paths,
+            (train_keys if (g == "sft_oof" and inputs_path is None) else input_keys),
+            validator, allow_partial=allow_partial, require_manifests=require_manifests,
+            manifests_dir=manifests_dir, phase5=phase5, max_examples=max_examples
+        )
         for g, p, paths in folders
     ]
     reasons = [f"{c.name}: {c.message}" for c in global_checks if c.status == FAIL]
