@@ -311,7 +311,14 @@ def run_post_oof(
         base_splits = synthetic_fixture["base_splits"]
     else:
         s_path = Path(splits_path) if splits_path else root / "ml" / "train_m2" / "out" / "m2" / "splits.json"
-        base_splits = json.loads(s_path.read_text(encoding="utf-8"))
+        if s_path.is_file():
+            base_splits = json.loads(s_path.read_text(encoding="utf-8"))
+        else:
+            from ml.train_m2.labels.leakguard import load_key_sets
+            from ml.train_m2.run_m2 import _clusters
+            ks = load_key_sets(root)
+            forced = ks.a_val - ks.phase5_train - ks.held_out_union
+            base_splits = build_splits(_clusters(), ks.held_out_union, forced, seed=seed)
 
     new_splits = resplit_proposal_step(base_splits, new_clean, out_path, seed=seed)
 
