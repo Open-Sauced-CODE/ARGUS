@@ -330,7 +330,7 @@ def write_manifest(cfg: HarvestConfig, folder: Path, meta: Dict[str, Any], all_i
         "runs": previous + [run_record],
         "provenance": {
             "git_commit": _git("rev-parse", "HEAD"),
-            "git_dirty": bool(_git("status", "--porcelain")),
+            "git_dirty": bool(_git("status", "--porcelain", "-uno")),
             "python": platform.python_version(),
             "platform": platform.platform(),
             "requests": _version("requests"),
