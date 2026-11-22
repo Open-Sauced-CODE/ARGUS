@@ -143,3 +143,18 @@ def test_corrupt_files_handled_gracefully(tmp_path: Path):
     assert "Phase 6 Results Summary" in md
     assert "tau_star.json not available." in md
     assert "parity_500.json not available." in md
+
+
+def test_visible_pending_section_when_run_log_absent():
+    """When RUN_LOG_M2.md is absent, render_phase6_results outputs a visible PENDING section for held-out and certification."""
+    root = repo_root()
+    run_log = root / "ml" / "train_m2" / "eval" / "RUN_LOG_M2.md"
+    assert not run_log.exists(), "RUN_LOG_M2.md must not exist prior to Stage 3"
+
+    md = render_phase6_results(root)
+    assert "Held-Out Evaluation Status (PENDING)" in md
+    assert "### Status: PENDING" in md
+    assert "### Certification Status: PENDING" in md
+    assert "Certification: PENDING" in md
+    assert md.isascii()
+

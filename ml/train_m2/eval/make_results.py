@@ -104,6 +104,12 @@ def load_licence_audit(root: Path) -> dict[str, Any]:
         return {}
 
 
+def is_run_log_present(root: Path) -> bool:
+    """Check if ml/train_m2/eval/RUN_LOG_M2.md exists and is non-empty."""
+    run_log = root / "ml" / "train_m2" / "eval" / "RUN_LOG_M2.md"
+    return run_log.is_file() and len(run_log.read_text(encoding="utf-8").strip()) > 0
+
+
 def load_heldout_results(root: Path) -> dict[str, Any] | None:
     """Check if held-out evaluation results exist and are non-empty."""
     candidates = [
@@ -131,27 +137,31 @@ def render_phase6_results(root: Path) -> str:
     parity = load_parity_check(root)
     lic = load_licence_audit(root)
     heldout = load_heldout_results(root)
+    run_log_active = is_run_log_present(root)
 
     lines = [
         "# Phase 6 Results Summary",
         "",
-        "## 1. Held-Out Evaluation Status",
+        "## 1. Held-Out Evaluation Status" + ("" if (heldout is not None and run_log_active) else " (PENDING)"),
         "",
     ]
 
-    if heldout is None:
-        lines += [
-            "held-out: not yet run",
-            "",
-            "> Per Hard Rule 5 and stop rule S4: held-out test sets remain sealed and un-opened.",
-            "> Held-out evaluation will be run only after OOF harvest ingestion is completed.",
-            "",
-        ]
-    else:
+    if heldout is not None:
         lines += [
             "### Held-Out Evaluation Results",
             "",
             f"```json\n{json.dumps(heldout, indent=2)}\n```",
+            "",
+        ]
+    else:
+        lines += [
+            "held-out: not yet run",
+            "",
+            "### Status: PENDING",
+            "",
+            "> Per Hard Rule 5 and stop rule S4: held-out test sets remain sealed and un-opened.",
+            "> Run log (ml/train_m2/eval/RUN_LOG_M2.md) is absent: evaluation is PENDING.",
+            "> Held-out evaluation will be run only after OOF harvest ingestion is completed.",
             "",
         ]
 
@@ -188,9 +198,16 @@ def render_phase6_results(root: Path) -> str:
 
     lines += [
         "",
-        "## 4. Calibration & LTT Guarantee Status (tau_star.json)",
+        "## 4. Calibration & LTT Guarantee Status (tau_star.json)" + ("" if run_log_active else " (PENDING)"),
         "",
     ]
+    if not run_log_active:
+        lines += [
+            "### Certification Status: PENDING",
+            "",
+            "- Certification: PENDING (autonomy OFF, awaiting OOF harvest delivery and one-shot evaluation)",
+            "",
+        ]
     if tau:
         lines += [
             f"- Certified: {tau.get('certified')}",

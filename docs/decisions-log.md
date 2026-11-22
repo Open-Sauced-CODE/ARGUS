@@ -90,3 +90,6 @@ Work / Methodology sections) will thank present-you for this.
 2026-11-11 (Shaurya) EXPERIMENT_PLAN_M2.md frozen BEFORE any held-out evaluation. Supersedes PREREG_M2.md v0 (1e2bd23). Changes since v0 and their reasons are in section 12 of the plan:
  route bug fixed in our tooling; pooled M2 found generator-confounded; primary M2 is now per-generator; Q2 (SFT) is answered with a gate-only certificate; bars B3/B5 re-scoped
  because C-human does not exist; stop rule S1 triggered (66 distinct usable natural negatives) and recorded as a deviation; stop rule S4 added. No held-out number has been computed.
+
+2026-11-22 (Shaurya) Phase 6: cross-fit package sent, Stage 4 drafts written, held-out not opened, waiting on OOF; deadline 2026-11-24.
+
