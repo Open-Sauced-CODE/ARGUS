@@ -262,3 +262,88 @@ def test_cli_reports_a_clean_failure(env, capsys):
 def test_strip_pattern_removes_only_pattern_keywords():
     schema = {"properties": {"pattern": {"type": "string"}, "ref": {"type": "string", "pattern": "^x$"}}}
     assert harvest_run.strip_pattern(schema) == {"properties": {"pattern": {"type": "string"}, "ref": {"type": "string"}}}
+
+
+def test_input_keys_file_filters_inputs_lines_format(env, tmp_path):
+    chosen_keys = [env["rows"][0]["input_key"], env["rows"][2]["input_key"]]
+    keys_file = tmp_path / "fold_keys.txt"
+    keys_file.write_text("\n".join(chosen_keys) + "\n", encoding="utf-8")
+    with FakeOllama() as fake:
+        summary = go(env, fake, input_keys_file=keys_file)
+    lines = all_lines(env)
+    assert summary.lines_written == 16
+    assert len(lines) == 16
+    assert {l["input_key"] for l in lines} == set(chosen_keys)
+    manifest = json.loads((env["out"] / "sft" / "A" / "MANIFEST.json").read_text())
+    assert manifest["inputs_in_contract"] == 2
+    assert manifest["lines_expected"] == 16
+    assert manifest["lines_total"] == 16
+    assert manifest["complete"] is True
+
+
+def test_input_keys_file_json_array_format(env, tmp_path):
+    chosen_key = env["rows"][1]["input_key"]
+    keys_file = tmp_path / "fold_keys.json"
+    keys_file.write_text(json.dumps([chosen_key]), encoding="utf-8")
+    with FakeOllama() as fake:
+        summary = go(env, fake, input_keys_file=keys_file)
+    lines = all_lines(env)
+    assert summary.lines_written == 8
+    assert len(lines) == 8
+    assert {l["input_key"] for l in lines} == {chosen_key}
+
+
+def test_input_keys_file_missing_raises_error(env, tmp_path):
+    missing_file = tmp_path / "missing_keys.txt"
+    with FakeOllama() as fake:
+        with pytest.raises(HarvestError) as exc_info:
+            go(env, fake, input_keys_file=missing_file)
+    assert "not found" in str(exc_info.value)
+
+
+def test_input_keys_file_no_matching_keys_raises_error(env, tmp_path):
+    keys_file = tmp_path / "unmatched_keys.txt"
+    keys_file.write_text("nonexistent_key_1\nnonexistent_key_2\n", encoding="utf-8")
+    with FakeOllama() as fake:
+        with pytest.raises(HarvestError) as exc_info:
+            go(env, fake, input_keys_file=keys_file)
+    assert "no inputs matched keys" in str(exc_info.value)
+
+
+def test_sft_oof_generator_and_crossfit_fold(env, tmp_path):
+    chosen_keys = [env["rows"][0]["input_key"]]
+    keys_file = tmp_path / "fold_1_keys.txt"
+    keys_file.write_text("\n".join(chosen_keys) + "\n", encoding="utf-8")
+    with FakeOllama() as fake:
+        summary = go(env, fake, generator="sft_oof", model="argus-m1-sft-fold1",
+                     crossfit_fold=1, input_keys_file=keys_file)
+    oof_lines = [line for _p, line in iter_lines(env["out"] / "sft_oof" / "A")]
+    assert summary.lines_written == 8
+    assert len(oof_lines) == 8
+    for l in oof_lines:
+        validate_line(l)
+        assert l["generator"] == "sft_oof"
+        assert l["model"] == "argus-m1-sft-fold1"
+    manifest = json.loads((env["out"] / "sft_oof" / "A" / "MANIFEST.json").read_text())
+    assert manifest["generator"] == "sft_oof"
+    assert manifest["crossfit_fold"] == 1
+    assert "crossfit_code_commit" in manifest
+
+
+def test_cli_with_input_keys_file(env, tmp_path, capsys):
+    from ml.train_m2.harvest.paths import INPUTS_PATH
+    real_inputs = harvest_run.load_inputs(INPUTS_PATH)
+    chosen_keys = [real_inputs[0]["input_key"], real_inputs[1]["input_key"]]
+    keys_file = tmp_path / "cli_keys.txt"
+    keys_file.write_text("\n".join(chosen_keys) + "\n", encoding="utf-8")
+    with FakeOllama() as fake:
+        code = harvest_run.main(
+            ["--generator", "sft_oof", "--model", "argus-m1-sft-fold0", "--profile", "A",
+             "--threads", "2", "--top-logprobs", "2", "--input-keys-file", str(keys_file),
+             "--crossfit-fold", "0", "--out", str(env["out"]), "--host", fake.host, "--timeout", "5"],
+            messages_fn=messages_fn, schema=SCHEMA)
+    out = capsys.readouterr().out
+    assert code == 0 and "Lines written now: 16" in out
+    manifest = json.loads((env["out"] / "manifests" / "sft_oof_A.json").read_text())
+    assert manifest["generator"] == "sft_oof"
+    assert manifest["crossfit_fold"] == 0

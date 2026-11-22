@@ -20,6 +20,7 @@ import json
 import logging
 import platform
 import queue
+import re
 import subprocess
 import sys
 import threading
@@ -28,7 +29,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from importlib import metadata
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from ml.train_m2.harvest.client import (DEFAULT_HOST, DEFAULT_NUM_PREDICT, DEFAULT_TIMEOUT, chat_once_v2,
                                          ollama_meta)
@@ -70,6 +71,8 @@ class HarvestConfig:
     part_size: int = DEFAULT_PART_SIZE
     max_consecutive_errors: int = 20
     progress_every: int = 50
+    input_keys_file: Optional[Path] = None
+    crossfit_fold: Optional[int] = None
 
 
 @dataclass
@@ -110,6 +113,42 @@ def load_inputs(path: Path = INPUTS_PATH) -> List[Dict[str, Any]]:
     if not inputs:
         raise HarvestError("%s is empty" % path)
     return inputs
+
+
+def load_input_keys(path: Path) -> Set[str]:
+    """Read a file of input keys. Supports JSON array or one key string per line."""
+    p = Path(path)
+    if not p.is_file():
+        raise HarvestError("input keys file not found: %s" % path)
+    text = p.read_text(encoding="utf-8")
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, list):
+            keys: Set[str] = set()
+            for item in parsed:
+                if isinstance(item, str):
+                    keys.add(item)
+                elif isinstance(item, dict):
+                    keys.add(json.dumps(item, separators=(",", ":"), sort_keys=True))
+                else:
+                    keys.add(str(item))
+            return keys
+    except json.JSONDecodeError:
+        pass
+    keys = set()
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith('"') and line.endswith('"'):
+            try:
+                parsed_line = json.loads(line)
+                if isinstance(parsed_line, str):
+                    line = parsed_line
+            except Exception:
+                pass
+        keys.add(line)
+    return keys
 
 
 def stratified_pick(inputs: Sequence[Dict[str, Any]], n: int) -> List[Dict[str, Any]]:
@@ -233,6 +272,12 @@ def _check_config(cfg: HarvestConfig) -> None:
         raise HarvestError("--temp-override is a local experiment: use an --out folder outside %s" % DEFAULT_OUT)
     if cfg.shard[1] > 9:
         raise HarvestError("at most 9 shards are supported")
+    if cfg.input_keys_file is not None and not Path(cfg.input_keys_file).is_file():
+        raise HarvestError("--input-keys-file not found: %s" % cfg.input_keys_file)
+    if cfg.crossfit_fold is not None and cfg.generator != "sft_oof":
+        raise HarvestError("--crossfit-fold is only valid when --generator is sft_oof")
+    if cfg.crossfit_fold is not None and cfg.crossfit_fold not in range(5):
+        raise HarvestError("--crossfit-fold must be between 0 and 4")
 
 
 # ---------------------------------------------------------------------------------------------------------
@@ -287,6 +332,18 @@ def write_manifest(cfg: HarvestConfig, folder: Path, meta: Dict[str, Any], all_i
             "schema_sha256": sha256_file(schema_path) if schema_path.exists() else None,
         },
     }
+    fold = cfg.crossfit_fold
+    if fold is None and cfg.generator == "sft_oof":
+        target_str = str(cfg.input_keys_file or cfg.model)
+        m = re.search(r"fold_?([0-4])", target_str)
+        if m:
+            fold = int(m.group(1))
+    if fold is not None:
+        manifest["crossfit_fold"] = fold
+    if cfg.generator == "sft_oof":
+        commit = _git("rev-parse", "HEAD")
+        manifest["crossfit_code_commit"] = commit
+        manifest["provenance"]["crossfit_code_commit"] = commit
     write_json(existing, manifest)
     copy_path = cfg.manifest_dir / ("%s_%s.json" % (cfg.generator, cfg.profile))
     write_json(copy_path, manifest)
@@ -316,6 +373,11 @@ def run_harvest(
         schema = schema if schema is not None else default_schema
 
     all_inputs = load_inputs(inputs_path)
+    if cfg.input_keys_file is not None:
+        allowed = load_input_keys(cfg.input_keys_file)
+        all_inputs = [item for item in all_inputs if item["input_key"] in allowed]
+        if not all_inputs:
+            raise HarvestError("no inputs matched keys in %s" % cfg.input_keys_file)
     selected = select_inputs(all_inputs, cfg.limit, cfg.stratify, cfg.shard)
     folder = Path(cfg.out_root) / cfg.generator / cfg.profile
     folder.mkdir(parents=True, exist_ok=True)
@@ -330,7 +392,7 @@ def run_harvest(
     before = scan_folder(folder)
     if before["duplicates"]:
         raise HarvestError("%s already has %d duplicate (input_key, sample_idx) lines; fix them first" % (folder, before["duplicates"]))
-    if before["models"] and set(before["models"]) != {cfg.model}:
+    if cfg.generator != "sft_oof" and before["models"] and set(before["models"]) != {cfg.model}:
         raise HarvestError("%s holds lines from model(s) %s but you asked for %r. One folder = one model."
                            % (folder, before["models"], cfg.model))
 
@@ -531,6 +593,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--retry-errors", action="store_true", help="delete earlier error lines and generate them again")
     p.add_argument("--strip-pattern", action="store_true", help="remove `pattern` from the Patch-IR schema sent to Ollama")
     p.add_argument("--max-consecutive-errors", type=int, default=20)
+    p.add_argument("--input-keys-file", type=Path, default=None, help="restrict harvest to input keys listed in this file")
+    p.add_argument("--crossfit-fold", type=int, default=None, choices=range(5), help="fold index (0-4) for sft_oof manifest")
     return p
 
 
@@ -548,6 +612,7 @@ def main(argv: Optional[Sequence[str]] = None, *, messages_fn=None, schema=None,
         timeout=args.timeout, limit=args.limit, stratify=args.stratify, shard=args.shard, n_samples=args.samples,
         temperature_override=args.temp_override, retry_errors=args.retry_errors, strip_pattern=args.strip_pattern,
         max_consecutive_errors=args.max_consecutive_errors,
+        input_keys_file=args.input_keys_file, crossfit_fold=args.crossfit_fold,
     )
     kwargs: Dict[str, Any] = {"messages_fn": messages_fn, "schema": schema,
                               "command": "python -m ml.train_m2.harvest.run " + " ".join(args_list)}

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 SCHEMA_VERSION = "m2.harvest.v1"
-GENERATORS = ("zeroshot", "sft", "rft", "rft_v2")
+GENERATORS = ("zeroshot", "sft", "rft", "rft_v2", "sft_oof")
 PROFILES = ("A", "B")
 N_SAMPLES = 8
 
