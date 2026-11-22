@@ -55,6 +55,43 @@ from ml.train_m2.splits import assert_disjoint, build_splits, cell_table, splits
 LOG = logging.getLogger("post_oof")
 SEED = 1337
 
+# The 15 A_val-only clusters that Phase 5 SFT never trained on, forced into calibration split
+DEFAULT_FORCED_CAL_CLUSTERS: tuple[str, ...] = (
+    '{"fields":{"action":["autoscaling:*","elasticloadbalancing:*","codepipeline:PutJobFailureResult","codepipeline:PutJobSuccessResult","ec2:CreateLaunchTemplate","ec2:CreateLaunchTemplateVersion","ec2:DescribeImages","ec2:DescribeLaunchTemplates","ec2:DescribeLaunchTemplateVersions","ec2:DeregisterImage","ec2:DeleteSnapshot","ec2:DescribeSnapshots","logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents","logs:DescribeLogStreams","sns:Publish","ssm:*","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["cloudwatch:*","logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents","dynamodb:BatchGetItem","dynamodb:BatchWriteItem","dynamodb:PutItem","dynamodb:GetItem","dynamodb:Scan","dynamodb:Query","dynamodb:UpdateItem","dynamodb:GetRecords","sns:*","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["dynamodb:CreateTable","dynamodb:PutItem","dynamodb:GetItem","dynamodb:Scan","dynamodb:UpdateItem","dynamodb:DeleteItem","dynamodb:Describe*","dynamodb:List*","*"],"effect":"Allow","resource":["arn:aws:dynamodb:*:*:table/terraform-state-lock-table-*","*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ec2:*Volume*","ec2:*Snapshot*","ec2:*networkinterface*","ec2:DeleteTags","ec2:DescribeTags","ec2:CreateTags","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ec2:AttachVolume","ec2:DetachVolume","ec2:DeleteVolume","ec2:DescribeInstances","ec2:DescribeSnapshots","ec2:DescribeTags","ec2:DescribeVolumes","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ec2:DescribeAccountAttributes","ec2:DescribeAvailabilityZones","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ec2:DescribeInstances","ecr:GetAuthorizationToken","ecr:BatchGetImage","ecr:GetDownloadUrlForLayer","ecr:DescribeRepositories","ecr:ListImages","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ec2:DescribeReservedInstances","ec2:DescribeReservedInstancesOfferings","ec2:PurchaseReservedInstancesOffering","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ec2:StartInstances","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ecs:RegisterTaskDefinition","ecs:DeregisterTaskDefinition","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["iam:ListServerCertificates","iam:GetServerCertificate","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents","ecr:GetAuthorizationToken","ecr:InitiateLayerUpload","ecr:UploadLayerPart","ecr:CompleteLayerUpload","ecr:BatchCheckLayerAvailability","ecr:PutImage","ecs:RunTask","iam:PassRole","s3:GetObject","lambda:UpdateFunctionCode","secretsmanager:GetSecretValue","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ssmmessages:CreateControlChannel","ssmmessages:CreateDataChannel","ssmmessages:OpenControlChannel","ssmmessages:OpenDataChannel","ssm:StartSession","ssm:TerminateSession","ssm:DescribeSessions","ecs:ExecuteCommand","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["ssmmessages:CreateControlChannel","ssmmessages:CreateDataChannel","ssmmessages:OpenControlChannel","ssmmessages:OpenDataChannel","ssm:UpdateInstanceInformation","*"],"effect":"Allow","resource":["*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+    '{"fields":{"action":["sts:AssumeRole","*"],"effect":"Allow","resource":["arn:aws:iam::*:role/AtlantisTerraformRole","*"],"resource_type":"AWSPolicyStatement"},"resource_ref":"RESOURCE_1","rule_id":"cis.iam_no_full_admin"}',
+)
+
+
+def load_base_splits(root: Path | None = None, splits_path: str | Path | None = None, seed: int = SEED) -> dict[str, Any]:
+    """Load production base splits, reconstructing them if splits.json is absent (e.g. fresh clone)."""
+    root = Path(root) if root else repo_root()
+    s_path = Path(splits_path) if splits_path else root / "ml" / "train_m2" / "out" / "m2" / "splits.json"
+    if s_path.is_file():
+        return json.loads(s_path.read_text(encoding="utf-8"))
+
+    from ml.train_m2.labels.leakguard import load_key_sets
+    from ml.train_m2.run_m2 import _clusters
+    from ml.train_m2.splits import build_splits
+
+    ks = load_key_sets(root, strict=False)
+    forced = ks.a_val - ks.phase5_train - ks.held_out_union
+    if not forced:
+        forced = set(DEFAULT_FORCED_CAL_CLUSTERS)
+    return build_splits(_clusters(), ks.held_out_union, forced, seed=seed)
+
 
 def check_execution_guards(dry_run: bool, i_understand: bool, root: Path) -> None:
     """Verify execution guards for real mode vs dry-run."""
@@ -128,10 +165,13 @@ def resplit_proposal_step(
     if not base_forced:
         try:
             from ml.train_m2.labels.leakguard import load_key_sets
-            ks = load_key_sets(repo_root())
+            ks = load_key_sets(repo_root(), strict=False)
             base_forced = (ks.a_val - ks.phase5_train - ks.held_out_union) & set(clusters)
         except Exception:
             base_forced = set()
+
+    if not base_forced:
+        base_forced = set(DEFAULT_FORCED_CAL_CLUSTERS) & set(clusters)
 
     force_cal = (base_forced | set(new_clean_clusters)) - test_only
 
@@ -310,15 +350,7 @@ def run_post_oof(
     if synthetic_fixture and "base_splits" in synthetic_fixture:
         base_splits = synthetic_fixture["base_splits"]
     else:
-        s_path = Path(splits_path) if splits_path else root / "ml" / "train_m2" / "out" / "m2" / "splits.json"
-        if s_path.is_file():
-            base_splits = json.loads(s_path.read_text(encoding="utf-8"))
-        else:
-            from ml.train_m2.labels.leakguard import load_key_sets
-            from ml.train_m2.run_m2 import _clusters
-            ks = load_key_sets(root)
-            forced = ks.a_val - ks.phase5_train - ks.held_out_union
-            base_splits = build_splits(_clusters(), ks.held_out_union, forced, seed=seed)
+        base_splits = load_base_splits(root, splits_path=splits_path, seed=seed)
 
     new_splits = resplit_proposal_step(base_splits, new_clean, out_path, seed=seed)
 

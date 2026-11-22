@@ -22,6 +22,7 @@ from ml.train_m2.eval.post_oof import (
     check_execution_guards,
     emit_changelog_entry,
     ingest_step,
+    load_base_splits,
     main,
     resplit_proposal_step,
     run_post_oof,
@@ -220,17 +221,7 @@ def test_emit_changelog_entry_format():
 def test_resplit_proposal_empty_clean_clusters_matches_base_splits(tmp_path: Path):
     """When zero new clean clusters are provided, re-split proposal reproduces base splits exactly."""
     root = repo_root()
-    splits_file = root / "ml" / "train_m2" / "out" / "m2" / "splits.json"
-    if splits_file.is_file():
-        base_splits = json.loads(splits_file.read_text(encoding="utf-8"))
-    else:
-        from ml.train_m2.labels.leakguard import load_key_sets
-        from ml.train_m2.run_m2 import _clusters
-        from ml.train_m2.splits import build_splits
-        ks = load_key_sets(root)
-        forced = ks.a_val - ks.phase5_train - ks.held_out_union
-        base_splits = build_splits(_clusters(), ks.held_out_union, forced, seed=1337)
-
+    base_splits = load_base_splits(root)
     out_dir = tmp_path / "resplit_identity"
 
     prop = resplit_proposal_step(base_splits, [], out_dir)
