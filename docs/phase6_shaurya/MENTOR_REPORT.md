@@ -38,13 +38,13 @@ Across Phase 6, we delivered an end-to-end trust architecture:
 - **Stop Rule S1 Triggered:** Only 66 distinct usable natural negative patches exist in non-test data (rft_v2: 55, zeroshot: 4, sft: 3, rft: 3). SFT is essentially never wrong on seen inputs (pass@1 of 96.7%), preventing discrimination evaluation on SFT alone.
 - **Stop Rule S4 Active:** Pre-OOF non-test data provides only 15 clean unseen clusters for SFT. With 50 total calibration clusters, the calibration pool is below the rule of 59 (`n_min = 59`). Autonomy is therefore OFF (`certified = false`, `tau = null`).
 - **Inherited Contamination:** 56 training inputs overlap with held-out test clusters from Phase 5. Primary held-out evaluation is strictly limited to the 92 unseen held-out clusters.
-- **Ollama Logprob Semantics:** Presence penalty was applied after logprob computation, decoupling raw token logprobs from the final sampled tokens.
+- **Ollama Logprob Semantics:** The audit found chosen-token == top-1 on greedy rows at 0.931 (zeroshot) and 0.916 (rft_v2) vs 1.000 for sft/rft; this is consistent with penalty or masking acting post-logprob, but is not proven without running Ollama.
 - **Base Model Licence:** Foundation model `unsloth/Qwen3.5-4B` licence remains UNVERIFIED.
 
 ## 6. What Is Pending
 
 Held-out test sets (`B1`, `B2`, `C_verifier`, `gold`) remain strictly sealed under Hard Rule 5. The following components remain **PENDING**:
-- Delivery and validation of Prabhav's 5-fold SFT out-of-fold harvest.
+- out-of-fold folds delivered: PENDING (up to 5 planned; minimum 2 give 72 clean clusters)
 - Post-OOF re-split and threshold re-calibration via `post_oof.py`.
 - One-shot evaluation execution on unseen held-out clusters.
 - Final held-out metrics and certification status: **PENDING**.

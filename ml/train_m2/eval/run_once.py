@@ -31,7 +31,21 @@ def _previous(log: Path, model: str, set_name: str) -> int:
 
 
 def run_once(model_name: str, set_name: str, evaluator: Callable[[], dict[str, Any]], repeat_reason: str | None = None,
-             log: Path = LOG, prereg: Path = PREREG) -> dict[str, Any]:
+             log: Path = LOG, prereg: Path = PREREG, require_preflight: bool | None = None,
+             root: Path | None = None, skip_test_suites_in_preflight: bool = False) -> dict[str, Any]:
+    # Require preflight check before scoring any held-out row in production
+    should_check_preflight = require_preflight if require_preflight is not None else (log == LOG and prereg == PREREG)
+    if should_check_preflight:
+        from ml.train_m2.eval.preflight_heldout import PreflightError, require_preflight_pass
+        try:
+            require_preflight_pass(
+                root=root,
+                pairs=[(model_name, set_name)],
+                skip_test_suites=skip_test_suites_in_preflight,
+            )
+        except PreflightError as exc:
+            raise RunOnceError(f"Preflight held-out checks failed: {exc}") from exc
+
     if not prereg.exists() or not prereg.read_text(encoding="utf-8").strip():
         raise RunOnceError(f"pre-registration {prereg.name} is missing: commit it before any held-out evaluation")
     if _previous(log, model_name, set_name) and not repeat_reason:

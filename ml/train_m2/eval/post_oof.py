@@ -41,6 +41,7 @@ from ml.train_m2.common import (
 from ml.train_m2.eval.ingest_oof import (
     _build_fold_membership,
     _build_key_flags,
+    _extract_fold,
     _load_folds,
     assert_fold_disjointness,
     compute_unseen_clean_counts,
@@ -54,6 +55,223 @@ from ml.train_m2.splits import assert_disjoint, build_splits, cell_table, splits
 
 LOG = logging.getLogger("post_oof")
 SEED = 1337
+
+# Clean counts per fold from docs/phase6_shaurya/crossfit/folds.md
+CLEAN_COUNTS_PER_FOLD: dict[int, int] = {
+    0: 37,
+    1: 35,
+    2: 30,
+    3: 33,
+    4: 33,
+}
+
+
+def compute_cp_min_n(k: int, alpha: float = 0.05, delta: float = 0.05) -> int:
+    """Compute smallest n >= max(k + 1, 1) such that cp_upper(k, n, delta) <= alpha.
+
+    Uses ltt.cp_upper (one-sided Clopper-Pearson upper confidence bound).
+    """
+    if not (0 < alpha < 1 and 0 < delta < 1):
+        raise ValueError("alpha and delta must be in (0, 1)")
+    if k < 0:
+        raise ValueError("k must be non-negative")
+    n = max(k + 1, 1)
+    while ltt.cp_upper(k, n, delta) > alpha:
+        n += 1
+    return n
+
+
+def _is_gate_pass(row: dict[str, Any]) -> bool:
+    """Extract gate_pass status from row."""
+    if row.get("gate_pass") is not None:
+        return bool(row["gate_pass"])
+    if row.get("gate_passed") is not None:
+        return bool(row["gate_passed"])
+    scored = row.get("scored")
+    if isinstance(scored, dict):
+        cands = scored.get("candidates", [])
+        if cands and isinstance(cands[0], dict):
+            return bool(cands[0].get("gate_passed"))
+    return False
+
+
+def _is_wrong(row: dict[str, Any]) -> bool:
+    """Extract wrong status from row."""
+    oc = row.get("oracle_class")
+    if oc is not None:
+        return oc in ("wrong", "valid_not_minimal")
+    if row.get("wrong") is not None:
+        return bool(row["wrong"])
+    if row.get("y") is not None:
+        return int(row["y"]) == 0
+    if row.get("strict_correct") is not None:
+        return not bool(row["strict_correct"])
+    return False
+
+
+def evaluate_partial_oof(
+    rows: list[dict[str, Any]],
+    fold_membership: dict[str, int],
+    key_flags: dict[str, dict[str, bool]],
+    existing_unseen_clean: int = 15,
+    alpha: float = 0.05,
+    delta: float = 0.05,
+    clean_counts_per_fold: Mapping[int, int] | None = None,
+) -> dict[str, Any]:
+    """Analyze a partial (or full) set of OOF folds for SFT certification readiness.
+
+    Reports:
+      - folds_present: sorted list of fold indices (1..5) present in rows
+      - clean_unseen_clusters: sorted list of clean unseen cluster keys
+      - oof_clean_count: count of clean unseen clusters from OOF rows
+      - existing_clean_count: count of existing clean unseen clusters (default 15)
+      - total_clean_clusters: oof_clean_count + existing_clean_count
+      - k: count of gate-passing-but-wrong SFT drafts among clean unseen clusters at CLUSTER level
+      - cp_min_n: Clopper-Pearson minimum n for k at alpha, delta
+      - verdict: 'SUFFICIENT' if total_clean_clusters >= cp_min_n else 'NEED <m> MORE CLEAN CLUSTERS'
+      - remaining_folds: list of fold indices not present in rows
+      - covering_folds: minimal remaining folds that would cover the deficit
+      - covering_status: human-readable explanation of fold coverage
+
+    Rules:
+      - Statistical unit is CLUSTER (distinct input_key).
+      - Never uses any held-out or A_val cluster.
+      - Does NOT choose a threshold tau.
+    """
+    clean_counts = dict(clean_counts_per_fold) if clean_counts_per_fold is not None else CLEAN_COUNTS_PER_FOLD
+
+    # 1. Identify folds present in rows
+    folds_present_set: set[int] = set()
+    for r in rows:
+        f = _extract_fold(r)
+        if f is not None:
+            folds_present_set.add(f)
+    folds_present = sorted(folds_present_set)
+
+    # 2. Group rows by input_key
+    from collections import defaultdict
+    by_ik: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for r in rows:
+        ik = r.get("input_key")
+        if ik:
+            by_ik[ik].append(r)
+
+    clean_unseen_clusters: list[str] = []
+    k_clusters: list[str] = []
+
+    for ik, cluster_rows in by_ik.items():
+        flags = key_flags.get(ik, {})
+        in_heldout = flags.get("in_heldout", False) or any(r.get("heldout_overlap") for r in cluster_rows)
+        in_a_val = flags.get("in_a_val", False) or any(r.get("in_a_val") for r in cluster_rows)
+
+        # Held-out and A_val clusters are STRICTLY EXCLUDED
+        if in_heldout or in_a_val:
+            continue
+
+        assigned_fold = fold_membership.get(ik)
+        cf_values = {_extract_fold(r) for r in cluster_rows} - {None}
+        if not cf_values:
+            continue
+
+        # unseen = adapter that generated this completion excluded this input
+        unseen = any(assigned_fold == cf for cf in cf_values)
+        if not unseen:
+            continue
+
+        # This is a clean unseen cluster
+        clean_unseen_clusters.append(ik)
+
+        # 3. Check for gate-passing-but-wrong at CLUSTER level on greedy draft (sample_idx == 0)
+        greedy_rows = [r for r in cluster_rows if r.get("sample_idx", 0) == 0]
+        greedy_row = greedy_rows[0] if greedy_rows else cluster_rows[0]
+
+        if _is_gate_pass(greedy_row) and _is_wrong(greedy_row):
+            k_clusters.append(ik)
+
+    clean_unseen_clusters.sort()
+    oof_clean_count = len(clean_unseen_clusters)
+    total_clean = oof_clean_count + existing_unseen_clean
+    k = len(k_clusters)
+
+    # 4. Clopper-Pearson minimum n for k
+    cp_min_n = compute_cp_min_n(k, alpha=alpha, delta=delta)
+
+    # 5. Verdict and deficit
+    if total_clean >= cp_min_n:
+        verdict = "SUFFICIENT"
+        needed_more = 0
+    else:
+        needed_more = cp_min_n - total_clean
+        verdict = f"NEED {needed_more} MORE CLEAN CLUSTERS"
+
+    # 6. Remaining folds coverage
+    all_folds = [0, 1, 2, 3, 4]
+    remaining_folds = [f for f in all_folds if f not in folds_present]
+    covering_folds: list[int] = []
+    covering_count = 0
+
+    if verdict != "SUFFICIENT":
+        for f in remaining_folds:
+            covering_folds.append(f)
+            covering_count += clean_counts.get(f, 0)
+            if covering_count >= needed_more:
+                break
+        if covering_count >= needed_more:
+            covering_status = (
+                f"Remaining fold(s) {covering_folds} provide {covering_count} clean clusters, "
+                f"covering the deficit of {needed_more}."
+            )
+        else:
+            covering_status = (
+                f"All remaining fold(s) {remaining_folds} provide {covering_count} clean clusters, "
+                f"which is insufficient for the deficit of {needed_more}."
+            )
+    else:
+        covering_status = "Available clean unseen clusters are SUFFICIENT for certification."
+
+    return {
+        "folds_present": folds_present,
+        "oof_clean_count": oof_clean_count,
+        "existing_clean_count": existing_unseen_clean,
+        "total_clean_clusters": total_clean,
+        "k": k,
+        "k_clusters": sorted(k_clusters),
+        "alpha": alpha,
+        "delta": delta,
+        "cp_min_n": cp_min_n,
+        "verdict": verdict,
+        "needed_more": needed_more,
+        "remaining_folds": remaining_folds,
+        "covering_folds": covering_folds,
+        "covering_count": covering_count,
+        "covering_status": covering_status,
+        "clean_unseen_clusters": clean_unseen_clusters,
+    }
+
+
+def render_partial_oof_report(res: dict[str, Any]) -> str:
+    """Render markdown summary of partial OOF analysis."""
+    lines = [
+        "# Partial-Fold Post-OOF Analysis Report (SFT Certification Readiness)",
+        "",
+        f"- Folds present in harvest: {res['folds_present']} (count: {len(res['folds_present'])})",
+        f"- OOF clean unseen clusters: {res['oof_clean_count']}",
+        f"- Pre-OOF existing clean clusters: {res['existing_clean_count']}",
+        f"- Total clean unseen clusters: **{res['total_clean_clusters']}**",
+        "",
+        "## Error Analysis at Cluster Level (Greedy Drafts)",
+        "",
+        f"- Gate-passing-but-wrong drafts (k): **{res['k']}**",
+        f"- Target risk alpha: {res['alpha']}, failure bound delta: {res['delta']}",
+        f"- Clopper-Pearson minimum n required (cp_upper(k, n, delta) <= alpha): **{res['cp_min_n']}**",
+        "",
+        "## Verdict",
+        "",
+        f"- **Verdict: {res['verdict']}**",
+        f"- Remaining folds available: {res['remaining_folds']}",
+        f"- Recommendation: {res['covering_status']}",
+    ]
+    return "\n".join(lines) + "\n"
 
 # The 15 A_val-only clusters that Phase 5 SFT never trained on, forced into calibration split
 DEFAULT_FORCED_CAL_CLUSTERS: tuple[str, ...] = (
@@ -436,6 +654,51 @@ def run_post_oof(
     print(changelog_entry)
     print("------------------------------------------------------------------------------\n")
 
+    # 6. Partial-fold post-OOF evaluation (dry-run only)
+    partial_oof: dict[str, Any] | None = None
+    if synthetic_fixture and "partial_oof" in synthetic_fixture:
+        partial_oof = synthetic_fixture["partial_oof"]
+    elif synthetic_fixture and "partial_rows" in synthetic_fixture:
+        f_path = Path(folds_path) if folds_path else root / "docs" / "phase6_shaurya" / "crossfit" / "folds.json"
+        folds = _load_folds(f_path) if f_path.exists() else {"folds": {}}
+        fold_mem = _build_fold_membership(folds) if "folds" in folds else {}
+        inputs = load_inputs()
+        k_flags = _build_key_flags(inputs)
+        partial_oof = evaluate_partial_oof(
+            synthetic_fixture["partial_rows"],
+            fold_mem,
+            k_flags,
+            alpha=alpha,
+            delta=delta,
+        )
+    else:
+        h_root = Path(harvest_root) if harvest_root else root / "ml" / "train_m2" / "harvest_out" / "sft_oof"
+        f_path = Path(folds_path) if folds_path else root / "docs" / "phase6_shaurya" / "crossfit" / "folds.json"
+        if h_root.exists() and f_path.exists():
+            folds = _load_folds(f_path)
+            fold_mem = _build_fold_membership(folds)
+            inputs = load_inputs()
+            k_flags = _build_key_flags(inputs)
+            h_rows: list[dict[str, Any]] = []
+            for part in sorted(h_root.rglob("part-*.jsonl")):
+                for r in jsonl_iter(part):
+                    h_rows.append(r)
+            partial_oof = evaluate_partial_oof(
+                h_rows,
+                fold_mem,
+                k_flags,
+                alpha=alpha,
+                delta=delta,
+            )
+
+    if partial_oof:
+        part_rep_json = out_path / "partial_oof_report.json"
+        part_rep_md = out_path / "partial_oof_report.md"
+        jsonl_write_atomic(part_rep_json, [partial_oof])
+        write_provenance(part_rep_json, seed=seed)
+        part_rep_md.write_text(render_partial_oof_report(partial_oof), encoding="utf-8")
+        write_provenance(part_rep_md, seed=seed)
+
     return {
         "counts": counts,
         "splits": new_splits,
@@ -443,6 +706,7 @@ def run_post_oof(
         "val_report": val_report,
         "tau_info": tau_info,
         "changelog_entry": changelog_entry,
+        "partial_oof": partial_oof,
     }
 
 

@@ -1,0 +1,22 @@
+{
+  "m2.joblib": {
+    "path": "ml\\train_m2\\out\\m2\\m2.joblib",
+    "sha256": "CAFE1544DA3345F6CCD7CF8B1641BB0913E502B8CDAEF1BD8E35095CB091AEA7"
+  },
+  "model_card.json": {
+    "path": "ml\\train_m2\\out\\m2\\model_card.json",
+    "sha256": "BF8E6288BED4C9CDCFA7FE75BA2E74B37753C4C7B1114A957F91406E02CEEBD2"
+  },
+  "splits.json": {
+    "path": "ml\\train_m2\\out\\m2\\splits.json",
+    "sha256": "F32395543C6D70020A601BA4F5B46743BEC5263B99911D0B5238F99FC8402EBC"
+  },
+  "tau_star.json": {
+    "path": "ml\\train_m2\\out\\tau_star.json",
+    "sha256": "92C519EE2698AA45E88BB56DA65BD9D5FE2BDB5B6D8AB4F882F21D4885D63EE0"
+  },
+  "val_metrics.json": {
+    "path": "ml\\train_m2\\out\\m2\\val_metrics.json",
+    "sha256": "317B78A447625AA903B3068EDCB3683A75B5CF7D0364BF7E4589D3F28DDE7035"
+  }
+}

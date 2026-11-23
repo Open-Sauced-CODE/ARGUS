@@ -89,3 +89,39 @@ def test_all_drafts_are_ascii(root_dir: Path) -> None:
     for rel_path in DRAFT_FILES:
         text = (root_dir / rel_path).read_text(encoding="utf-8")
         assert text.isascii(), f"Non-ASCII characters found in {rel_path}"
+
+
+def test_no_verified_in_audit_k13_phrase(root_dir: Path) -> None:
+    for rel_path in DRAFT_FILES:
+        text = (root_dir / rel_path).read_text(encoding="utf-8")
+        assert "verified in audit k13" not in text.lower(), (
+            f"Forbidden phrase 'verified in audit K13' found in {rel_path}"
+        )
+
+
+def test_every_ollama_version_in_drafts_appears_in_a_manifest(root_dir: Path) -> None:
+    import json
+    manifest_versions: set[str] = set()
+    manifest_dir = root_dir / "ml" / "train_m2" / "harvest_manifests"
+    if manifest_dir.is_dir():
+        for mf in manifest_dir.glob("*.json"):
+            try:
+                data = json.loads(mf.read_text(encoding="utf-8"))
+                if "ollama_version" in data:
+                    manifest_versions.add(str(data["ollama_version"]))
+                for v in data.get("ollama_versions_seen_in_files", []):
+                    manifest_versions.add(str(v))
+            except Exception:
+                pass
+
+    assert len(manifest_versions) > 0, "No manifest ollama versions found to validate against"
+
+    for rel_path in DRAFT_FILES:
+        text = (root_dir / rel_path).read_text(encoding="utf-8")
+        # Match e.g. "Ollama 0.40.11"
+        matches = re.findall(r"Ollama\s+([0-9]+\.[0-9]+(?:\.[0-9a-zA-Z_-]+)?)", text, re.IGNORECASE)
+        for ver in matches:
+            assert ver in manifest_versions, (
+                f"Ollama version string {ver!r} in {rel_path} does not appear in any committed harvest manifest: {manifest_versions}"
+            )
+

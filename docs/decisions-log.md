@@ -93,3 +93,5 @@ Work / Methodology sections) will thank present-you for this.
 
 2026-11-22 (Shaurya) Phase 6: cross-fit package sent, Stage 4 drafts written, held-out not opened, waiting on OOF; deadline 2026-11-24.
 
+2026-11-23 (Shaurya) Phase 6: pre-flight and partial-fold post-OOF added; doc wording fixed; held-out still unopened.
+

@@ -23,9 +23,9 @@
   - Total rows: 37 across 12 public GitHub repositories.
   - Unique clusters: 5 distinct input keys (all 5 overlap with Phase 5 train / held-out inputs; unsuited as an independent benchmark).
 - **Out-of-Fold (OOF) Harvest:**
-  - Specification: 5-fold cross-fit (`docs/phase6_shaurya/crossfit/folds.json`).
+  - Specification: cross-fit (`docs/phase6_shaurya/crossfit/folds.json`).
   - Total inputs across folds: 230 train inputs (expected 1,840 OOF rows at 8 samples per input).
-  - Status: Delivery from generator track is **PENDING**.
+  - Status: out-of-fold folds delivered: PENDING (up to 5 planned; minimum 2 give 72 clean clusters).
 
 ## 3. Partitions & Split Methodology
 
@@ -86,7 +86,7 @@ Audited via `ml/train_m2/licence_audit.py` (documented in `ml/train_m2/out/repor
 3. **Small Non-Test Clean Pool:**
    Pre-OOF non-test clean unseen inputs total only 15 clusters. Stop rule S4 requires 44 additional clean clusters from OOF harvest to reach the rule-of-59 threshold.
 4. **Logprob Discrepancy under Presence Penalty:**
-   In Ollama 0.40.x, presence penalty operates after logits generation, creating a discrepancy between raw token logprobs and final sampled completions.
+   In Ollama 0.40.11 (recorded in committed harvest manifests, e.g. sft_A.json), the audit found chosen-token == top-1 on greedy rows at 0.931 (zeroshot) and 0.916 (rft_v2) vs 1.000 for sft/rft, consistent with penalty acting post-logprob, but not proven without running Ollama.
 
 ## 7. Held-Out Evaluation Policy
 

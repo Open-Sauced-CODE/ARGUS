@@ -20,7 +20,7 @@
     - Format: Patch-IR JSON schema (`remediate/patch_ir/schema.json`).
     - Modelfile PARAMETERs: `presence_penalty 1.5`, `top_k 20`, `top_p 0.95`.
     - Sampling: sample 0 greedy, samples 1-7 at `temperature 0.7` with seeds 1-7.
-    - Runtime: Ollama 0.40.x.
+    - Runtime: Ollama 0.40.11 (recorded in committed harvest manifests, e.g. ml/train_m2/harvest_manifests/sft_A.json).
   - Valid ONLY on fix-route candidates. Escalate-route findings and escalate-only patches bypass M2 entirely and route directly to human review.
 
 ## 3. What M2 is NOT
@@ -64,7 +64,7 @@
 1. **Inherited Contamination (A1-S Audit Check K6):**
    The Phase 5 training set shared 56 input clusters with the held-out test sets (B1: 36/36, B2: 10/10, C_verifier: 32/108, gold: 14/30). While row hashes differ, cluster keys overlap. Primary held-out evaluation is strictly confined to the 92 unseen held-out clusters (76 C_verifier + 16 gold).
 2. **Logprob Semantics (A1-S Audit Check K13):**
-   In Ollama 0.40.x, presence penalty was applied after token logprobs were recorded. As verified in audit K13, top-1 agreement on greedy sample 0 dropped to 0.931 on zeroshot and 0.916 on rft_v2. Token logprob features reflect pre-penalty logits rather than the exact sampled token distribution.
+   The audit found chosen-token == top-1 on greedy rows at 0.931 (zeroshot) and 0.916 (rft_v2) vs 1.000 for sft/rft; this is consistent with the penalty (or grammar masking) acting after the reported logprobs, which cannot be separated without running Ollama, so it is NOT proven. Token logprob features reflect pre-penalty logits rather than the exact sampled token distribution.
 3. **Tiny Clean Unseen Pool (A1-S Audit Check K12 & Stop Rule S4):**
    Before out-of-fold (OOF) harvesting, only 15 clean unseen clusters exist in non-test data for SFT (A_val-only inputs). This yields an uncertified Upper Confidence Bound (UCB) of 0.181 at 0 errors, leaving 44 clean clusters needed to close stop rule S4.
 4. **Natural Negative Scarcity (Stop Rule S1 Triggered):**

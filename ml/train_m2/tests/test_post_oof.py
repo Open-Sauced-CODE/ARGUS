@@ -259,6 +259,182 @@ def test_ingest_step_with_corrupt_harvest_raises_assertion(tmp_path: Path):
         ingest_step(harvest_dir, folds_path, out_dir)
 
 
+def test_compute_cp_min_n():
+    """Verify Clopper-Pearson minimum n calculation matches analytical values."""
+    from ml.train_m2.eval.post_oof import compute_cp_min_n
+    assert compute_cp_min_n(0) == 59
+    assert compute_cp_min_n(1) == 93
+    assert compute_cp_min_n(2) == 124
+    assert compute_cp_min_n(3) == 153
+    assert compute_cp_min_n(4) == 181
+
+
+def test_partial_oof_two_folds_k0_sufficient():
+    """2 folds present with k=0 errors: 72 + 15 = 87 >= 59 -> SUFFICIENT."""
+    from ml.train_m2.eval.post_oof import evaluate_partial_oof
+
+    # 37 clean clusters for fold 0, 35 for fold 1
+    fold_mem = {}
+    key_flags = {}
+    rows = []
+
+    for i in range(37):
+        ik = f"f0_clean_{i}"
+        fold_mem[ik] = 0
+        key_flags[ik] = {"in_heldout": False, "in_a_val": False}
+        rows.append({"input_key": ik, "crossfit_fold": 0, "sample_idx": 0, "gate_pass": True, "oracle_class": "minimal_correct"})
+
+    for i in range(35):
+        ik = f"f1_clean_{i}"
+        fold_mem[ik] = 1
+        key_flags[ik] = {"in_heldout": False, "in_a_val": False}
+        rows.append({"input_key": ik, "crossfit_fold": 1, "sample_idx": 0, "gate_pass": True, "oracle_class": "minimal_correct"})
+
+    res = evaluate_partial_oof(rows, fold_mem, key_flags, existing_unseen_clean=15)
+    assert res["folds_present"] == [0, 1]
+    assert res["oof_clean_count"] == 72
+    assert res["total_clean_clusters"] == 87
+    assert res["k"] == 0
+    assert res["cp_min_n"] == 59
+    assert res["verdict"] == "SUFFICIENT"
+    assert res["needed_more"] == 0
+    assert res["remaining_folds"] == [2, 3, 4]
+    assert res["covering_folds"] == []
+
+
+def test_partial_oof_two_folds_k1_needs_more():
+    """2 folds present with k=1 error: 87 < 93 -> NEED 6 MORE CLEAN CLUSTERS, covered by fold 2 (30)."""
+    from ml.train_m2.eval.post_oof import evaluate_partial_oof
+
+    fold_mem = {}
+    key_flags = {}
+    rows = []
+
+    for i in range(37):
+        ik = f"f0_clean_{i}"
+        fold_mem[ik] = 0
+        key_flags[ik] = {"in_heldout": False, "in_a_val": False}
+        # 1 gate-passing wrong draft in fold 0
+        oc = "wrong" if i == 0 else "minimal_correct"
+        rows.append({"input_key": ik, "crossfit_fold": 0, "sample_idx": 0, "gate_pass": True, "oracle_class": oc})
+
+    for i in range(35):
+        ik = f"f1_clean_{i}"
+        fold_mem[ik] = 1
+        key_flags[ik] = {"in_heldout": False, "in_a_val": False}
+        rows.append({"input_key": ik, "crossfit_fold": 1, "sample_idx": 0, "gate_pass": True, "oracle_class": "minimal_correct"})
+
+    res = evaluate_partial_oof(rows, fold_mem, key_flags, existing_unseen_clean=15)
+    assert res["folds_present"] == [0, 1]
+    assert res["oof_clean_count"] == 72
+    assert res["total_clean_clusters"] == 87
+    assert res["k"] == 1
+    assert res["cp_min_n"] == 93
+    assert res["verdict"] == "NEED 6 MORE CLEAN CLUSTERS"
+    assert res["needed_more"] == 6
+    assert res["remaining_folds"] == [2, 3, 4]
+    assert res["covering_folds"] == [2]
+    assert "Remaining fold(s) [2] provide 30 clean clusters" in res["covering_status"]
+
+
+def test_partial_oof_two_folds_k2_needs_more():
+    """2 folds present with k=2 errors: 87 < 124 -> NEED 37 MORE CLEAN CLUSTERS, covered by folds [2, 3] (30+33=63)."""
+    from ml.train_m2.eval.post_oof import evaluate_partial_oof
+
+    fold_mem = {}
+    key_flags = {}
+    rows = []
+
+    for i in range(37):
+        ik = f"f0_clean_{i}"
+        fold_mem[ik] = 0
+        key_flags[ik] = {"in_heldout": False, "in_a_val": False}
+        oc = "wrong" if i < 2 else "minimal_correct"
+        rows.append({"input_key": ik, "crossfit_fold": 0, "sample_idx": 0, "gate_pass": True, "oracle_class": oc})
+
+    for i in range(35):
+        ik = f"f1_clean_{i}"
+        fold_mem[ik] = 1
+        key_flags[ik] = {"in_heldout": False, "in_a_val": False}
+        rows.append({"input_key": ik, "crossfit_fold": 1, "sample_idx": 0, "gate_pass": True, "oracle_class": "minimal_correct"})
+
+    res = evaluate_partial_oof(rows, fold_mem, key_flags, existing_unseen_clean=15)
+    assert res["folds_present"] == [0, 1]
+    assert res["oof_clean_count"] == 72
+    assert res["total_clean_clusters"] == 87
+    assert res["k"] == 2
+    assert res["cp_min_n"] == 124
+    assert res["verdict"] == "NEED 37 MORE CLEAN CLUSTERS"
+    assert res["needed_more"] == 37
+    assert res["remaining_folds"] == [2, 3, 4]
+    assert res["covering_folds"] == [2, 3]
+    assert "Remaining fold(s) [2, 3] provide 63 clean clusters" in res["covering_status"]
+
+
+def test_partial_oof_five_folds_k2_sufficient():
+    """5 folds present with k=2 errors: 168 + 15 = 183 >= 124 -> SUFFICIENT."""
+    from ml.train_m2.eval.post_oof import evaluate_partial_oof
+
+    fold_counts = {0: 37, 1: 35, 2: 30, 3: 33, 4: 33}
+    fold_mem = {}
+    key_flags = {}
+    rows = []
+
+    k_assigned = 0
+    for fold_idx, n_clusters in fold_counts.items():
+        for i in range(n_clusters):
+            ik = f"f{fold_idx}_clean_{i}"
+            fold_mem[ik] = fold_idx
+            key_flags[ik] = {"in_heldout": False, "in_a_val": False}
+            if k_assigned < 2:
+                oc = "wrong"
+                k_assigned += 1
+            else:
+                oc = "minimal_correct"
+            rows.append({"input_key": ik, "crossfit_fold": fold_idx, "sample_idx": 0, "gate_pass": True, "oracle_class": oc})
+
+    res = evaluate_partial_oof(rows, fold_mem, key_flags, existing_unseen_clean=15)
+    assert res["folds_present"] == [0, 1, 2, 3, 4]
+    assert res["oof_clean_count"] == 168
+    assert res["total_clean_clusters"] == 183
+    assert res["k"] == 2
+    assert res["cp_min_n"] == 124
+    assert res["verdict"] == "SUFFICIENT"
+    assert res["remaining_folds"] == []
+
+
+def test_partial_oof_heldout_and_aval_overlap_strictly_excluded():
+    """Held-out overlap and A_val clusters are strictly excluded and never contribute to clean counts or k."""
+    from ml.train_m2.eval.post_oof import evaluate_partial_oof
+
+    fold_mem = {
+        "c_clean": 0,
+        "c_heldout": 0,
+        "c_aval": 0,
+    }
+    key_flags = {
+        "c_clean": {"in_heldout": False, "in_a_val": False},
+        "c_heldout": {"in_heldout": True, "in_a_val": False},
+        "c_aval": {"in_heldout": False, "in_a_val": True},
+    }
+    rows = [
+        {"input_key": "c_clean", "crossfit_fold": 0, "sample_idx": 0, "gate_pass": True, "oracle_class": "minimal_correct"},
+        # c_heldout has a gate-passing-wrong draft, but MUST be excluded
+        {"input_key": "c_heldout", "crossfit_fold": 0, "sample_idx": 0, "gate_pass": True, "oracle_class": "wrong", "heldout_overlap": True},
+        # c_aval has a gate-passing-wrong draft, but MUST be excluded
+        {"input_key": "c_aval", "crossfit_fold": 0, "sample_idx": 0, "gate_pass": True, "oracle_class": "wrong", "in_a_val": True},
+    ]
+
+    res = evaluate_partial_oof(rows, fold_mem, key_flags, existing_unseen_clean=15)
+    # Only c_clean is counted
+    assert res["clean_unseen_clusters"] == ["c_clean"]
+    assert res["oof_clean_count"] == 1
+    assert res["total_clean_clusters"] == 16
+    # k must NOT count the errors in c_heldout or c_aval
+    assert res["k"] == 0
+    assert res["cp_min_n"] == 59
+
+
 def test_main_cli_dry_run_execution(tmp_path: Path):
     """Verify main() CLI execution succeeds in dry-run mode and writes artifacts."""
     out_dir = tmp_path / "cli_dry_run_out"
