@@ -34,6 +34,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
 
+# Ensure repository root is on sys.path when invoked directly as a script
+_repo_root = str(Path(__file__).resolve().parents[3])
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+
 from ml.train_m2.common import repo_root
 from ml.train_m2.splits import splits_hash
 
@@ -158,12 +163,15 @@ def check_plan_diff_section12(root: Path, target_commit: str = PLAN_COMMIT) -> C
             )
 
         # If diff exists, check that changes are only in section 12
-        # Find start line of Section 12 in the file at HEAD
+        # Find start and end line of Section 12 in the file at HEAD
         plan_lines = plan_full.read_text(encoding="utf-8").splitlines()
         sec12_start_line = None
+        sec12_end_line = None
         for idx, line in enumerate(plan_lines, start=1):
-            if "## 12. Change-log & deviations" in line:
+            if re.match(r"^##\s+12\.\s+Change\s*log", line.strip(), re.IGNORECASE):
                 sec12_start_line = idx
+            elif sec12_start_line is not None and re.match(r"^##\s+13\.", line.strip()):
+                sec12_end_line = idx
                 break
 
         if sec12_start_line is None:
@@ -172,24 +180,33 @@ def check_plan_diff_section12(root: Path, target_commit: str = PLAN_COMMIT) -> C
                 False,
                 "Section 12 heading not found in EXPERIMENT_PLAN_M2.md",
             )
+        if sec12_end_line is None:
+            sec12_end_line = len(plan_lines) + 1
 
-        # Inspect diff hunks
-        hunk_header_re = re.compile(r"^@@\s+-\d+(?:,\d+)?\s+\+(\d+)(?:,(\d+))?\s+@@")
+        # Inspect diff hunks: @@ -from,len +to,len @@
+        hunk_header_re = re.compile(r"^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@")
         for line in diff_text.splitlines():
             m = hunk_header_re.match(line)
             if m:
-                hunk_new_start = int(m.group(1))
+                hunk_new_start = int(m.group(3))
+                hunk_new_len = int(m.group(4)) if m.group(4) else 1
                 if hunk_new_start < sec12_start_line:
                     return CheckResult(
                         "Plan Section 12 diff",
                         False,
                         f"Diff hunk starts at line {hunk_new_start} before Section 12 (line {sec12_start_line})",
                     )
+                if hunk_new_start + hunk_new_len > sec12_end_line:
+                    return CheckResult(
+                        "Plan Section 12 diff",
+                        False,
+                        f"Diff hunk extends to line {hunk_new_start + hunk_new_len} beyond Section 12 (ends at line {sec12_end_line})",
+                    )
 
         return CheckResult(
             "Plan Section 12 diff",
             True,
-            f"All diff hunks are contained within Section 12 (starts line {sec12_start_line})",
+            f"All diff hunks are contained within Section 12 (lines {sec12_start_line}..{sec12_end_line})",
         )
     except Exception as e:
         return CheckResult("Plan Section 12 diff", False, f"Diff check failed: {e}")

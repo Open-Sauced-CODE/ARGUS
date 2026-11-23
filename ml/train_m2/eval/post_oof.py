@@ -22,9 +22,15 @@ import argparse
 import hashlib
 import json
 import logging
-import sys
-from datetime import datetime, timezone
 from pathlib import Path
+import sys
+
+# Ensure repository root is on sys.path when invoked directly as a script
+_repo_root = str(Path(__file__).resolve().parents[3])
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+
+from datetime import datetime, timezone
 from typing import Any, Mapping
 
 import numpy as np
@@ -96,7 +102,19 @@ def _is_gate_pass(row: dict[str, Any]) -> bool:
 
 
 def _is_wrong(row: dict[str, Any]) -> bool:
-    """Extract wrong status from row."""
+    """Extract wrong status from row, taking into account harvest record's own finding_id."""
+    rec_fid = row.get("finding_id")
+    patch = row.get("patch")
+    if not isinstance(patch, dict) and isinstance(row.get("content"), str):
+        try:
+            patch = json.loads(row["content"])
+        except Exception:
+            patch = None
+    if isinstance(patch, dict) and rec_fid:
+        patch_fid = patch.get("finding_id")
+        if patch_fid and rec_fid != patch_fid:
+            return True
+
     oc = row.get("oracle_class")
     if oc is not None:
         return oc in ("wrong", "valid_not_minimal")
@@ -527,8 +545,9 @@ def run_post_oof(
     seed: int = SEED,
     root: Path | None = None,
     synthetic_fixture: dict[str, Any] | None = None,
+    partial_only: bool = False,
 ) -> dict[str, Any]:
-    """Execute the full post-OOF pipeline.
+    """Execute the full post-OOF pipeline or partial-fold evaluation only.
 
     Args:
         dry_run: Whether to run in dry-run mode (default True).
@@ -543,15 +562,69 @@ def run_post_oof(
         seed: Random seed (default: 1337).
         root: ARGUS repository root directory.
         synthetic_fixture: Optional pre-loaded fixture for unit tests.
+        partial_only: If True, evaluates partial-fold OOF only (no retraining or tau selection).
 
     Returns:
-        Dictionary containing results of all 5 steps.
+        Dictionary containing results.
     """
     root = root or repo_root()
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
     check_execution_guards(dry_run, i_understand, root)
+
+    if partial_only:
+        partial_oof: dict[str, Any] | None = None
+        if synthetic_fixture and "partial_oof" in synthetic_fixture:
+            partial_oof = synthetic_fixture["partial_oof"]
+        elif synthetic_fixture and "partial_rows" in synthetic_fixture:
+            f_path = Path(folds_path) if folds_path else root / "docs" / "phase6_shaurya" / "crossfit" / "folds.json"
+            folds = _load_folds(f_path) if f_path.exists() else {"folds": {}}
+            fold_mem = _build_fold_membership(folds) if "folds" in folds else {}
+            inputs = load_inputs()
+            k_flags = _build_key_flags(inputs)
+            partial_oof = evaluate_partial_oof(
+                synthetic_fixture["partial_rows"],
+                fold_mem,
+                k_flags,
+                alpha=alpha,
+                delta=delta,
+            )
+        else:
+            h_root = Path(harvest_root) if harvest_root else root / "ml" / "train_m2" / "harvest_out" / "sft_oof"
+            f_path = Path(folds_path) if folds_path else root / "docs" / "phase6_shaurya" / "crossfit" / "folds.json"
+            if h_root.exists() and f_path.exists():
+                folds = _load_folds(f_path)
+                fold_mem = _build_fold_membership(folds)
+                inputs = load_inputs()
+                k_flags = _build_key_flags(inputs)
+                h_rows: list[dict[str, Any]] = []
+                for part in sorted(h_root.rglob("part-*.jsonl")):
+                    for r in jsonl_iter(part):
+                        h_rows.append(r)
+                partial_oof = evaluate_partial_oof(
+                    h_rows,
+                    fold_mem,
+                    k_flags,
+                    alpha=alpha,
+                    delta=delta,
+                )
+            else:
+                LOG.warning("OOF harvest directory %s or folds %s not found", h_root, f_path)
+
+        if partial_oof:
+            part_rep_json = out_path / "partial_oof_report.json"
+            part_rep_md = out_path / "partial_oof_report.md"
+            jsonl_write_atomic(part_rep_json, [partial_oof])
+            write_provenance(part_rep_json, seed=seed)
+            rep_text = render_partial_oof_report(partial_oof)
+            part_rep_md.write_text(rep_text, encoding="utf-8")
+            write_provenance(part_rep_md, seed=seed)
+            print("\n--- PARTIAL-FOLD POST-OOF REPORT ---")
+            print(rep_text)
+            print("------------------------------------\n")
+
+        return {"partial_oof": partial_oof}
 
     # 1. Ingest OOF
     if synthetic_fixture and "counts" in synthetic_fixture:
@@ -696,8 +769,12 @@ def run_post_oof(
         part_rep_md = out_path / "partial_oof_report.md"
         jsonl_write_atomic(part_rep_json, [partial_oof])
         write_provenance(part_rep_json, seed=seed)
-        part_rep_md.write_text(render_partial_oof_report(partial_oof), encoding="utf-8")
+        rep_text = render_partial_oof_report(partial_oof)
+        part_rep_md.write_text(rep_text, encoding="utf-8")
         write_provenance(part_rep_md, seed=seed)
+        print("\n--- PARTIAL-FOLD POST-OOF REPORT ---")
+        print(rep_text)
+        print("------------------------------------\n")
 
     return {
         "counts": counts,
@@ -719,6 +796,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="Run in real mode (requires --i-understand and absent RUN_LOG_M2.md)")
     p.add_argument("--i-understand", action="store_true", default=False,
                    help="Acknowledge real execution (required if --no-dry-run)")
+    p.add_argument("--partial-only", action="store_true", default=False,
+                   help="Evaluate partial-fold OOF only (no retraining or tau selection)")
     p.add_argument("--out-dir", default="ml/train_m2/out/reports/tmp_p6g",
                    help="Output directory for dry-run artifacts")
     p.add_argument("--harvest-root", default="ml/train_m2/harvest_out/sft_oof",
@@ -752,6 +831,7 @@ def main(argv: list[str] | None = None) -> int:
             delta=args.delta,
             seed=args.seed,
             root=root,
+            partial_only=args.partial_only,
         )
     except Exception as exc:
         LOG.error("post_oof execution failed: %s", exc)

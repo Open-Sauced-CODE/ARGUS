@@ -48,9 +48,22 @@ def test_draft_files_exist(root_dir: Path) -> None:
 
 
 def test_pending_token_present_in_model_card_and_mentor_report(root_dir: Path) -> None:
-    for rel_path in ["ml/train_m2/MODEL_CARD.md", "docs/phase6_shaurya/MENTOR_REPORT.md"]:
+    for rel_path in [
+        "ml/train_m2/MODEL_CARD.md",
+        "ml/train_m2/DATASHEET.md",
+        "docs/phase6_shaurya/MENTOR_REPORT.md",
+    ]:
         text = (root_dir / rel_path).read_text(encoding="utf-8")
         assert "PENDING" in text, f"Literal token PENDING missing from {rel_path}"
+
+
+def test_pending_oof_delivery_wording(root_dir: Path) -> None:
+    expected_phrase = "out-of-fold folds delivered: PENDING (up to 5 planned; minimum 2 give 72 clean clusters)"
+    for rel_path in ["ml/train_m2/DATASHEET.md", "docs/phase6_shaurya/MENTOR_REPORT.md"]:
+        text = (root_dir / rel_path).read_text(encoding="utf-8")
+        assert expected_phrase in text, (
+            f"Expected OOF delivery phrasing missing from {rel_path}: {expected_phrase!r}"
+        )
 
 
 def test_no_heldout_metric_values_in_drafts(root_dir: Path) -> None:

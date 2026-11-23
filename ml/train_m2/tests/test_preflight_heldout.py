@@ -76,7 +76,7 @@ def clean_preflight_env(tmp_path: Path) -> dict[str, Any]:
     (docs_dir / "HELDOUT_DECISION.md").write_text(decision_text, encoding="utf-8")
 
     # EXPERIMENT_PLAN_M2.md
-    plan_text = "# Experiment Plan\n## 12. Change-log & deviations\n- Log entry\n"
+    plan_text = "# Experiment Plan\n## 12. Change log\n- Log entry\n## 13. Appendix A\n"
     plan_path = root / "ml" / "train_m2" / "EXPERIMENT_PLAN_M2.md"
     plan_path.write_text(plan_text, encoding="utf-8")
 
@@ -222,15 +222,32 @@ def test_preflight_fails_if_target_pair_already_in_ledger(clean_preflight_env: d
 
 
 def test_preflight_fails_if_diff_outside_section12(clean_preflight_env: dict[str, Any]):
-    """Preflight fails if EXPERIMENT_PLAN_M2.md diff touches lines before Section 12."""
+    """Preflight fails if EXPERIMENT_PLAN_M2.md diff touches lines before or after Section 12."""
     root = clean_preflight_env["root"]
-    diff_output = "@@ -1,1 +1,1 @@\n- old line\n+ new line\n"
 
+    # 1. Diff before Section 12 fails
+    diff_before = "@@ -1,1 +1,1 @@\n- old line\n+ new line\n"
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(stdout=diff_output, returncode=0)
+        mock_run.return_value = MagicMock(stdout=diff_before, returncode=0)
         res = PH.check_plan_diff_section12(root)
         assert not res.passed
         assert "before Section 12" in res.detail
+
+    # 2. Diff after Section 12 (in Section 13) fails
+    diff_after = "@@ -4,1 +4,1 @@\n- old line\n+ new line\n"
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(stdout=diff_after, returncode=0)
+        res = PH.check_plan_diff_section12(root)
+        assert not res.passed
+        assert "beyond Section 12" in res.detail
+
+    # 3. Diff strictly inside Section 12 passes
+    diff_inside = "@@ -3,1 +3,1 @@\n- Log entry\n+ Log entry 2\n"
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(stdout=diff_inside, returncode=0)
+        res = PH.check_plan_diff_section12(root)
+        assert res.passed
+        assert "contained within Section 12" in res.detail
 
 
 def test_preflight_never_opens_any_heldout_file(clean_preflight_env: dict[str, Any]):

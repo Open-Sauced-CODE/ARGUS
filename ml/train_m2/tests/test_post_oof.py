@@ -435,6 +435,42 @@ def test_partial_oof_heldout_and_aval_overlap_strictly_excluded():
     assert res["cp_min_n"] == 59
 
 
+def test_partial_oof_finding_id_mismatch_counted_as_wrong():
+    """A draft whose patch finding_id mismatches the harvest record's finding_id is classified as wrong (k counted)."""
+    from ml.train_m2.eval.post_oof import evaluate_partial_oof
+
+    fold_mem = {"c_clean": 0}
+    key_flags = {"c_clean": {"in_heldout": False, "in_a_val": False}}
+    rows = [
+        {
+            "input_key": "c_clean",
+            "crossfit_fold": 0,
+            "sample_idx": 0,
+            "gate_pass": True,
+            "finding_id": "FINDING_1",
+            "patch": {"finding_id": "WRONG_FINDING_2", "ops": []},
+            "oracle_class": "minimal_correct",  # pre-labeled tag is overridden by finding_id mismatch
+        }
+    ]
+
+    res = evaluate_partial_oof(rows, fold_mem, key_flags, existing_unseen_clean=15)
+    assert res["clean_unseen_clusters"] == ["c_clean"]
+    assert res["oof_clean_count"] == 1
+    assert res["k"] == 1
+    assert res["cp_min_n"] == 93
+    assert res["verdict"] == "NEED 77 MORE CLEAN CLUSTERS"
+
+
+def test_main_cli_partial_only(tmp_path: Path):
+    """Verify main() CLI with --partial-only does not retrain model or choose tau."""
+    out_dir = tmp_path / "cli_partial_only_out"
+    exit_code = main(["--dry-run", "--partial-only", "--out-dir", str(out_dir)])
+    assert exit_code == 0
+    # Retrained model and tau_star must NOT exist in partial-only mode
+    assert not (out_dir / "m2" / "m2.joblib").exists()
+    assert not (out_dir / "tau_star.json").exists()
+
+
 def test_main_cli_dry_run_execution(tmp_path: Path):
     """Verify main() CLI execution succeeds in dry-run mode and writes artifacts."""
     out_dir = tmp_path / "cli_dry_run_out"
