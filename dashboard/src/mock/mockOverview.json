@@ -1,0 +1,17 @@
+{
+  "scan_id": "scan-9021-f8a1",
+  "region": "ap-south-1",
+  "scanned_time": "Today, 10:14 AM IST",
+  "is_on_device": true,
+  "user_name": "Yash",
+  "certified": false,
+  "headline": "One fix removes most of your exposure.",
+  "subline": "Modelled attack likelihood drops from 91% to 59%.",
+  "action_button_label": "Review the plan",
+  "auto_apply_threshold_pct": 95,
+  "pending_approvals_count": 9,
+  "graph_summary": {
+    "total_nodes": 8,
+    "total_edges": 9
+  }
+}

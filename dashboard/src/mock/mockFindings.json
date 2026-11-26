@@ -1,0 +1,455 @@
+[
+  {
+    "finding_id": "F-b42cc0f7",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "rule_title": "Rule 6 Public access",
+    "title": "Restrict public access to s3 bucket",
+    "resource_id": "BUCKET_1",
+    "resource_type": "AWSS3Bucket",
+    "severity": "HIGH",
+    "status": "NEEDS_REVIEW",
+    "auto_apply_status": "NEEDS_APPROVAL",
+    "m2_confidence": 0.87,
+    "confidence": 0.87,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Below the 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T1",
+    "generator_model": "argus-m1-sft",
+    "latency_ms": 142.3,
+    "patch_ir": {
+      "finding_id": "F-b42cc0f7",
+      "resource_ref": "BUCKET_1",
+      "ops": [
+        {
+          "op": "set_attr",
+          "attr": "block_public_acls",
+          "value": true
+        },
+        {
+          "op": "set_attr",
+          "attr": "block_public_policy",
+          "value": true
+        }
+      ],
+      "rationale_ref": "dpdp.rule6_public_exposure"
+    },
+    "diff": {
+      "before": "block_public_acls = false\nblock_public_policy = false",
+      "after": "block_public_acls = true\nblock_public_policy = true"
+    },
+    "privacy_receipt_id": "rcpt-F-b42cc0f7"
+  },
+  {
+    "finding_id": "F-712ca891",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "rule_title": "Rule 6 Public access",
+    "title": "Turn on versioning for customer-data",
+    "resource_id": "BUCKET_1",
+    "resource_type": "AWSS3Bucket",
+    "severity": "HIGH",
+    "status": "NEEDS_REVIEW",
+    "auto_apply_status": "NEEDS_APPROVAL",
+    "m2_confidence": 0.91,
+    "confidence": 0.91,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Below the 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T0",
+    "generator_model": "deterministic_template",
+    "latency_ms": 0.6,
+    "patch_ir": {
+      "finding_id": "F-712ca891",
+      "resource_ref": "BUCKET_1",
+      "ops": [
+        {
+          "op": "enable_feature",
+          "attr": "versioning_status",
+          "value": "Enabled"
+        }
+      ],
+      "rationale_ref": "dpdp.rule6_versioning"
+    },
+    "diff": {
+      "before": "status = \"Suspended\"",
+      "after": "status = \"Enabled\""
+    },
+    "privacy_receipt_id": "rcpt-F-712ca891"
+  },
+  {
+    "finding_id": "F-893de412",
+    "rule_id": "dpdp.rule7_logging",
+    "rule_title": "Rule 7 Logging",
+    "title": "Rotate access keys for devops user",
+    "resource_id": "USER_1",
+    "resource_type": "AWSIAMUser",
+    "severity": "MEDIUM",
+    "status": "NEEDS_REVIEW",
+    "auto_apply_status": "NEEDS_APPROVAL",
+    "m2_confidence": 0.76,
+    "confidence": 0.76,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Below the 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T1",
+    "generator_model": "argus-m1-sft",
+    "latency_ms": 88.4,
+    "patch_ir": {
+      "finding_id": "F-893de412",
+      "resource_ref": "USER_1",
+      "ops": [
+        {
+          "op": "set_attr",
+          "attr": "status",
+          "value": "Inactive"
+        }
+      ],
+      "rationale_ref": "dpdp.rule7_key_rotation"
+    },
+    "diff": {
+      "before": "status = \"Active\"\nage_days = 184",
+      "after": "status = \"Inactive\"\nrotated = true"
+    },
+    "privacy_receipt_id": "rcpt-F-893de412"
+  },
+  {
+    "finding_id": "F-e490fa21",
+    "rule_id": "dpdp.rule6_encryption",
+    "rule_title": "Rule 6 Encryption",
+    "title": "Enable encryption for s3 storage",
+    "resource_id": "BUCKET_1",
+    "resource_type": "AWSS3Bucket",
+    "severity": "CRITICAL",
+    "status": "ESCALATED",
+    "auto_apply_status": "ESCALATED",
+    "m2_confidence": null,
+    "confidence": "n/a",
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Escalated for human judgement",
+    "escalated": true,
+    "tier_used": "T3",
+    "generator_model": "human",
+    "latency_ms": 1850,
+    "patch_ir": {
+      "finding_id": "F-e490fa21",
+      "resource_ref": "BUCKET_1",
+      "ops": [
+        {
+          "op": "escalate",
+          "rationale": "Dual-key KMS architecture requires architectural committee approval"
+        }
+      ],
+      "rationale_ref": "dpdp.rule6_encryption_escalation"
+    },
+    "privacy_receipt_id": "rcpt-F-e490fa21"
+  },
+  {
+    "finding_id": "F-2309aa11",
+    "rule_id": "dpdp.rule7_logging",
+    "rule_title": "Rule 7 Logging",
+    "title": "Enable CloudTrail data events logging",
+    "resource_id": "BUCKET_1",
+    "resource_type": "AWSS3Bucket",
+    "severity": "HIGH",
+    "status": "NEEDS_REVIEW",
+    "auto_apply_status": "NEEDS_APPROVAL",
+    "m2_confidence": 0.88,
+    "confidence": 0.88,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Below the 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T1",
+    "generator_model": "argus-m1-sft",
+    "latency_ms": 112.1,
+    "patch_ir": {
+      "finding_id": "F-2309aa11",
+      "resource_ref": "BUCKET_1",
+      "ops": [
+        {
+          "op": "enable_feature",
+          "attr": "logging.include_data_events",
+          "value": true
+        }
+      ],
+      "rationale_ref": "dpdp.rule7_logging"
+    },
+    "diff": {
+      "before": "include_data_events = false",
+      "after": "include_data_events = true"
+    },
+    "privacy_receipt_id": "rcpt-F-2309aa11"
+  },
+  {
+    "finding_id": "F-4411bb22",
+    "rule_id": "dpdp.rule8_retention",
+    "rule_title": "Rule 8 Retention",
+    "title": "Set lifecycle expiration policy for temp logs",
+    "resource_id": "BUCKET_3",
+    "resource_type": "AWSS3Bucket",
+    "severity": "LOW",
+    "status": "NEEDS_REVIEW",
+    "auto_apply_status": "NEEDS_APPROVAL",
+    "m2_confidence": 0.89,
+    "confidence": 0.89,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Below the 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T0",
+    "generator_model": "deterministic_template",
+    "latency_ms": 0.4,
+    "patch_ir": {
+      "finding_id": "F-4411bb22",
+      "resource_ref": "BUCKET_3",
+      "ops": [
+        {
+          "op": "set_lifecycle_rule",
+          "attr": "expiration_days",
+          "value": 30
+        }
+      ],
+      "rationale_ref": "dpdp.rule8_retention"
+    },
+    "diff": {
+      "before": "# no expiration rule",
+      "after": "expiration {\n  days = 30\n}"
+    },
+    "privacy_receipt_id": "rcpt-F-4411bb22"
+  },
+  {
+    "finding_id": "F-5522cc33",
+    "rule_id": "dpdp.rule6_encryption",
+    "rule_title": "Rule 6 Encryption",
+    "title": "Enforce KMS customer-managed key for database",
+    "resource_id": "BUCKET_2",
+    "resource_type": "AWSS3Bucket",
+    "severity": "CRITICAL",
+    "status": "NEEDS_REVIEW",
+    "auto_apply_status": "NEEDS_APPROVAL",
+    "m2_confidence": 0.84,
+    "confidence": 0.84,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Below the 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T1",
+    "generator_model": "argus-m1-sft",
+    "latency_ms": 134.8,
+    "patch_ir": {
+      "finding_id": "F-5522cc33",
+      "resource_ref": "BUCKET_2",
+      "ops": [
+        {
+          "op": "set_attr",
+          "attr": "kms_master_key_id",
+          "value": "KMS_KEY_1"
+        }
+      ],
+      "rationale_ref": "dpdp.rule6_encryption"
+    },
+    "diff": {
+      "before": "sse_algorithm = \"AES256\"",
+      "after": "sse_algorithm = \"aws:kms\"\nkms_master_key_id = \"KMS_KEY_1\""
+    },
+    "privacy_receipt_id": "rcpt-F-5522cc33"
+  },
+  {
+    "finding_id": "F-6633dd44",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "rule_title": "Rule 6 Public access",
+    "title": "Restrict CIDR block 0.0.0.0/0 on bastion ingress",
+    "resource_id": "SG_1",
+    "resource_type": "AWSSecurityGroup",
+    "severity": "HIGH",
+    "status": "NEEDS_REVIEW",
+    "auto_apply_status": "NEEDS_APPROVAL",
+    "m2_confidence": 0.92,
+    "confidence": 0.92,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Below the 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T0",
+    "generator_model": "deterministic_template",
+    "latency_ms": 0.5,
+    "patch_ir": {
+      "finding_id": "F-6633dd44",
+      "resource_ref": "SG_1",
+      "ops": [
+        {
+          "op": "restrict_cidr",
+          "attr": "cidr_blocks",
+          "value": [
+            "10.0.0.0/16"
+          ]
+        }
+      ],
+      "rationale_ref": "dpdp.rule6_public_exposure"
+    },
+    "diff": {
+      "before": "cidr_blocks = [\"0.0.0.0/0\"]",
+      "after": "cidr_blocks = [\"10.0.0.0/16\"]"
+    },
+    "privacy_receipt_id": "rcpt-F-6633dd44"
+  },
+  {
+    "finding_id": "F-7744ee55",
+    "rule_id": "dpdp.rule8_retention",
+    "rule_title": "Rule 8 Retention",
+    "title": "Review cross-region replication to us-east-1",
+    "resource_id": "BUCKET_2",
+    "resource_type": "AWSS3Bucket",
+    "severity": "MEDIUM",
+    "status": "ESCALATED",
+    "auto_apply_status": "ESCALATED",
+    "m2_confidence": null,
+    "confidence": "n/a",
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Escalated for human judgement",
+    "escalated": true,
+    "tier_used": "T3",
+    "generator_model": "human",
+    "latency_ms": 2400,
+    "patch_ir": {
+      "finding_id": "F-7744ee55",
+      "resource_ref": "BUCKET_2",
+      "ops": [
+        {
+          "op": "escalate",
+          "rationale": "Cross-border replication violates section 16 cross-border transfer constraints"
+        }
+      ],
+      "rationale_ref": "dpdp.rule8_retention_escalation"
+    },
+    "privacy_receipt_id": "rcpt-F-7744ee55"
+  },
+  {
+    "finding_id": "F-auto-01",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "rule_title": "Rule 6 Public access",
+    "title": "Block public ACLs on backup archive",
+    "resource_id": "BUCKET_2",
+    "resource_type": "AWSS3Bucket",
+    "severity": "HIGH",
+    "status": "APPROVED",
+    "auto_apply_status": "APPROVED",
+    "m2_confidence": 0.98,
+    "confidence": 0.98,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Cleared 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T0",
+    "generator_model": "deterministic_template",
+    "latency_ms": 0.4,
+    "patch_ir": {
+      "finding_id": "F-auto-01",
+      "resource_ref": "BUCKET_2",
+      "ops": [
+        {
+          "op": "set_attr",
+          "attr": "block_public_acls",
+          "value": true
+        }
+      ],
+      "rationale_ref": "dpdp.rule6_public_exposure"
+    },
+    "diff": {
+      "before": "block_public_acls = false",
+      "after": "block_public_acls = true"
+    },
+    "privacy_receipt_id": "rcpt-F-auto-01"
+  },
+  {
+    "finding_id": "F-auto-02",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "rule_title": "Rule 6 Public access",
+    "title": "Enable S3 bucket default TLS enforcement",
+    "resource_id": "BUCKET_2",
+    "resource_type": "AWSS3Bucket",
+    "severity": "MEDIUM",
+    "status": "APPROVED",
+    "auto_apply_status": "APPROVED",
+    "m2_confidence": 0.96,
+    "confidence": 0.96,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Cleared 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T0",
+    "generator_model": "deterministic_template",
+    "latency_ms": 0.4,
+    "patch_ir": {
+      "finding_id": "F-auto-02",
+      "resource_ref": "BUCKET_2",
+      "ops": [
+        {
+          "op": "add_policy_statement",
+          "attr": "enforce_ssl",
+          "value": true
+        }
+      ],
+      "rationale_ref": "dpdp.rule6_tls"
+    },
+    "diff": {
+      "before": "# no ssl policy",
+      "after": "condition {\n  test = \"Bool\"\n  variable = \"aws:SecureTransport\"\n  values = [\"true\"]\n}"
+    },
+    "privacy_receipt_id": "rcpt-F-auto-02"
+  },
+  {
+    "finding_id": "F-auto-03",
+    "rule_id": "dpdp.rule7_logging",
+    "rule_title": "Rule 7 Logging",
+    "title": "Enable multi-region trail validation",
+    "resource_id": "TRAIL_1",
+    "resource_type": "AWSCloudTrail",
+    "severity": "LOW",
+    "status": "APPROVED",
+    "auto_apply_status": "APPROVED",
+    "m2_confidence": 0.97,
+    "confidence": 0.97,
+    "threshold": 0.95,
+    "conformal_threshold": 0.95,
+    "certified": false,
+    "reason": "Cleared 95% auto-apply threshold",
+    "escalated": false,
+    "tier_used": "T0",
+    "generator_model": "deterministic_template",
+    "latency_ms": 0.5,
+    "patch_ir": {
+      "finding_id": "F-auto-03",
+      "resource_ref": "TRAIL_1",
+      "ops": [
+        {
+          "op": "enable_feature",
+          "attr": "enable_log_file_validation",
+          "value": true
+        }
+      ],
+      "rationale_ref": "dpdp.rule7_integrity"
+    },
+    "diff": {
+      "before": "enable_log_file_validation = false",
+      "after": "enable_log_file_validation = true"
+    },
+    "privacy_receipt_id": "rcpt-F-auto-03"
+  }
+]

@@ -1,0 +1,254 @@
+[
+  {
+    "receipt_id": "rcpt-F-b42cc0f7",
+    "finding_id": "F-b42cc0f7",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "set_attr",
+      "target_attr": "block_public_acls",
+      "action_classified": "Restrict public access to s3 bucket"
+    },
+    "tokens": {
+      "BUCKET_1": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T1",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-712ca891",
+    "finding_id": "F-712ca891",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "enable_feature",
+      "target_attr": "versioning_status",
+      "action_classified": "Turn on versioning for customer-data"
+    },
+    "tokens": {
+      "BUCKET_1": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T0",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-893de412",
+    "finding_id": "F-893de412",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule7_logging",
+    "projected_fields": {
+      "resource_type": "AWSIAMUser",
+      "operation": "set_attr",
+      "target_attr": "status",
+      "action_classified": "Rotate access keys for devops user"
+    },
+    "tokens": {
+      "USER_1": "vault:v1:55534552"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T1",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-e490fa21",
+    "finding_id": "F-e490fa21",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule6_encryption",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "escalate",
+      "target_attr": "configuration",
+      "action_classified": "Enable encryption for s3 storage"
+    },
+    "tokens": {
+      "BUCKET_1": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T3",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-2309aa11",
+    "finding_id": "F-2309aa11",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule7_logging",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "enable_feature",
+      "target_attr": "logging.include_data_events",
+      "action_classified": "Enable CloudTrail data events logging"
+    },
+    "tokens": {
+      "BUCKET_1": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T1",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-4411bb22",
+    "finding_id": "F-4411bb22",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule8_retention",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "set_lifecycle_rule",
+      "target_attr": "expiration_days",
+      "action_classified": "Set lifecycle expiration policy for temp logs"
+    },
+    "tokens": {
+      "BUCKET_3": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T0",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-5522cc33",
+    "finding_id": "F-5522cc33",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule6_encryption",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "set_attr",
+      "target_attr": "kms_master_key_id",
+      "action_classified": "Enforce KMS customer-managed key for database"
+    },
+    "tokens": {
+      "BUCKET_2": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T1",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-6633dd44",
+    "finding_id": "F-6633dd44",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "projected_fields": {
+      "resource_type": "AWSSecurityGroup",
+      "operation": "restrict_cidr",
+      "target_attr": "cidr_blocks",
+      "action_classified": "Restrict CIDR block 0.0.0.0/0 on bastion ingress"
+    },
+    "tokens": {
+      "SG_1": "vault:v1:53475f31"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T0",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-7744ee55",
+    "finding_id": "F-7744ee55",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule8_retention",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "escalate",
+      "target_attr": "configuration",
+      "action_classified": "Review cross-region replication to us-east-1"
+    },
+    "tokens": {
+      "BUCKET_2": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T3",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-auto-01",
+    "finding_id": "F-auto-01",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "set_attr",
+      "target_attr": "block_public_acls",
+      "action_classified": "Block public ACLs on backup archive"
+    },
+    "tokens": {
+      "BUCKET_2": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T0",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-auto-02",
+    "finding_id": "F-auto-02",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule6_public_exposure",
+    "projected_fields": {
+      "resource_type": "AWSS3Bucket",
+      "operation": "add_policy_statement",
+      "target_attr": "enforce_ssl",
+      "action_classified": "Enable S3 bucket default TLS enforcement"
+    },
+    "tokens": {
+      "BUCKET_2": "vault:v1:4255434b"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T0",
+    "leaked_to_network": false
+  },
+  {
+    "receipt_id": "rcpt-F-auto-03",
+    "finding_id": "F-auto-03",
+    "timestamp": "2026-10-28T04:44:12Z",
+    "rule_id": "dpdp.rule7_logging",
+    "projected_fields": {
+      "resource_type": "AWSCloudTrail",
+      "operation": "enable_feature",
+      "target_attr": "enable_log_file_validation",
+      "action_classified": "Enable multi-region trail validation"
+    },
+    "tokens": {
+      "TRAIL_1": "vault:v1:54524149"
+    },
+    "scrub_result": {
+      "presidio_hits": 0,
+      "secret_scan_hits": 0
+    },
+    "tier_used": "T0",
+    "leaked_to_network": false
+  }
+]

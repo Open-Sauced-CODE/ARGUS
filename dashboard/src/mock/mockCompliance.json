@@ -1,0 +1,84 @@
+[
+  {
+    "rule_id": "dpdp.rule6_encryption",
+    "name": "Rule 6 Encryption",
+    "compliance_pct": 92,
+    "score_pct": 92,
+    "failing_count": 2,
+    "violations_count": 2,
+    "status": "PASS",
+    "is_visibility_flag": false,
+    "category": "Safeguards",
+    "description": "Personal data encrypted in transit and at rest with managed KMS keys.",
+    "finding_ids": [
+      "F-e490fa21",
+      "F-5522cc33"
+    ]
+  },
+  {
+    "rule_id": "dpdp.rule6_public_exposure",
+    "name": "Rule 6 Public access",
+    "compliance_pct": 74,
+    "score_pct": 74,
+    "failing_count": 5,
+    "violations_count": 5,
+    "status": "WARNING",
+    "is_visibility_flag": false,
+    "category": "Exposure",
+    "description": "Strict perimeter controls blocking unintended public access points.",
+    "finding_ids": [
+      "F-b42cc0f7",
+      "F-712ca891",
+      "F-6633dd44",
+      "F-auto-01",
+      "F-auto-02"
+    ]
+  },
+  {
+    "rule_id": "dpdp.rule7_logging",
+    "name": "Rule 7 Logging",
+    "compliance_pct": 85,
+    "score_pct": 85,
+    "failing_count": 3,
+    "violations_count": 3,
+    "status": "PASS",
+    "is_visibility_flag": false,
+    "category": "Audit & Incident",
+    "description": "Immutable access logging, audit trails, and periodic key rotation.",
+    "finding_ids": [
+      "F-2309aa11",
+      "F-893de412",
+      "F-auto-03"
+    ]
+  },
+  {
+    "rule_id": "dpdp.rule8_retention",
+    "name": "Rule 8 Retention",
+    "compliance_pct": 88,
+    "score_pct": 88,
+    "failing_count": 2,
+    "violations_count": 2,
+    "status": "PASS",
+    "is_visibility_flag": false,
+    "category": "Storage Minimisation",
+    "description": "Data retention schedules, expiration policies, and deletion workflows.",
+    "finding_ids": [
+      "F-4411bb22",
+      "F-7744ee55"
+    ]
+  },
+  {
+    "rule_id": "dpdp.rule15_residency",
+    "name": "Rule 15 Region",
+    "status": "PASS",
+    "is_visibility_flag": true,
+    "category": "Residency",
+    "description": "Verification that sensitive personal data remains within jurisdiction borders.",
+    "review_count": 0,
+    "residency": {
+      "home_region": "ap-south-1",
+      "cross_border_resources": []
+    },
+    "finding_ids": []
+  }
+]

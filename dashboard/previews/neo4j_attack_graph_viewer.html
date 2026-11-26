@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARGUS :: Interactive Neo4j Cloud Attack Graph Explorer</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-bg: #111827;
+      --border-color: #1f2937;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      color: #000;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+
+    .title-group h1 {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-group p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .neo4j-btn {
+      background: linear-gradient(135deg, #008cc1, #006b94);
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: all 0.2s;
+    }
+
+    .neo4j-btn:hover {
+      background: linear-gradient(135deg, #00a4e4, #008cc1);
+      box-shadow: 0 0 15px rgba(0, 140, 193, 0.4);
+    }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 65px);
+      overflow: hidden;
+    }
+
+    #graph-viewport {
+      flex: 1;
+      height: 100%;
+      background: radial-gradient(circle at center, #131b2e 0%, #0b0f19 100%);
+      position: relative;
+    }
+
+    .sidebar {
+      width: 380px;
+      background-color: var(--card-bg);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 20px;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+
+    .panel-card {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .panel-card h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-cyan);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-btn {
+      width: 100%;
+      background-color: #1f2937;
+      color: var(--text-main);
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: left;
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background-color: #2563eb;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+
+    .filter-btn .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .node-legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .details-row span:first-child { color: var(--text-muted); }
+    .details-row span:last-child { font-weight: 600; font-family: monospace; }
+
+    .cypher-box {
+      background: #000;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      margin-top: 8px;
+    }
+
+    .controls-overlay {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .tool-btn {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .tool-btn:hover { background: #374151; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="logo-badge">ARGUS</div>
+      <div class="title-group">
+        <h1>Cloud Attack Graph & Topology Explorer <span style="font-size: 12px; color: #10b981; font-weight: normal;">● Phase 2 Derived Graph</span></h1>
+        <p>Ground-Truth Cartography Ingestion + Derived Stackelberg Hacker-Movement Graph</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <a href="http://localhost:7474" target="_blank" class="neo4j-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+        Launch Native Neo4j Browser (Port 7474)
+      </a>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div id="graph-viewport">
+      <div class="controls-overlay">
+        <button class="tool-btn" onclick="network.fit({animation: true})">Fit View</button>
+        <button class="tool-btn" onclick="togglePhysics()">Toggle Physics</button>
+        <button class="tool-btn" onclick="applyPreset('all')">Reset Graph</button>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="panel-card">
+        <h3>Evaluator Demonstration Views</h3>
+        <button class="filter-btn active" onclick="applyPreset('all')">
+          <span>1. Complete Cloud Topology</span>
+          <span class="badge">12 Nodes</span>
+        </button>
+        <button class="filter-btn" onclick="applyPreset('exfiltration')">
+          <span>2. Citizen PII Exfiltration Path</span>
+          <span class="badge" style="color: #ef4444;">DPDP Rule 6</span>
+        </button>
+        <button class="filter-btn" onclick="applyPreset('privesc')">
+          <span>3. Privilege Escalation Chain</span>
+          <span class="badge" style="color: #f59e0b;">CIS 1.16</span>
+        </button>
+        <button class="filter-btn" onclick="applyPreset('interdiction')">
+          <span>4. Optimal Stackelberg Cut</span>
+          <span class="badge" style="color: #10b981;">Min-Cut</span>
+        </button>
+      </div>
+
+      <div class="panel-card">
+        <h3>Node Legend</h3>
+        <div class="node-legend">
+          <div class="legend-item"><div class="dot" style="background:#ef4444;"></div>Attacker / Entry</div>
+          <div class="legend-item"><div class="dot" style="background:#dc2626;"></div>Crown Jewel / Admin</div>
+          <div class="legend-item"><div class="dot" style="background:#10b981;"></div>IAM User / Key</div>
+          <div class="legend-item"><div class="dot" style="background:#8b5cf6;"></div>IAM Role</div>
+          <div class="legend-item"><div class="dot" style="background:#f59e0b;"></div>Policy / Stmt</div>
+          <div class="legend-item"><div class="dot" style="background:#06b6d4;"></div>S3 Bucket</div>
+          <div class="legend-item"><div class="dot" style="background:#3b82f6;"></div>VPC / Subnet</div>
+          <div class="legend-item"><div class="dot" style="background:#6b7280;"></div>Security Group</div>
+        </div>
+      </div>
+
+      <div class="panel-card" id="selection-details">
+        <h3>Selected Element Telemetry</h3>
+        <p style="font-size: 12px; color: var(--text-muted);">Click any node or edge in the graph to inspect formal attributes, ARN, PageRank score, and transition probabilities.</p>
+      </div>
+
+      <div class="panel-card">
+        <h3>Live Cypher Query</h3>
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Paste into Neo4j Browser:</p>
+        <div class="cypher-box" id="cypher-display">MATCH (n:ARGUS_Demo) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m;</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const rawNodes = [
+      { id: "INTERNET", label: "0.0.0.0/0\n(Public Internet)", group: "attacker", title: "Public Attacker Source" },
+      { id: "KEY", label: "AKIAIOSFODNN7EXAMPLE\n(Leaked AWS Key)", group: "key", title: "Compromised Access Key" },
+      { id: "USER_RAYNOR", label: "raynor-cgid\n(Dev User)", group: "user", title: "Compromised Developer IAM User" },
+      { id: "POL_RAYNOR", label: "cg-raynor-policy\n(IAM Policy)", group: "policy", title: "Policy with iam:CreatePolicyVersion" },
+      { id: "STMT_ESCALATE", label: "AllowPrivEscalate\n(Policy Statement)", group: "stmt", title: "Statement granting wildcard versioning" },
+      { id: "ROLE_PIPELINE", label: "argus-data-pipeline\n(IAM Role)", group: "role", title: "High-privilege Role trusted by Dev" },
+      { id: "SG_WEB", label: "Public-Web-SG\n(Port 22/80 Open)", group: "sg", title: "Inbound 0.0.0.0/0 open port 22" },
+      { id: "VPC_PROD", label: "Prod-VPC-Mumbai\n(ap-south-1)", group: "vpc", title: "Production AWS VPC" },
+      { id: "BUCKET_MEDICAL", label: "citizen-medical-records\n(India DPDP Sensitive)", group: "crown_jewel", title: "Personal Data S3 Bucket (Unencrypted)" },
+      { id: "BUCKET_FINANCE", label: "production-finance-ledger\n(CIS 2.1.1 Non-compliant)", group: "bucket", title: "Financial Ledger S3 Bucket" },
+      { id: "ADMIN_EQUIV", label: "ADMIN_EQUIV\n(Full Cloud Takeover)", group: "crown_jewel", title: "Full Root/Admin AWS Access" },
+      { id: "TAG_DPDP", label: "contains_personal_data\n(Tag)", group: "tag", title: "India DPDP Act 2023 Tag" }
+    ];
+
+    const rawEdges = [
+      { from: "INTERNET", to: "KEY", label: "EXFILTRATED_FROM", p: 1.0, color: "#ef4444", width: 2 },
+      { from: "KEY", to: "USER_RAYNOR", label: "USES_KEY (p=0.90)", p: 0.90, color: "#ef4444", width: 3 },
+      { from: "INTERNET", to: "SG_WEB", label: "EXPOSES_PORT 22 (p=0.85)", p: 0.85, color: "#f59e0b", width: 2 },
+      { from: "SG_WEB", to: "VPC_PROD", label: "INBOUND_TRAFFIC", p: 0.5, color: "#4b5563", width: 1 },
+      { from: "USER_RAYNOR", to: "POL_RAYNOR", label: "ATTACHED_POLICY", p: 1.0, color: "#8b5cf6", width: 1 },
+      { from: "POL_RAYNOR", to: "STMT_ESCALATE", label: "CONTAINS_STMT", p: 1.0, color: "#8b5cf6", width: 1 },
+      { from: "USER_RAYNOR", to: "ROLE_PIPELINE", label: "CAN_ASSUME (p=0.80)", p: 0.80, color: "#ef4444", width: 3 },
+      { from: "STMT_ESCALATE", to: "ADMIN_EQUIV", label: "CAN_ESCALATE (p=0.92)", p: 0.92, color: "#dc2626", width: 4 },
+      { from: "ROLE_PIPELINE", to: "BUCKET_MEDICAL", label: "CAN_ACCESS (p=0.88)", p: 0.88, color: "#ef4444", width: 4 },
+      { from: "ROLE_PIPELINE", to: "BUCKET_FINANCE", label: "CAN_ACCESS (p=0.75)", p: 0.75, color: "#06b6d4", width: 2 },
+      { from: "USER_RAYNOR", to: "BUCKET_FINANCE", label: "CAN_ACCESS (p=0.65)", p: 0.65, color: "#06b6d4", width: 2 },
+      { from: "BUCKET_MEDICAL", to: "TAG_DPDP", label: "TAGGED", p: 1.0, color: "#10b981", width: 1 }
+    ];
+
+    const colorGroups = {
+      attacker: { background: "#ef4444", border: "#b91c1c" },
+      crown_jewel: { background: "#dc2626", border: "#991b1b" },
+      key: { background: "#f97316", border: "#c2410c" },
+      user: { background: "#10b981", border: "#047857" },
+      role: { background: "#8b5cf6", border: "#6d28d9" },
+      policy: { background: "#f59e0b", border: "#d97706" },
+      stmt: { background: "#d97706", border: "#b45309" },
+      bucket: { background: "#06b6d4", border: "#0e7490" },
+      vpc: { background: "#3b82f6", border: "#1d4ed8" },
+      sg: { background: "#6b7280", border: "#374151" },
+      tag: { background: "#10b981", border: "#059669" }
+    };
+
+    const container = document.getElementById('graph-viewport');
+    const nodes = new vis.DataSet(rawNodes.map(n => ({
+      ...n,
+      color: colorGroups[n.group] || { background: "#3b82f6", border: "#1d4ed8" },
+      font: { color: "#fff", face: "monospace", size: 12 },
+      shape: n.group === 'attacker' ? 'hexagon' : (n.group === 'crown_jewel' ? 'diamond' : 'box'),
+      margin: 10,
+      shadow: true
+    })));
+
+    const edges = new vis.DataSet(rawEdges.map(e => ({
+      ...e,
+      arrows: "to",
+      font: { color: "#9ca3af", size: 10, align: "horizontal" },
+      smooth: { type: "curvedCW", roundness: 0.15 }
+    })));
+
+    const data = { nodes, edges };
+    const options = {
+      physics: {
+        forceAtlas2Based: {
+          gravitationalConstant: -70,
+          centralGravity: 0.015,
+          springLength: 140,
+          springConstant: 0.12
+        },
+        maxVelocity: 50,
+        solver: 'forceAtlas2Based',
+        timestep: 0.35,
+        stabilization: { iterations: 150 }
+      },
+      interaction: {
+        hover: true,
+        tooltipDelay: 100,
+        zoomView: true
+      }
+    };
+
+    const network = new vis.Network(container, data, options);
+    let physicsEnabled = true;
+
+    function togglePhysics() {
+      physicsEnabled = !physicsEnabled;
+      network.setOptions({ physics: { enabled: physicsEnabled } });
+    }
+
+    network.on("click", function(params) {
+      if (params.nodes.length > 0) {
+        const nodeId = params.nodes[0];
+        const node = rawNodes.find(n => n.id === nodeId);
+        showNodeDetails(node);
+      } else if (params.edges.length > 0) {
+        const edgeId = params.edges[0];
+        const edge = edges.get(edgeId);
+        showEdgeDetails(edge);
+      }
+    });
+
+    function showNodeDetails(node) {
+      const p = (node.group === 'crown_jewel') ? '0.880 (High Risk)' : (node.group === 'user' ? '0.720' : '0.450');
+      document.getElementById('selection-details').innerHTML = `
+        <h3>Node Telemetry</h3>
+        <div class="details-row"><span>ID:</span><span>${node.id}</span></div>
+        <div class="details-row"><span>Label:</span><span>${node.label.replace('\n', ' ')}</span></div>
+        <div class="details-row"><span>Category:</span><span style="color:var(--accent-cyan)">${node.group.toUpperCase()}</span></div>
+        <div class="details-row"><span>Blast Radius:</span><span style="color:${node.group === 'crown_jewel' ? '#ef4444' : '#10b981'}">${p}</span></div>
+        <div class="details-row"><span>Data Plane Egress:</span><span style="color:#10b981">0 BYTES</span></div>
+        <div class="details-row"><span>Status:</span><span>Monitored by ARGUS</span></div>
+      `;
+    }
+
+    function showEdgeDetails(edge) {
+      document.getElementById('selection-details').innerHTML = `
+        <h3>Edge Telemetry</h3>
+        <div class="details-row"><span>From:</span><span>${edge.from}</span></div>
+        <div class="details-row"><span>To:</span><span>${edge.to}</span></div>
+        <div class="details-row"><span>Movement Type:</span><span style="color:var(--accent-yellow)">${edge.label}</span></div>
+        <div class="details-row"><span>Hacker Transition (p):</span><span style="color:#ef4444; font-weight:bold;">${edge.p}</span></div>
+        <div class="details-row"><span>Stackelberg Cost:</span><span>1 Token Remediation</span></div>
+      `;
+    }
+
+    function applyPreset(preset) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      if (preset === 'all') {
+        nodes.forEach(n => nodes.update({ id: n.id, hidden: false, opacity: 1 }));
+        edges.forEach(e => edges.update({ id: e.id, hidden: false, color: { opacity: 1 } }));
+        document.getElementById('cypher-display').innerText = "MATCH (n:ARGUS_Demo) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m;";
+      } else if (preset === 'exfiltration') {
+        const pathNodes = ["INTERNET", "KEY", "USER_RAYNOR", "ROLE_PIPELINE", "BUCKET_MEDICAL", "TAG_DPDP"];
+        nodes.forEach(n => {
+          const inPath = pathNodes.includes(n.id);
+          nodes.update({ id: n.id, hidden: !inPath, opacity: inPath ? 1 : 0.1 });
+        });
+        edges.forEach(e => {
+          const inPath = pathNodes.includes(e.from) && pathNodes.includes(e.to);
+          edges.update({ id: e.id, hidden: !inPath });
+        });
+        document.getElementById('cypher-display').innerText = `MATCH path = (attacker:AttackerEntry)-[*1..4]->(target:CrownJewel {id: 'arn:aws:s3:::indian-citizen-medical-records-store'}) RETURN path;`;
+      } else if (preset === 'privesc') {
+        const pathNodes = ["INTERNET", "KEY", "USER_RAYNOR", "POL_RAYNOR", "STMT_ESCALATE", "ADMIN_EQUIV"];
+        nodes.forEach(n => {
+          const inPath = pathNodes.includes(n.id);
+          nodes.update({ id: n.id, hidden: !inPath, opacity: inPath ? 1 : 0.1 });
+        });
+        edges.forEach(e => {
+          const inPath = pathNodes.includes(e.from) && pathNodes.includes(e.to);
+          edges.update({ id: e.id, hidden: !inPath });
+        });
+        document.getElementById('cypher-display').innerText = `MATCH path = (attacker:AttackerEntry)-[:USES_KEY]->(u:AWSUser)-[:CAN_ESCALATE]->(admin:ADMIN_EQUIV) RETURN path;`;
+      } else if (preset === 'interdiction') {
+        edges.forEach(e => {
+          if (e.from === "KEY" && e.to === "USER_RAYNOR") {
+            edges.update({ id: e.id, color: "#10b981", width: 6, label: "INTERDICTED (Rotate Key)" });
+          }
+        });
+        document.getElementById('selection-details').innerHTML = `
+          <h3>Stackelberg Optimal Interdiction Cut</h3>
+          <p style="font-size:12px; color:#10b981; margin-bottom:8px;">Min-cut interdiction algorithm selected 1 atomic fix covering 100% of attack paths.</p>
+          <div class="details-row"><span>Target Finding:</span><span>cis.iam_rotate_access_key</span></div>
+          <div class="details-row"><span>Budget Cost:</span><span>1 / 3</span></div>
+          <div class="details-row"><span>Residual Attack Prob:</span><span style="color:#10b981; font-weight:bold;">0.00%</span></div>
+        `;
+        document.getElementById('cypher-display').innerText = `// Phase 3 Interdiction Cut\nMATCH (key:AWSAccountAccessKey)-[r:USES_KEY]->(u:AWSUser)\n// Edge interdicted: attack prob reduced from 0.90 to 0.00`;
+      }
+      network.fit({ animation: true });
+    }
+  </script>
+</body>
+</html>

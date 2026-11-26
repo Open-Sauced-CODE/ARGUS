@@ -1,0 +1,126 @@
+{
+  "product": "ARGUS",
+  "latest_version": "v2.0.0",
+  "repo_url": "https://github.com/Prabhav-020108/ARGUS",
+  "live_portal_url": "http://ec2-13-201-224-53.ap-south-1.compute.amazonaws.com/",
+  "distribution_strategy": "Direct Portal Download (/downloads/files/) + Separate On-Device Ollama GGUF Onboarding",
+  "desktop_build_status": "READY",
+  "desktop_architecture_choices": {
+    "window_shell": "System Tray App (pystray) + Auto-Open Default Browser (http://127.0.0.1:8742)",
+    "scanners": "Local GitHub Clone + Recursive .tf/.tfvars HCL Scanner + Live AWS Read-Only boto3 Scanner (enforcing iam_guard)",
+    "binary_hosting": "Direct EC2 /downloads/files/ HTTP stream + SHA-256 verification; 2.59 GiB GGUFs via Ollama pull or 1-click local .gguf picker",
+    "packaging": "PyInstaller --onedir + Inno Setup user-mode installer (%LocalAppData%\\ARGUS-Desktop, zero UAC prompt) + portable ZIP"
+  },
+  "current_release": {
+    "version": "v2.0.0",
+    "codename": "Windows Desktop Release & Zero-Egress Onboarding",
+    "released_at": "2026-11-26",
+    "portal_status": "LIVE_ON_AWS_FREE_TIER",
+    "artifacts": [
+      {
+        "id": "win64-installer",
+        "name": "ARGUS-Desktop-Setup-v2.0.0-win64.exe",
+        "platform": "Windows 10 / 11 (x64)",
+        "packaging": "PyInstaller --onedir + Inno Setup (User-mode)",
+        "estimated_size": "88.1 MB (92,392,722 bytes)",
+        "status": "READY",
+        "download_ready": true,
+        "download_url": "/downloads/files/ARGUS-Desktop-Setup-v2.0.0-win64.exe",
+        "sha256": "f86ee09017ea9dc0d64c5d21c9c275f2420123d4c4137e04e88340bcbb1ca504",
+        "notes": "User-mode Inno Setup installer (%LocalAppData%\\ARGUS-Desktop, zero UAC prompt). Includes Python runtime, NetworkX/SciPy/MILP, Fernet Vault Airlock, bundled opa.exe, system tray launcher, and React console.",
+        "size_bytes": 92392722,
+        "size_display": "88.1 MB (92,392,722 bytes)",
+        "portal_download_url": "http://ec2-13-201-224-53.ap-south-1.compute.amazonaws.com/downloads/files/ARGUS-Desktop-Setup-v2.0.0-win64.exe",
+        "github_release_url": "https://github.com/Prabhav-020108/ARGUS/releases/tag/v2.0.0"
+      },
+      {
+        "id": "win64-portable-zip",
+        "name": "ARGUS-Desktop-v2.0.0-win64-portable.zip",
+        "platform": "Windows 10 / 11 (x64 Portable)",
+        "packaging": "Portable Archive (No installation required)",
+        "estimated_size": "114.7 MB (120,298,386 bytes)",
+        "status": "READY",
+        "download_ready": true,
+        "download_url": "/downloads/files/ARGUS-Desktop-v2.0.0-win64-portable.zip",
+        "sha256": "0b870d5596a31095b0f00191859f483aca4e8b9e3d816775d84a57be92b9a9b8",
+        "notes": "Portable zero-install ZIP archive. Unzip anywhere and launch ARGUS.exe directly.",
+        "size_bytes": 120298386,
+        "size_display": "114.7 MB (120,298,386 bytes)",
+        "portal_download_url": "http://ec2-13-201-224-53.ap-south-1.compute.amazonaws.com/downloads/files/ARGUS-Desktop-v2.0.0-win64-portable.zip",
+        "github_release_url": "https://github.com/Prabhav-020108/ARGUS/releases/tag/v2.0.0"
+      }
+    ],
+    "model_packs": [
+      {
+        "id": "argus-m1-sft",
+        "name": "ARGUS-M1 SFT (Confirmed Primary M1 Generator)",
+        "base_model": "Qwen3.5-4B (4-bit Q4_K_M GGUF)",
+        "size": "2.59 GB",
+        "status": "ON_DEVICE_PICKER_OR_PULL",
+        "download_ready": false,
+        "download_url": null,
+        "ollama_digest": "sha256:ded5fad28aadecc0b2bcdaac695ce47472f8808d1d2f1b6dc66ffe575405aed7",
+        "register_cmd": "Inside ARGUS Desktop -> Tab 1 (Readiness & Ollama): click 'Browse .gguf...' (no base model pull needed) or pull a custom Ollama/HF tag",
+        "pass_at_1_oof": "94.48% (4-Fold CrossFit OOF)",
+        "notes": "Retained as primary M1 model per Phase 6 H1 Audit Rule 5.2. Register local Q4_K_M GGUF weights via Browse .gguf... (or optional custom Ollama/HF mirror); Tier 0 deterministic templates work immediately without GGUF weights.",
+        "ollama_pull_ref": null
+      },
+      {
+        "id": "argus-m1-rft",
+        "name": "ARGUS-M1 RFT (Rejection-Sampled Variant)",
+        "base_model": "Qwen3.5-4B (4-bit Q4_K_M GGUF)",
+        "size": "2.59 GB",
+        "status": "ON_DEVICE_PICKER_OR_PULL",
+        "download_ready": false,
+        "download_url": null,
+        "ollama_digest": "sha256:02e86d0a0b5e35052997c8f4396a8c1e752d1fda7c58abbbccd111e8ea74d53e",
+        "register_cmd": "Inside ARGUS Desktop -> Tab 1 (Readiness & Ollama): click 'Browse .gguf...' and target argus-m1-rft",
+        "pass_at_1_c_verifier": "89.3% (0 / 2,728 unsafe candidates)",
+        "notes": "Zero unsafe candidates across 2,728 inference evaluations. Register local Q4_K_M GGUF weights via Browse .gguf... (or optional custom Ollama/HF mirror).",
+        "ollama_pull_ref": null
+      }
+    ]
+  },
+  "versions": [
+    {
+      "version": "v2.0.0",
+      "date": "2026-11-26",
+      "title": "Hybrid AWS Showcase Portal + Local Zero-Egress Desktop Engine Architecture",
+      "tag": "hybrid-v2.0",
+      "status": "RELEASED",
+      "highlights": [
+        "Split zero-egress architecture: AWS Free Tier ap-south-1 showcase portal + local loopback engine (127.0.0.1:8742)",
+        "Dedicated Project Empirical Results page (/results) with Phase 5, Phase 6 CrossFit OOF, Interdiction MILP, and LTT metrics",
+        "Enterprise Documentation Hub (/docs) with DPDP Act 2023 Rule Matrix, Least-Privilege IAM Terraform setup, and Patch-IR spec",
+        "Versions & Desktop Downloads Hub (/downloads) with live Windows .exe installer download, local engine bridge detector, and 1-click Ollama GGUF onboarding",
+        "Real local Terraform (.tf) scanner, boto3 read-only AWS scanner with iam_guard pre-flight, and in-memory Cartography session"
+      ]
+    },
+    {
+      "version": "v1.5.0",
+      "date": "2026-11-24",
+      "title": "Phase 6 CrossFit Out-Of-Fold (OOF) Evaluation & M2 LTT Contract",
+      "tag": "ebcb504",
+      "status": "VERIFIED",
+      "highlights": [
+        "4-fold CrossFit OOF SFT evaluation: 94.48% weighted pass@1 (2,055 / 2,175) across 189 distinct unseen inputs",
+        "100.0% JSON Patch-IR schema validity (189 / 189 inputs, zero syntax errors)",
+        "150 clean unseen clusters delivered vs 59 required by Stop Rule S4 (+91 cluster margin)",
+        "H1 Harvest Audit (10,272 rows) and 2,868 / 2,868 counterfactual oracle agreement across all 14 Rego rules"
+      ]
+    },
+    {
+      "version": "v1.0.0",
+      "date": "2026-10-23",
+      "title": "Phase 5 M1 Verifier-Guided Remediation + Privacy Airlock + Network Interdiction",
+      "tag": "phase5-complete (b5d4467)",
+      "status": "FROZEN_TAG",
+      "highlights": [
+        "Frozen Privacy Airlock (projection, Fernet SQLite token vault, Presidio + secret scrubbers, leak-check backstop)",
+        "OPA Rego verification gate across 14 DPDP Act 2023 & CIS AWS rules (20 / 20 adversarial payloads rejected)",
+        "NetworkX Personalized PageRank + PuLP/SciPy MILP cut-set prioritization",
+        "Local Qwen3.5-4B QLoRA SFT & RFT models achieving 88.8%\u201389.3% pass@1 on real GitHub C_verifier repositories"
+      ]
+    }
+  ]
+}

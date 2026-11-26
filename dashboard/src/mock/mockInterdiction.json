@@ -1,0 +1,825 @@
+{
+  "budget": 3,
+  "baseline_likelihood": 0.906,
+  "residual_likelihood": 0.586,
+  "selected_findings": [
+    "F-b42cc0f7"
+  ],
+  "edges_interdicted": [
+    {
+      "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+      "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+    },
+    {
+      "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+      "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+    }
+  ],
+  "cost_spent": 2,
+  "attacker_shortest_path_cost": 5.8,
+  "baseline_path_cost": 1.2,
+  "pareto_curve": [
+    {
+      "budget": 0,
+      "residual": 0.906,
+      "naive_residual": 0.906,
+      "stackelberg_residual": 0.906
+    },
+    {
+      "budget": 1,
+      "residual": 0.696,
+      "naive_residual": 0.906,
+      "stackelberg_residual": 0.73
+    },
+    {
+      "budget": 2,
+      "residual": 0.626,
+      "naive_residual": 0.906,
+      "stackelberg_residual": 0.68
+    },
+    {
+      "budget": 3,
+      "residual": 0.586,
+      "naive_residual": 0.906,
+      "stackelberg_residual": 0.64
+    },
+    {
+      "budget": 4,
+      "residual": 0.561,
+      "naive_residual": 0.88,
+      "stackelberg_residual": 0.61
+    },
+    {
+      "budget": 5,
+      "residual": 0.541,
+      "naive_residual": 0.85,
+      "stackelberg_residual": 0.59
+    },
+    {
+      "budget": 6,
+      "residual": 0.526,
+      "naive_residual": 0.81,
+      "stackelberg_residual": 0.57
+    },
+    {
+      "budget": 7,
+      "residual": 0.514,
+      "naive_residual": 0.77,
+      "stackelberg_residual": 0.55
+    },
+    {
+      "budget": 8,
+      "residual": 0.504,
+      "naive_residual": 0.73,
+      "stackelberg_residual": 0.53
+    },
+    {
+      "budget": 9,
+      "residual": 0.496,
+      "naive_residual": 0.69,
+      "stackelberg_residual": 0.51
+    },
+    {
+      "budget": 10,
+      "residual": 0.49,
+      "naive_residual": 0.65,
+      "stackelberg_residual": 0.495
+    }
+  ],
+  "budget_table": {
+    "0": {
+      "budget": 0,
+      "residual_likelihood": 0.906,
+      "cost_spent": 0,
+      "attacker_shortest_path_cost": 1.2,
+      "selected_fixes": [],
+      "edges_interdicted": []
+    },
+    "1": {
+      "budget": 1,
+      "residual_likelihood": 0.696,
+      "cost_spent": 0,
+      "attacker_shortest_path_cost": 1.2,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        }
+      ],
+      "edges_interdicted": []
+    },
+    "2": {
+      "budget": 2,
+      "residual_likelihood": 0.626,
+      "cost_spent": 2,
+      "attacker_shortest_path_cost": 5.8,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        }
+      ]
+    },
+    "3": {
+      "budget": 3,
+      "residual_likelihood": 0.586,
+      "cost_spent": 2,
+      "attacker_shortest_path_cost": 5.8,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        },
+        {
+          "rank": 3,
+          "finding_id": "F-893de412",
+          "title": "Rotate access keys for devops user",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "USER_1",
+          "edge_cut": "dev-access-key->ec2-runner-role",
+          "marginal_reduction": 0.04
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        }
+      ]
+    },
+    "4": {
+      "budget": 4,
+      "residual_likelihood": 0.561,
+      "cost_spent": 3,
+      "attacker_shortest_path_cost": 6.4,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        },
+        {
+          "rank": 3,
+          "finding_id": "F-893de412",
+          "title": "Rotate access keys for devops user",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "USER_1",
+          "edge_cut": "dev-access-key->ec2-runner-role",
+          "marginal_reduction": 0.04
+        },
+        {
+          "rank": 4,
+          "finding_id": "F-6633dd44",
+          "title": "Restrict CIDR block 0.0.0.0/0 on bastion ingress",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "SG_1",
+          "edge_cut": "developer-raynor->sg-bastion",
+          "marginal_reduction": 0.025
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        }
+      ]
+    },
+    "5": {
+      "budget": 5,
+      "residual_likelihood": 0.541,
+      "cost_spent": 3,
+      "attacker_shortest_path_cost": 6.4,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        },
+        {
+          "rank": 3,
+          "finding_id": "F-893de412",
+          "title": "Rotate access keys for devops user",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "USER_1",
+          "edge_cut": "dev-access-key->ec2-runner-role",
+          "marginal_reduction": 0.04
+        },
+        {
+          "rank": 4,
+          "finding_id": "F-6633dd44",
+          "title": "Restrict CIDR block 0.0.0.0/0 on bastion ingress",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "SG_1",
+          "edge_cut": "developer-raynor->sg-bastion",
+          "marginal_reduction": 0.025
+        },
+        {
+          "rank": 5,
+          "finding_id": "F-2309aa11",
+          "title": "Enable CloudTrail data events logging",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "app-deployer-role->admin-policy-stmt",
+          "marginal_reduction": 0.02
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        }
+      ]
+    },
+    "6": {
+      "budget": 6,
+      "residual_likelihood": 0.526,
+      "cost_spent": 4,
+      "attacker_shortest_path_cost": 6.9,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        },
+        {
+          "rank": 3,
+          "finding_id": "F-893de412",
+          "title": "Rotate access keys for devops user",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "USER_1",
+          "edge_cut": "dev-access-key->ec2-runner-role",
+          "marginal_reduction": 0.04
+        },
+        {
+          "rank": 4,
+          "finding_id": "F-6633dd44",
+          "title": "Restrict CIDR block 0.0.0.0/0 on bastion ingress",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "SG_1",
+          "edge_cut": "developer-raynor->sg-bastion",
+          "marginal_reduction": 0.025
+        },
+        {
+          "rank": 5,
+          "finding_id": "F-2309aa11",
+          "title": "Enable CloudTrail data events logging",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "app-deployer-role->admin-policy-stmt",
+          "marginal_reduction": 0.02
+        },
+        {
+          "rank": 6,
+          "finding_id": "F-4411bb22",
+          "title": "Set lifecycle expiration policy for temp logs",
+          "rule_id": "dpdp.rule8_retention",
+          "resource_id": "BUCKET_3",
+          "edge_cut": "ec2-runner-role->prod-read-role",
+          "marginal_reduction": 0.015
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:iam::123456789012:key/dev-access-key"
+        }
+      ]
+    },
+    "7": {
+      "budget": 7,
+      "residual_likelihood": 0.514,
+      "cost_spent": 5,
+      "attacker_shortest_path_cost": 7.8,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        },
+        {
+          "rank": 3,
+          "finding_id": "F-893de412",
+          "title": "Rotate access keys for devops user",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "USER_1",
+          "edge_cut": "dev-access-key->ec2-runner-role",
+          "marginal_reduction": 0.04
+        },
+        {
+          "rank": 4,
+          "finding_id": "F-6633dd44",
+          "title": "Restrict CIDR block 0.0.0.0/0 on bastion ingress",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "SG_1",
+          "edge_cut": "developer-raynor->sg-bastion",
+          "marginal_reduction": 0.025
+        },
+        {
+          "rank": 5,
+          "finding_id": "F-2309aa11",
+          "title": "Enable CloudTrail data events logging",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "app-deployer-role->admin-policy-stmt",
+          "marginal_reduction": 0.02
+        },
+        {
+          "rank": 6,
+          "finding_id": "F-4411bb22",
+          "title": "Set lifecycle expiration policy for temp logs",
+          "rule_id": "dpdp.rule8_retention",
+          "resource_id": "BUCKET_3",
+          "edge_cut": "ec2-runner-role->prod-read-role",
+          "marginal_reduction": 0.015
+        },
+        {
+          "rank": 7,
+          "finding_id": "F-5522cc33",
+          "title": "Enforce KMS customer-managed key for database",
+          "rule_id": "dpdp.rule6_encryption",
+          "resource_id": "BUCKET_2",
+          "edge_cut": "admin-policy-stmt->customer-data",
+          "marginal_reduction": 0.012
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:iam::123456789012:key/dev-access-key"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion"
+        }
+      ]
+    },
+    "8": {
+      "budget": 8,
+      "residual_likelihood": 0.504,
+      "cost_spent": 6,
+      "attacker_shortest_path_cost": 8.6,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        },
+        {
+          "rank": 3,
+          "finding_id": "F-893de412",
+          "title": "Rotate access keys for devops user",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "USER_1",
+          "edge_cut": "dev-access-key->ec2-runner-role",
+          "marginal_reduction": 0.04
+        },
+        {
+          "rank": 4,
+          "finding_id": "F-6633dd44",
+          "title": "Restrict CIDR block 0.0.0.0/0 on bastion ingress",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "SG_1",
+          "edge_cut": "developer-raynor->sg-bastion",
+          "marginal_reduction": 0.025
+        },
+        {
+          "rank": 5,
+          "finding_id": "F-2309aa11",
+          "title": "Enable CloudTrail data events logging",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "app-deployer-role->admin-policy-stmt",
+          "marginal_reduction": 0.02
+        },
+        {
+          "rank": 6,
+          "finding_id": "F-4411bb22",
+          "title": "Set lifecycle expiration policy for temp logs",
+          "rule_id": "dpdp.rule8_retention",
+          "resource_id": "BUCKET_3",
+          "edge_cut": "ec2-runner-role->prod-read-role",
+          "marginal_reduction": 0.015
+        },
+        {
+          "rank": 7,
+          "finding_id": "F-5522cc33",
+          "title": "Enforce KMS customer-managed key for database",
+          "rule_id": "dpdp.rule6_encryption",
+          "resource_id": "BUCKET_2",
+          "edge_cut": "admin-policy-stmt->customer-data",
+          "marginal_reduction": 0.012
+        },
+        {
+          "rank": 8,
+          "finding_id": "F-e490fa21",
+          "title": "Enable encryption for s3 storage",
+          "rule_id": "dpdp.rule6_encryption",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "uses_key->customer-data",
+          "marginal_reduction": 0.01
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:iam::123456789012:key/dev-access-key"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/ec2-runner-role",
+          "target": "arn:aws:iam::123456789012:role/prod-read-role"
+        }
+      ]
+    },
+    "9": {
+      "budget": 9,
+      "residual_likelihood": 0.496,
+      "cost_spent": 7,
+      "attacker_shortest_path_cost": 9.4,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        },
+        {
+          "rank": 3,
+          "finding_id": "F-893de412",
+          "title": "Rotate access keys for devops user",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "USER_1",
+          "edge_cut": "dev-access-key->ec2-runner-role",
+          "marginal_reduction": 0.04
+        },
+        {
+          "rank": 4,
+          "finding_id": "F-6633dd44",
+          "title": "Restrict CIDR block 0.0.0.0/0 on bastion ingress",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "SG_1",
+          "edge_cut": "developer-raynor->sg-bastion",
+          "marginal_reduction": 0.025
+        },
+        {
+          "rank": 5,
+          "finding_id": "F-2309aa11",
+          "title": "Enable CloudTrail data events logging",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "app-deployer-role->admin-policy-stmt",
+          "marginal_reduction": 0.02
+        },
+        {
+          "rank": 6,
+          "finding_id": "F-4411bb22",
+          "title": "Set lifecycle expiration policy for temp logs",
+          "rule_id": "dpdp.rule8_retention",
+          "resource_id": "BUCKET_3",
+          "edge_cut": "ec2-runner-role->prod-read-role",
+          "marginal_reduction": 0.015
+        },
+        {
+          "rank": 7,
+          "finding_id": "F-5522cc33",
+          "title": "Enforce KMS customer-managed key for database",
+          "rule_id": "dpdp.rule6_encryption",
+          "resource_id": "BUCKET_2",
+          "edge_cut": "admin-policy-stmt->customer-data",
+          "marginal_reduction": 0.012
+        },
+        {
+          "rank": 8,
+          "finding_id": "F-e490fa21",
+          "title": "Enable encryption for s3 storage",
+          "rule_id": "dpdp.rule6_encryption",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "uses_key->customer-data",
+          "marginal_reduction": 0.01
+        },
+        {
+          "rank": 9,
+          "finding_id": "F-7744ee55",
+          "title": "Review cross-region replication to us-east-1",
+          "rule_id": "dpdp.rule8_retention",
+          "resource_id": "BUCKET_2",
+          "edge_cut": "can_access->customer-data",
+          "marginal_reduction": 0.008
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:iam::123456789012:key/dev-access-key"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/ec2-runner-role",
+          "target": "arn:aws:iam::123456789012:role/prod-read-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/ec2-runner-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        }
+      ]
+    },
+    "10": {
+      "budget": 10,
+      "residual_likelihood": 0.49,
+      "cost_spent": 8,
+      "attacker_shortest_path_cost": 10.5,
+      "selected_fixes": [
+        {
+          "rank": 1,
+          "finding_id": "F-b42cc0f7",
+          "title": "Restrict public access to s3 bucket",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "sg-bastion->app-deployer-role",
+          "marginal_reduction": 0.21
+        },
+        {
+          "rank": 2,
+          "finding_id": "F-712ca891",
+          "title": "Turn on versioning for customer-data",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "prod-read-role->customer-data",
+          "marginal_reduction": 0.07
+        },
+        {
+          "rank": 3,
+          "finding_id": "F-893de412",
+          "title": "Rotate access keys for devops user",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "USER_1",
+          "edge_cut": "dev-access-key->ec2-runner-role",
+          "marginal_reduction": 0.04
+        },
+        {
+          "rank": 4,
+          "finding_id": "F-6633dd44",
+          "title": "Restrict CIDR block 0.0.0.0/0 on bastion ingress",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "SG_1",
+          "edge_cut": "developer-raynor->sg-bastion",
+          "marginal_reduction": 0.025
+        },
+        {
+          "rank": 5,
+          "finding_id": "F-2309aa11",
+          "title": "Enable CloudTrail data events logging",
+          "rule_id": "dpdp.rule7_logging",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "app-deployer-role->admin-policy-stmt",
+          "marginal_reduction": 0.02
+        },
+        {
+          "rank": 6,
+          "finding_id": "F-4411bb22",
+          "title": "Set lifecycle expiration policy for temp logs",
+          "rule_id": "dpdp.rule8_retention",
+          "resource_id": "BUCKET_3",
+          "edge_cut": "ec2-runner-role->prod-read-role",
+          "marginal_reduction": 0.015
+        },
+        {
+          "rank": 7,
+          "finding_id": "F-5522cc33",
+          "title": "Enforce KMS customer-managed key for database",
+          "rule_id": "dpdp.rule6_encryption",
+          "resource_id": "BUCKET_2",
+          "edge_cut": "admin-policy-stmt->customer-data",
+          "marginal_reduction": 0.012
+        },
+        {
+          "rank": 8,
+          "finding_id": "F-e490fa21",
+          "title": "Enable encryption for s3 storage",
+          "rule_id": "dpdp.rule6_encryption",
+          "resource_id": "BUCKET_1",
+          "edge_cut": "uses_key->customer-data",
+          "marginal_reduction": 0.01
+        },
+        {
+          "rank": 9,
+          "finding_id": "F-7744ee55",
+          "title": "Review cross-region replication to us-east-1",
+          "rule_id": "dpdp.rule8_retention",
+          "resource_id": "BUCKET_2",
+          "edge_cut": "can_access->customer-data",
+          "marginal_reduction": 0.008
+        },
+        {
+          "rank": 10,
+          "finding_id": "F-auto-01",
+          "title": "Block public ACLs on backup archive",
+          "rule_id": "dpdp.rule6_public_exposure",
+          "resource_id": "BUCKET_2",
+          "edge_cut": "ec2-runner-role->customer-data",
+          "marginal_reduction": 0.006
+        }
+      ],
+      "edges_interdicted": [
+        {
+          "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+          "target": "arn:aws:iam::123456789012:role/app-deployer-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:iam::123456789012:key/dev-access-key"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:user/developer-raynor",
+          "target": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/ec2-runner-role",
+          "target": "arn:aws:iam::123456789012:role/prod-read-role"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:role/ec2-runner-role",
+          "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt"
+        },
+        {
+          "source": "arn:aws:iam::123456789012:policy/admin-policy-stmt",
+          "target": "arn:aws:s3:::customer-data"
+        }
+      ]
+    }
+  }
+}

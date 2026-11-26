@@ -1,0 +1,152 @@
+{
+  "nodes": [
+    {
+      "id": "arn:aws:iam::123456789012:user/developer-raynor",
+      "label": "developer-raynor",
+      "kind": "user",
+      "risk": 87,
+      "isEntry": true,
+      "isCrownJewel": false,
+      "x": 120,
+      "y": 250
+    },
+    {
+      "id": "arn:aws:iam::123456789012:key/dev-access-key",
+      "label": "dev-access-key",
+      "kind": "key",
+      "risk": 78,
+      "isEntry": false,
+      "isCrownJewel": false,
+      "x": 300,
+      "y": 140
+    },
+    {
+      "id": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+      "label": "bastion-sg",
+      "kind": "sg",
+      "risk": 84,
+      "isEntry": false,
+      "isCrownJewel": false,
+      "x": 320,
+      "y": 360
+    },
+    {
+      "id": "arn:aws:iam::123456789012:role/ec2-runner-role",
+      "label": "ec2-runner-role",
+      "kind": "role",
+      "risk": 81,
+      "isEntry": false,
+      "isCrownJewel": false,
+      "x": 500,
+      "y": 150
+    },
+    {
+      "id": "arn:aws:iam::123456789012:role/app-deployer-role",
+      "label": "app-deployer-role",
+      "kind": "role",
+      "risk": 89,
+      "isEntry": false,
+      "isCrownJewel": false,
+      "x": 500,
+      "y": 350
+    },
+    {
+      "id": "arn:aws:iam::123456789012:policy/admin-policy-stmt",
+      "label": "admin-policy-stmt",
+      "kind": "stmt",
+      "risk": 95,
+      "isEntry": false,
+      "isCrownJewel": false,
+      "x": 690,
+      "y": 310
+    },
+    {
+      "id": "arn:aws:iam::123456789012:role/prod-read-role",
+      "label": "prod-read-role",
+      "kind": "role",
+      "risk": 74,
+      "isEntry": false,
+      "isCrownJewel": false,
+      "x": 700,
+      "y": 150
+    },
+    {
+      "id": "arn:aws:s3:::customer-data",
+      "label": "customer-data",
+      "kind": "bucket",
+      "risk": 99,
+      "isEntry": false,
+      "isCrownJewel": true,
+      "x": 880,
+      "y": 250
+    }
+  ],
+  "edges": [
+    {
+      "source": "arn:aws:iam::123456789012:user/developer-raynor",
+      "target": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+      "etype": "RULE_TO_SG",
+      "p": 0.85,
+      "isAttackPath": true,
+      "isInterdicted": false
+    },
+    {
+      "source": "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-bastion",
+      "target": "arn:aws:iam::123456789012:role/app-deployer-role",
+      "etype": "CAN_ASSUME",
+      "p": 0.90,
+      "isAttackPath": true,
+      "isInterdicted": true
+    },
+    {
+      "source": "arn:aws:iam::123456789012:role/app-deployer-role",
+      "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt",
+      "etype": "CAN_ESCALATE",
+      "p": 0.92,
+      "isAttackPath": true,
+      "isInterdicted": true
+    },
+    {
+      "source": "arn:aws:iam::123456789012:policy/admin-policy-stmt",
+      "target": "arn:aws:s3:::customer-data",
+      "etype": "CAN_ACCESS",
+      "p": 0.98,
+      "isAttackPath": true,
+      "isInterdicted": false
+    },
+    {
+      "source": "arn:aws:iam::123456789012:user/developer-raynor",
+      "target": "arn:aws:iam::123456789012:key/dev-access-key",
+      "etype": "USES_KEY",
+      "p": 0.80,
+      "residual": true
+    },
+    {
+      "source": "arn:aws:iam::123456789012:key/dev-access-key",
+      "target": "arn:aws:iam::123456789012:role/ec2-runner-role",
+      "etype": "CAN_ASSUME",
+      "p": 0.75,
+      "residual": true
+    },
+    {
+      "source": "arn:aws:iam::123456789012:role/ec2-runner-role",
+      "target": "arn:aws:iam::123456789012:role/prod-read-role",
+      "etype": "CAN_ESCALATE",
+      "p": 0.68,
+      "residual": true
+    },
+    {
+      "source": "arn:aws:iam::123456789012:role/prod-read-role",
+      "target": "arn:aws:s3:::customer-data",
+      "etype": "CAN_ACCESS",
+      "p": 0.586,
+      "residual": true
+    },
+    {
+      "source": "arn:aws:iam::123456789012:role/ec2-runner-role",
+      "target": "arn:aws:iam::123456789012:policy/admin-policy-stmt",
+      "etype": "CAN_ACCESS",
+      "p": 0.35
+    }
+  ]
+}

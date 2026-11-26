@@ -23,6 +23,7 @@ No Neo4j imports in this file.
 
 import math
 import time
+import warnings
 from pathlib import Path
 
 import networkx as nx
@@ -196,12 +197,19 @@ def _solve_scipy(G, entry, crown, findings, budget, cover):
     integrality = np.zeros(nv)
     integrality[nN:] = 1.0
 
-    res = milp(
-        cvec,
-        constraints=LinearConstraint(A.tocsr(), -np.inf, np.array(ub)),
-        integrality=integrality,
-        bounds=Bounds(lb, ub_bounds),
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="Unrecognized options detected.*",
+            category=RuntimeWarning,
+        )
+        res = milp(
+            cvec,
+            constraints=LinearConstraint(A.tocsr(), -np.inf, np.array(ub)),
+            integrality=integrality,
+            bounds=Bounds(lb, ub_bounds),
+            options={"threads": 1, "parallel": False},
+        )
 
     if res.status not in (0, 1):  # 0=optimal, 1=iteration limit (near-optimal)
         raise RuntimeError(

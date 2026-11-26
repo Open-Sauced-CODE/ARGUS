@@ -1,0 +1,357 @@
+{
+  "generated_from": [
+    "docs/PHASE5_MENTOR_REPORT.md",
+    "docs/PHASE6_RESULTS.md",
+    "docs/phase6_prabhav/CROSSFIT_OOF_EVALUATION_REPORT.md",
+    "ml/train_m2/out/reports/h1_verdict.md",
+    "ml/train_m2/out/reports/harvest_validation.md",
+    "ml/train_m2/out/reports/cf_validation_summary.md",
+    "prioritize/benchmark_results.json"
+  ],
+  "headline_metrics": {
+    "oof_pass_at_1_pct": 94.48,
+    "oof_passed_examples": 2055,
+    "oof_total_examples": 2175,
+    "oof_distinct_keys_passed": 186,
+    "oof_distinct_keys_total": 189,
+    "oof_schema_valid_pct": 100.0,
+    "clean_unseen_clusters": 150,
+    "stop_rule_s4_min_clusters": 59,
+    "cluster_margin": 91,
+    "rft_unsafe_candidates": 0,
+    "rft_total_candidates": 2728,
+    "adversarial_defense_passed": 20,
+    "adversarial_defense_total": 20,
+    "milp_beats_naive_49_of_50": "49 / 50 (K=4, K=6)",
+    "primary_m1_model": "argus-m1-sft"
+  },
+  "phase6_crossfit_oof": {
+    "commit": "ebcb504",
+    "base_model": "unsloth/Qwen3.5-4B",
+    "k_folds_total": 5,
+    "folds_evaluated": 4,
+    "overall_pass_at_1": 94.48,
+    "overall_ci_low": 93.5,
+    "overall_ci_high": 95.3,
+    "total_passed_examples": 2055,
+    "total_examples": 2175,
+    "total_distinct_passed": 186,
+    "total_distinct_inputs": 189,
+    "distinct_key_pass_pct": 98.41,
+    "schema_valid_pct": 100.0,
+    "oof_clean_clusters": 135,
+    "existing_prod_clusters": 15,
+    "total_clean_clusters": 150,
+    "folds": [
+      {
+        "fold": "Fold 0",
+        "held_out_inputs": 55,
+        "clean_clusters": 37,
+        "pass_at_1_pct": 94.9,
+        "passed": 745,
+        "total": 785,
+        "ci_low": 93.1,
+        "ci_high": 96.2,
+        "distinct_passed": 54,
+        "distinct_total": 55,
+        "schema_valid_pct": 100.0,
+        "checkpoint": "checkpoint-324"
+      },
+      {
+        "fold": "Fold 1",
+        "held_out_inputs": 50,
+        "clean_clusters": 35,
+        "pass_at_1_pct": 87.3,
+        "passed": 551,
+        "total": 631,
+        "ci_low": 84.5,
+        "ci_high": 89.7,
+        "distinct_passed": 48,
+        "distinct_total": 50,
+        "schema_valid_pct": 100.0,
+        "checkpoint": "checkpoint-354"
+      },
+      {
+        "fold": "Fold 2",
+        "held_out_inputs": 43,
+        "clean_clusters": 30,
+        "pass_at_1_pct": 100.0,
+        "passed": 474,
+        "total": 474,
+        "ci_low": 99.2,
+        "ci_high": 100.0,
+        "distinct_passed": 43,
+        "distinct_total": 43,
+        "schema_valid_pct": 100.0,
+        "checkpoint": "checkpoint-380"
+      },
+      {
+        "fold": "Fold 3",
+        "held_out_inputs": 41,
+        "clean_clusters": 33,
+        "pass_at_1_pct": 100.0,
+        "passed": 285,
+        "total": 285,
+        "ci_low": 98.7,
+        "ci_high": 100.0,
+        "distinct_passed": 41,
+        "distinct_total": 41,
+        "schema_valid_pct": 100.0,
+        "checkpoint": "checkpoint-417"
+      }
+    ],
+    "stop_rule_s4": [
+      {
+        "metric": "Clean Clusters (0 errors)",
+        "required": 59,
+        "delivered": 150,
+        "margin": "+91 clusters"
+      },
+      {
+        "metric": "Clean Clusters (1 error)",
+        "required": 95,
+        "delivered": 150,
+        "margin": "+55 clusters"
+      },
+      {
+        "metric": "Clean Clusters (2 errors)",
+        "required": 126,
+        "delivered": 150,
+        "margin": "+24 clusters"
+      },
+      {
+        "metric": "Distinct Input Coverage",
+        "required": 148,
+        "delivered": 189,
+        "margin": "+41 inputs"
+      }
+    ]
+  },
+  "phase5_benchmarks": {
+    "tag": "phase5-complete (b5d4467)",
+    "synthetic_examples": 3309,
+    "train_examples": 2507,
+    "val_examples": 361,
+    "heldout_examples": 441,
+    "real_github_repos_scanned": 58,
+    "tier0_coverage_val_pct": 54.3,
+    "tier0_coverage_real_pct": 68.9,
+    "tier0_latency_ms": 0.4,
+    "splits": [
+      {
+        "split": "A_val (Validation)",
+        "zeroshot_pass1": 26.6,
+        "sft_pass1": 96.7,
+        "rft_pass1": 79.5,
+        "zeroshot_ci": [22.3, 31.4],
+        "sft_ci": [94.3, 98.1],
+        "rft_ci": [75.0, 83.3]
+      },
+      {
+        "split": "train300 (Sample)",
+        "zeroshot_pass1": 18.3,
+        "sft_pass1": 96.7,
+        "rft_pass1": 94.0,
+        "zeroshot_ci": [14.4, 23.1],
+        "sft_ci": [94.0, 98.2],
+        "rft_ci": [90.7, 96.2]
+      },
+      {
+        "split": "Tier B1 (Unseen Mutators)",
+        "zeroshot_pass1": 39.5,
+        "sft_pass1": 96.2,
+        "rft_pass1": 61.7,
+        "zeroshot_ci": [33.7, 45.5],
+        "sft_ci": [93.1, 97.9],
+        "rft_ci": [55.7, 67.4]
+      },
+      {
+        "split": "Tier B2 (Held-out Family)",
+        "zeroshot_pass1": 77.8,
+        "sft_pass1": 88.9,
+        "rft_pass1": 66.7,
+        "zeroshot_ci": [71.2, 83.2],
+        "sft_ci": [83.5, 92.7],
+        "rft_ci": [59.5, 73.1]
+      },
+      {
+        "split": "C_verifier (Real GitHub Repos)",
+        "zeroshot_pass1": 35.6,
+        "sft_pass1": 88.8,
+        "rft_pass1": 89.3,
+        "zeroshot_ci": [31.4, 40.1],
+        "sft_ci": [85.7, 91.4],
+        "rft_ci": [86.1, 91.8]
+      },
+      {
+        "split": "Gold (Human-Reviewed)",
+        "zeroshot_pass1": 36.2,
+        "sft_pass1": 87.5,
+        "rft_pass1": 87.5,
+        "zeroshot_ci": [26.6, 47.2],
+        "sft_ci": [78.5, 93.1],
+        "rft_ci": [78.5, 93.1]
+      }
+    ],
+    "safety_audit": [
+      {
+        "model": "rft (Phase 5 Final)",
+        "unsafe_count": 0,
+        "total_candidates": 2728,
+        "unsafe_rate_pct": 0.0,
+        "schema_valid_pct": 100.0,
+        "hidden_check_pass_pct": 99.0,
+        "median_latency_s": "2.97s – 3.43s"
+      },
+      {
+        "model": "sft (Primary M1)",
+        "unsafe_count": 3,
+        "total_candidates": 2728,
+        "unsafe_rate_pct": 0.11,
+        "schema_valid_pct": 99.7,
+        "hidden_check_pass_pct": 98.6,
+        "median_latency_s": "1.6s – 3.5s"
+      },
+      {
+        "model": "zeroshot (qwen3.5:4b)",
+        "unsafe_count": 2022,
+        "total_candidates": 2728,
+        "unsafe_rate_pct": 74.1,
+        "schema_valid_pct": 98.6,
+        "hidden_check_pass_pct": 51.4,
+        "median_latency_s": "5.0s – 10.8s"
+      }
+    ],
+    "adversarial_probes": {
+      "gate_payloads_tested": 20,
+      "gate_payloads_rejected": 20,
+      "injection_findings_tested": 20,
+      "injection_unsafe_accepted": 0
+    }
+  },
+  "phase6_audit_and_parity": {
+    "harvest_total_rows": 10272,
+    "harvest_inputs": 321,
+    "harvest_samples_per_input": 8,
+    "harvest_verdict": "ACCEPTED",
+    "model_selection_rule_5_2": "argus-m1-sft retained strictly as primary M1 (97.2% aligned A_val harvest pass@1 vs rft_v2 21.6%)",
+    "harvest_generators": [
+      {"generator": "sft (Primary M1)", "rows": 2568, "aligned_a_val_pass1_pct": 97.2, "a_val_counts": "351 / 361", "schema_valid_pct": 100.0, "verdict": "PASS"},
+      {"generator": "rft", "rows": 2568, "aligned_a_val_pass1_pct": 100.0, "a_val_counts": "361 / 361", "schema_valid_pct": 100.0, "verdict": "PASS"},
+      {"generator": "rft_v2", "rows": 2568, "aligned_a_val_pass1_pct": 21.6, "a_val_counts": "78 / 361", "schema_valid_pct": 100.0, "verdict": "REJECTED (Rule 5.2)"},
+      {"generator": "zeroshot (qwen3.5:4b)", "rows": 2568, "aligned_a_val_pass1_pct": 26.6, "a_val_counts": "96 / 361", "schema_valid_pct": 100.0, "verdict": "BASELINE"}
+    ],
+    "counterfactual_oracle_agreed": 2868,
+    "counterfactual_oracle_total": 2868,
+    "counterfactual_oracle_rate_pct": 100.0,
+    "feature_parity_checked": 500,
+    "feature_parity_mismatches": 0
+  },
+  "interdiction_milp": {
+    "n_seeds": 50,
+    "mean_solve_time_ms": 35.33,
+    "max_solve_time_ms": 869.63,
+    "brute_force_mismatches": 0,
+    "scale_probe_findings": 58,
+    "scale_probe_pulp_ms": 31.37,
+    "scale_probe_scipy_ms": 38.29,
+    "budgets": [
+      {
+        "budget": 2,
+        "better_than_naive": 43,
+        "better_than_stackelberg": 43,
+        "tied": 7,
+        "n_instances": 50,
+        "mean_milp_residual": 0.7181,
+        "mean_naive_residual": 0.8198,
+        "mean_stackelberg_residual": 0.8198
+      },
+      {
+        "budget": 4,
+        "better_than_naive": 49,
+        "better_than_stackelberg": 49,
+        "tied": 1,
+        "n_instances": 50,
+        "mean_milp_residual": 0.6407,
+        "mean_naive_residual": 0.7938,
+        "mean_stackelberg_residual": 0.7938
+      },
+      {
+        "budget": 6,
+        "better_than_naive": 49,
+        "better_than_stackelberg": 49,
+        "tied": 1,
+        "n_instances": 50,
+        "mean_milp_residual": 0.5796,
+        "mean_naive_residual": 0.7793,
+        "mean_stackelberg_residual": 0.7793
+      }
+    ]
+  },
+  "m2_ltt_governance": {
+    "certified": false,
+    "status": "PENDING_OOF_INGESTION",
+    "autonomy_mode": "HUMAN_REVIEW_ONLY",
+    "alpha": 0.05,
+    "delta": 0.05,
+    "c_FA": 20.0,
+    "c_esc": 1.0,
+    "bayes_cutoff": 0.95,
+    "tau_star": null,
+    "n_min_clusters": 59,
+    "n_pre_oof_clusters": 50,
+    "n_post_oof_available": 150,
+    "message": "Autonomy OFF until Shaurya's OOF ingestion emits certified tau_star.json & m2.joblib. All patches require explicit architect approval.",
+    "monte_carlo_reps_per_regime": 2000,
+    "monte_carlo_regimes": [
+      {
+        "regime": "exchangeable_low_error",
+        "n_cal": 80,
+        "true_err": 0.02,
+        "certified_frac": 0.9715,
+        "ltt_coverage": 1.0,
+        "crc_coverage": 1.0,
+        "crc_exceeds_alpha": false,
+        "max_cond_error": 0.02
+      },
+      {
+        "regime": "exchangeable_at_alpha",
+        "n_cal": 80,
+        "true_err": 0.05,
+        "certified_frac": 0.6295,
+        "ltt_coverage": 1.0,
+        "crc_coverage": 0.9965,
+        "crc_exceeds_alpha": false,
+        "max_cond_error": 0.0503
+      },
+      {
+        "regime": "label_shift_adversarial",
+        "n_cal": 80,
+        "true_err": 0.02,
+        "certified_frac": 0.3755,
+        "ltt_coverage": 1.0,
+        "crc_coverage": 1.0,
+        "crc_exceeds_alpha": false,
+        "max_cond_error": 0.0212
+      },
+      {
+        "regime": "covariate_shift_small_n",
+        "n_cal": 30,
+        "true_err": 0.08,
+        "certified_frac": 0.0,
+        "ltt_coverage": null,
+        "crc_coverage": 0.9035,
+        "crc_exceeds_alpha": true,
+        "max_cond_error": 0.0754
+      }
+    ]
+  },
+  "test_suites": [
+    {"suite": "ml/tests", "count": 126, "status": "PASS", "notes": "Patch-IR schema, gate stub, T0 templates, evaluator (verified locally)"},
+    {"suite": "privacy/tests", "count": 104, "status": "PASS", "notes": "Airlock projection, Fernet TokenVault, scrubbers, iam_guard (104 passed, 1 skipped)"},
+    {"suite": "risk/tests & prioritize/tests", "count": 147, "status": "PASS", "notes": "Attack graph builder, PPR scoring, PuLP/SciPy MILP interdiction (verified locally)"},
+    {"suite": "tests/test_backend_api.py", "count": 15, "status": "PASS", "notes": "Unified REST API, live pipeline runner, SPA fallback (verified locally)"},
+    {"suite": "tests/test_hybrid_engine.py", "count": 25, "status": "PASS", "notes": "Hybrid scanners, GitHub clone, tfvars/IAM data, GGUF onboarding, multi-layer Ollama pull & start, native picker validation, iam_guard block, M2 uncertified guardrail, dual-mode API & PNA CORS, .exe smoke test"},
+    {"suite": "ml/train_m2/tests", "count": 244, "status": "REPORTED", "notes": "Reported in docs/PHASE6_RESULTS.md (requires requirements-phase6.txt / joblib)"}
+  ]
+}
