@@ -1,7 +1,7 @@
 {
   "product": "ARGUS",
   "latest_version": "v2.0.0",
-  "repo_url": "https://github.com/Prabhav-020108/ARGUS",
+  "repo_url": "https://github.com/Open-Sauced-CODE/ARGUS",
   "live_portal_url": "http://ec2-13-201-224-53.ap-south-1.compute.amazonaws.com/",
   "distribution_strategy": "Direct Portal Download (/downloads/files/) + Separate On-Device Ollama GGUF Onboarding",
   "desktop_build_status": "READY",
@@ -31,7 +31,7 @@
         "size_bytes": 92392722,
         "size_display": "88.1 MB (92,392,722 bytes)",
         "portal_download_url": "http://ec2-13-201-224-53.ap-south-1.compute.amazonaws.com/downloads/files/ARGUS-Desktop-Setup-v2.0.0-win64.exe",
-        "github_release_url": "https://github.com/Prabhav-020108/ARGUS/releases/tag/v2.0.0"
+        "github_release_url": "https://github.com/Open-Sauced-CODE/ARGUS/releases/tag/v2.0.0"
       },
       {
         "id": "win64-portable-zip",
@@ -47,7 +47,7 @@
         "size_bytes": 120298386,
         "size_display": "114.7 MB (120,298,386 bytes)",
         "portal_download_url": "http://ec2-13-201-224-53.ap-south-1.compute.amazonaws.com/downloads/files/ARGUS-Desktop-v2.0.0-win64-portable.zip",
-        "github_release_url": "https://github.com/Prabhav-020108/ARGUS/releases/tag/v2.0.0"
+        "github_release_url": "https://github.com/Open-Sauced-CODE/ARGUS/releases/tag/v2.0.0"
       }
     ],
     "model_packs": [

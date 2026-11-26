@@ -775,8 +775,8 @@ def test_clone_terraform_repo_validation_and_bare_git_scan(tmp_path, local_serve
         with pytest.raises(ValueError):
             validate_git_url(bad)
 
-    assert validate_git_url("https://github.com/Prabhav-020108/ARGUS.git").startswith("https://")
-    assert validate_git_url("git@github.com:Prabhav-020108/ARGUS.git").startswith("git@")
+    assert validate_git_url("https://github.com/Open-Sauced-CODE/ARGUS.git").startswith("https://")
+    assert validate_git_url("git@github.com:Open-Sauced-CODE/ARGUS.git").startswith("git@")
 
     # Create a real local bare git repo with Terraform inside a subdir
     src_repo = tmp_path / "src_repo"

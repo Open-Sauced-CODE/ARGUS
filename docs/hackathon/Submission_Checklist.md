@@ -9,7 +9,7 @@
 * **AWS Free Tier Prototype URL:** `http://13.201.224.53/` (Rule 7)
 * **Alternative DNS URL:** `http://ec2-13-201-224-53.ap-south-1.compute.amazonaws.com/`
 * **API Health Check URL:** `http://13.201.224.53/api/health`
-* **Public GitHub Repository:** `https://github.com/Prabhav-020108/ARGUS`
+* **Public GitHub Repository:** `https://github.com/Open-Sauced-CODE/ARGUS`
 
 ---
 
@@ -40,6 +40,6 @@ ARGUS_Campus_to_Cloud_Submission_<TeamID>/
 | **Live Prototype URL** | Deployed on AWS Free Tier, accessible through Demo Day (Dec 17, 2026). | `http://13.201.224.53/` | **COMPLETE & LIVE** (running via systemd daemon). Keep instance running. |
 | **Idea Brief** | PDF explaining problem, Bharat impact, target users, and proposed solution. | `D:\ARGUS\docs\hackathon\Idea_Brief.md` | Open in VS Code / Markdown viewer and click **Export as PDF** or print to PDF. |
 | **Build Summary** | PDF detailing AWS services used, architecture, and justifications. | `D:\ARGUS\docs\hackathon\Build_Summary.md` | Open in VS Code / Markdown viewer and click **Export as PDF** or print to PDF. |
-| **Code Repository** | Public GitHub repository link. | `https://github.com/Prabhav-020108/ARGUS` | Ensure repo is set to Public and latest commits are pushed. |
+| **Code Repository** | Public GitHub repository link. | `https://github.com/Open-Sauced-CODE/ARGUS` | Ensure repo is set to Public and latest commits are pushed. |
 | **Demo Video** | Video strictly under 3 minutes explaining problem, solution, and live build. | `D:\ARGUS\docs\hackathon\Demo_Video_Script.md` | Record 2m 45s screen capture using OBS / Windows Game Bar following the script. |
 | **Student Verification** | Verify student status on AWS Builder Center via SheerID (Rule 5). | [AWS Builder Center](https://aws.amazon.com/developer/community/students/) | Sign in and complete student verification with college ID. |

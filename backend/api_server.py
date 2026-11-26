@@ -1804,7 +1804,7 @@ def get_releases_payload() -> Dict[str, Any]:
     return {
         "product": "ARGUS",
         "latest_version": "v2.0.0",
-        "repo_url": "https://github.com/Prabhav-020108/ARGUS",
+        "repo_url": "https://github.com/Open-Sauced-CODE/ARGUS",
         "live_portal_url": "http://13.201.224.53/",
         "desktop_build_status": "PLACEHOLDER_PENDING_BUILD",
         "runtime_mode": get_runtime_mode(),

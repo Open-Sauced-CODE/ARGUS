@@ -15,7 +15,7 @@ Instead of flooding resource-constrained university, government, and startup IT 
 | **Health & Telemetry Endpoint** | `http://ec2-13-201-224-53.ap-south-1.compute.amazonaws.com/api/health` |
 | **Live Windows Desktop Installer** | `/downloads/files/ARGUS-Desktop-Setup-v2.0.0-win64.exe` (`88.1 MB`, user-mode Inno Setup) & portable `.zip` (`114.7 MB`) |
 | **AWS Compute Region & Tier** | `ap-south-1` (Mumbai, India) — `t3.micro` (`i-0c5cdd36f0557e6d1`, 100% AWS Free Tier, ₹0 cost) |
-| **Public Code Repository** | `https://github.com/Prabhav-020108/ARGUS` |
+| **Public Code Repository** | `https://github.com/Open-Sauced-CODE/ARGUS` |
 | **Runtime Architecture** | Dual-Mode: AWS Cloud Showcase (`cloud_showcase`) + Local Zero-Egress Desktop Engine (`local_agent` on `127.0.0.1:8742`) |
 
 ---

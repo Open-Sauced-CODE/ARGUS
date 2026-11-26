@@ -9,7 +9,7 @@
 * **Track / Focus:** Cloud Security, Public Infrastructure Resilience, Bharat Impact.
 * **Target Environment:** Amazon Web Services (AWS) — Free Tier Deployable (`ap-south-1` Mumbai).
 * **Live Prototype URL:** [http://13.201.224.53/](http://13.201.224.53/)
-* **Code Repository:** [https://github.com/Prabhav-020108/ARGUS](https://github.com/Prabhav-020108/ARGUS)
+* **Code Repository:** [https://github.com/Open-Sauced-CODE/ARGUS](https://github.com/Open-Sauced-CODE/ARGUS)
 
 ---
 
