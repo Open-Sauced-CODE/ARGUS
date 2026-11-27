@@ -1,0 +1,464 @@
+"""Label greedy out-of-fold (OOF) predictions using P3 oracle (Shaurya-owned).
+
+Reads greedy OOF prediction files `fold{f}_preds.jsonl` from:
+  1. Explicit `--preds-dir` if specified, OR
+  2. Default `ml/train_m2/harvest_out/sft_oof_greedy/` (gitignored), falling back to
+     repository root (`fold{0..3}_preds.jsonl`) if present.
+If files are absent, STOPs with exit code 1 and instructs the operator to copy them from Drive.
+
+Rules:
+  - Validates file layout against ml/train_m1/score_oof.py and docs/phase6_shaurya/crossfit/folds.json.
+  - Strictly excludes and NEVER scores any held-out (B1, B2, C_verifier, gold, C-human) or A_val cluster.
+  - Labels each clean fold-f cluster against the reference for its own input_key (preserving record finding_id).
+  - Statistical unit is CLUSTER (distinct input_key).
+  - Evaluates sufficiency verdict via post_oof.evaluate_partial_oof for n = clean_oof + 15.
+  - Reports counts only (zero input content) + provenance JSON.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+from pathlib import Path
+import re
+import sys
+from typing import Any, Callable, Mapping, Sequence
+
+# Ensure repository root is on sys.path when invoked directly as a script
+_repo_root = str(Path(__file__).resolve().parents[3])
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+
+from ml.mutation_engine.dataset_io import input_key as ds_input_key
+from ml.train_m2.common import jsonl_iter, jsonl_write_atomic, load_inputs, repo_root, write_provenance
+from ml.train_m2.eval.ingest_oof import _build_fold_membership, _build_key_flags, _load_folds
+from ml.train_m2.eval.post_oof import evaluate_partial_oof
+from ml.train_m2.labels.oracle import (
+    OC_ESCALATED_OK,
+    OC_ESCALATED_UNNEEDED,
+    OC_FIXED_SHOULD_ESCALATE,
+    OC_MINIMAL_CORRECT,
+    OC_UNKNOWN,
+    OC_VALID_NOT_MINIMAL,
+    OC_WRONG,
+    SRC_REFERENCE,
+    label_candidate,
+)
+
+LOG = logging.getLogger("label_oof_greedy")
+DEFAULT_PREDS_RELDIR = Path("ml") / "train_m2" / "harvest_out" / "sft_oof_greedy"
+_FOLD_FILE_RE = re.compile(r"^fold(\d+)_preds\.jsonl$")
+SEED = 1337
+
+
+def resolve_preds_files(
+    root: Path,
+    preds_dir: Path | str | None = None,
+) -> tuple[Path | None, dict[int, Path]]:
+    """Locate fold*_preds.jsonl files without fetching anything.
+
+    When `preds_dir` is explicitly provided, searches ONLY that directory.
+    When `preds_dir` is None, searches `ml/train_m2/harvest_out/sft_oof_greedy/`
+    and falls back to repo root if absent there.
+    """
+    candidates: list[Path] = []
+    if preds_dir is not None:
+        d = Path(preds_dir)
+        if not d.is_absolute():
+            d = root / d
+        candidates = [d]
+    else:
+        candidates = [root / DEFAULT_PREDS_RELDIR, root]
+
+    for cand in candidates:
+        if not cand.is_dir():
+            continue
+        found: dict[int, Path] = {}
+        for p in sorted(cand.glob("fold*_preds.jsonl")):
+            m = _FOLD_FILE_RE.match(p.name)
+            if m:
+                found[int(m.group(1))] = p
+        if found:
+            return cand, found
+
+    return None, {}
+
+
+def load_train_reference_map(root: Path) -> dict[str, dict[str, Any]]:
+    """Load non-held-out training input_key -> {record, reference, route} from dataset/train.jsonl."""
+    train_path = root / "ml" / "mutation_engine" / "dataset" / "train.jsonl"
+    ref_map: dict[str, dict[str, Any]] = {}
+    if not train_path.is_file():
+        return ref_map
+    for ex in jsonl_iter(train_path):
+        ik = ds_input_key(ex)
+        if ik not in ref_map:
+            ref_map[ik] = {
+                "record": ex["input"],
+                "reference": ex.get("target"),
+                "route": (ex.get("meta") or {}).get("route", "fix"),
+            }
+    return ref_map
+
+
+def validate_preds_layout(
+    fold_paths: Mapping[int, Path],
+    folds_data: Mapping[str, Any],
+) -> dict[int, list[dict[str, Any]]]:
+    """Validate each fold{f}_preds.jsonl against score_oof.py layout and folds.json keys."""
+    preds_by_fold: dict[int, list[dict[str, Any]]] = {}
+    folds_map = folds_data.get("folds", {})
+
+    for f, p in sorted(fold_paths.items()):
+        rows: list[dict[str, Any]] = []
+        seen_keys: set[str] = set()
+        for row in jsonl_iter(p):
+            if "input_key" not in row or "content" not in row:
+                raise ValueError(
+                    f"{p.name}: missing required score_oof keys 'input_key'/'content'"
+                )
+            ik = row["input_key"]
+            if ik in seen_keys:
+                raise ValueError(f"{p.name}: duplicate input_key {ik[:40]!r}")
+            seen_keys.add(ik)
+            rows.append(row)
+
+        f_str = str(f)
+        if f_str in folds_map:
+            expected_keys = set(folds_map[f_str]["input_keys"])
+            if seen_keys != expected_keys:
+                raise ValueError(
+                    f"{p.name}: key set mismatch vs folds.json fold {f}: "
+                    f"missing={len(expected_keys - seen_keys)}, extra={len(seen_keys - expected_keys)}"
+                )
+        preds_by_fold[f] = rows
+
+    return preds_by_fold
+
+
+def label_clean_oof_greedy(
+    preds_by_fold: Mapping[int, Sequence[Mapping[str, Any]]],
+    fold_membership: Mapping[str, int],
+    key_flags: Mapping[str, Mapping[str, bool]],
+    ref_map: Mapping[str, Mapping[str, Any]],
+    *,
+    score_fn: Callable[[list[dict[str, Any]]], list[dict[str, Any]]] | None = None,
+    existing_unseen_clean: int = 15,
+    alpha: float = 0.05,
+    delta: float = 0.05,
+) -> dict[str, Any]:
+    """Label CLEAN fold-f greedy OOF clusters using the P3 oracle.
+
+    Strictly filters out held-out and A_val clusters BEFORE scoring. Never inspects or scores
+    held-out or A_val rows. Computes partial-fold Clopper-Pearson verdict via post_oof.evaluate_partial_oof.
+    """
+    if score_fn is None:
+        from ml.train_m1.eval.score import score_inputs  # FROZEN Phase 5 scorer
+        score_fn = score_inputs
+
+    per_fold_counts: list[dict[str, Any]] = []
+    partial_rows: list[dict[str, Any]] = []
+    clean_cluster_labels: dict[str, dict[str, Any]] = {}
+
+    total_raw = 0
+    total_excluded = 0
+    total_clean = 0
+    total_gp = 0
+    total_min_correct = 0
+    total_k = 0
+    total_vnm = 0
+    total_wrong = 0
+    total_fixed_esc = 0
+    total_unknown = 0
+    total_esc_ok = 0
+    total_esc_unneeded = 0
+
+    for f in sorted(preds_by_fold.keys()):
+        raw_rows = list(preds_by_fold[f])
+        clean_rows: list[Mapping[str, Any]] = []
+        excluded = 0
+
+        for r in raw_rows:
+            ik = r["input_key"]
+            flags = key_flags.get(ik, {})
+            if flags.get("in_heldout") or flags.get("in_a_val"):
+                excluded += 1
+                continue
+            if ik not in ref_map:
+                raise KeyError(f"Clean input_key missing from train reference map: {ik[:60]}")
+            clean_rows.append(r)
+
+        # Batch score ONLY clean rows via score_fn (never held-out or A_val)
+        score_items = []
+        for r in clean_rows:
+            ik = r["input_key"]
+            ref_entry = ref_map[ik]
+            score_items.append({
+                "record": ref_entry["record"],
+                "route": ref_entry.get("route", "fix"),
+                "reference": ref_entry.get("reference"),
+                "contents": [r.get("content", "")],
+            })
+
+        scored_results = score_fn(score_items) if score_items else []
+        if len(scored_results) != len(clean_rows):
+            raise RuntimeError(
+                f"Scorer returned {len(scored_results)} items for {len(clean_rows)} clean inputs"
+            )
+
+        f_gp = 0
+        f_min_correct = 0
+        f_k = 0
+        f_vnm = 0
+        f_wrong = 0
+        f_fixed_esc = 0
+        f_unknown = 0
+        f_esc_ok = 0
+        f_esc_unneeded = 0
+
+        for r, score_res in zip(clean_rows, scored_results):
+            ik = r["input_key"]
+            content = r.get("content", "")
+            ref_entry = ref_map[ik]
+            record = ref_entry["record"]
+            reference = ref_entry.get("reference")
+            route = ref_entry.get("route", "fix")
+
+            cands = score_res.get("candidates", [])
+            scored_cand = cands[0] if cands else {"gate_passed": False, "outcome": "rejected", "hidden": None}
+
+            try:
+                parsed = json.loads(content) if isinstance(content, str) and content.strip() else None
+                patch = parsed if isinstance(parsed, dict) else None
+            except (json.JSONDecodeError, TypeError):
+                patch = None
+
+            label_row = label_candidate(
+                record=record,
+                patch=patch,
+                reference=reference,
+                route=route,
+                scored=scored_cand,
+                source=SRC_REFERENCE,
+                source_file=f"fold{f}_preds.jsonl",
+                generator="sft_oof",
+                profile="A",
+                sample_idx=0,
+                input_key=ik,
+                content=content,
+            )
+
+            oc = label_row.oracle_class
+            gp = bool(label_row.gate_pass)
+            if gp:
+                f_gp += 1
+
+            is_wrong_cluster = False
+            if oc == OC_MINIMAL_CORRECT:
+                f_min_correct += 1
+            elif oc == OC_VALID_NOT_MINIMAL:
+                f_vnm += 1
+                is_wrong_cluster = gp
+            elif oc == OC_WRONG:
+                f_wrong += 1
+                is_wrong_cluster = gp
+            elif oc == OC_FIXED_SHOULD_ESCALATE:
+                f_fixed_esc += 1
+                is_wrong_cluster = gp
+            elif oc == OC_UNKNOWN:
+                f_unknown += 1
+            elif oc == OC_ESCALATED_OK:
+                f_esc_ok += 1
+            elif oc == OC_ESCALATED_UNNEEDED:
+                f_esc_unneeded += 1
+
+            if is_wrong_cluster:
+                f_k += 1
+
+            # Partial-OOF row preserving record's finding_id
+            partial_oc = OC_WRONG if oc == OC_FIXED_SHOULD_ESCALATE else oc
+            partial_rows.append({
+                "input_key": ik,
+                "crossfit_fold": f,
+                "sample_idx": 0,
+                "gate_pass": gp,
+                "oracle_class": partial_oc,
+                "finding_id": record.get("finding_id"),
+                "patch": patch,
+            })
+            clean_cluster_labels[ik] = {
+                "fold": f,
+                "route": route,
+                "gate_pass": gp,
+                "outcome": label_row.outcome,
+                "oracle_class": oc,
+                "strict_correct": label_row.strict_correct,
+            }
+
+        per_fold_counts.append({
+            "fold": f,
+            "raw_clusters": len(raw_rows),
+            "excluded_heldout_or_aval": excluded,
+            "clean_clusters": len(clean_rows),
+            "gate_pass": f_gp,
+            "minimal_correct": f_min_correct,
+            "gate_pass_and_wrong_k": f_k,
+            "valid_not_minimal": f_vnm,
+            "wrong": f_wrong,
+            "fixed_should_escalate": f_fixed_esc,
+            "unknown": f_unknown,
+            "escalated_ok": f_esc_ok,
+            "escalated_unneeded": f_esc_unneeded,
+        })
+
+        total_raw += len(raw_rows)
+        total_excluded += excluded
+        total_clean += len(clean_rows)
+        total_gp += f_gp
+        total_min_correct += f_min_correct
+        total_k += f_k
+        total_vnm += f_vnm
+        total_wrong += f_wrong
+        total_fixed_esc += f_fixed_esc
+        total_unknown += f_unknown
+        total_esc_ok += f_esc_ok
+        total_esc_unneeded += f_esc_unneeded
+
+    partial_verdict = evaluate_partial_oof(
+        partial_rows,
+        dict(fold_membership),
+        {k: dict(v) for k, v in key_flags.items()},
+        existing_unseen_clean=existing_unseen_clean,
+        alpha=alpha,
+        delta=delta,
+    )
+
+    return {
+        "per_fold": per_fold_counts,
+        "totals": {
+            "raw_clusters": total_raw,
+            "excluded_heldout_or_aval": total_excluded,
+            "clean_clusters": total_clean,
+            "gate_pass": total_gp,
+            "minimal_correct": total_min_correct,
+            "gate_pass_and_wrong_k": total_k,
+            "valid_not_minimal": total_vnm,
+            "wrong": total_wrong,
+            "fixed_should_escalate": total_fixed_esc,
+            "unknown": total_unknown,
+            "escalated_ok": total_esc_ok,
+            "escalated_unneeded": total_esc_unneeded,
+        },
+        "clean_k": partial_verdict["k"],
+        "existing_clean_clusters": existing_unseen_clean,
+        "total_clean_n": partial_verdict["total_clean_clusters"],
+        "cp_min_n": partial_verdict["cp_min_n"],
+        "verdict": partial_verdict["verdict"],
+        "needed_more": partial_verdict["needed_more"],
+        "remaining_folds": partial_verdict["remaining_folds"],
+        "covering_folds": partial_verdict["covering_folds"],
+        "covering_status": partial_verdict["covering_status"],
+        "clean_cluster_labels": clean_cluster_labels,
+    }
+
+
+def render_label_oof_greedy_report(summary: Mapping[str, Any]) -> str:
+    """Render counts-only markdown summary (zero input content)."""
+    lines = [
+        "# OOF Greedy Predictions P3 Oracle Summary (Clean Clusters Only)",
+        "",
+        "| Fold | Raw | Excluded (Heldout/A_val) | Clean Clusters | Gate-Pass | Minimal Correct | Gate-Pass-and-Wrong (k) | valid_not_minimal | unknown |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for r in summary["per_fold"]:
+        lines.append(
+            f"| {r['fold']} | {r['raw_clusters']} | {r['excluded_heldout_or_aval']} | "
+            f"{r['clean_clusters']} | {r['gate_pass']} | {r['minimal_correct']} | "
+            f"{r['gate_pass_and_wrong_k']} | {r['valid_not_minimal']} | {r['unknown']} |"
+        )
+    t = summary["totals"]
+    lines.append(
+        f"| **Total** | **{t['raw_clusters']}** | **{t['excluded_heldout_or_aval']}** | "
+        f"**{t['clean_clusters']}** | **{t['gate_pass']}** | **{t['minimal_correct']}** | "
+        f"**{t['gate_pass_and_wrong_k']}** | **{t['valid_not_minimal']}** | **{t['unknown']}** |"
+    )
+    lines.extend([
+        "",
+        "## Certification Verdict (Partial-Fold Post-OOF)",
+        "",
+        f"- Clean OOF clusters: {t['clean_clusters']}",
+        f"- Existing clean clusters: {summary['existing_clean_clusters']}",
+        f"- Total clean clusters n: **{summary['total_clean_n']}**",
+        f"- Clean gate-pass-and-wrong count k: **{summary['clean_k']}**",
+        f"- Clopper-Pearson minimum n required (alpha=0.05, delta=0.05): **{summary['cp_min_n']}**",
+        f"- **Verdict: {summary['verdict']}**",
+        f"- Remaining folds: {summary['remaining_folds']}",
+        f"- Coverage: {summary['covering_status']}",
+    ])
+    return "\n".join(lines) + "\n"
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    logging.basicConfig(level=logging.INFO, stream=sys.stderr)
+    p = argparse.ArgumentParser(description="Label greedy OOF predictions via P3 oracle")
+    p.add_argument("--preds-dir", default=None, help="Directory with fold{f}_preds.jsonl (default checks harvest_out/sft_oof_greedy then repo root)")
+    p.add_argument("--folds", default="docs/phase6_shaurya/crossfit/folds.json", help="Path to folds.json")
+    p.add_argument("--out-dir", default="ml/train_m2/out/reports", help="Output directory for counts-only report")
+    p.add_argument("--seed", type=int, default=SEED, help="Seed (default 1337)")
+    args = p.parse_args(argv)
+
+    root = repo_root()
+    resolved_dir, fold_paths = resolve_preds_files(root, preds_dir=args.preds_dir)
+    if not fold_paths:
+        msg = (
+            "STOP: Greedy OOF predictions (fold{0..3}_preds.jsonl) are absent under "
+            f"{args.preds_dir or DEFAULT_PREDS_RELDIR.as_posix()}. "
+            "Please copy them from Google Drive (/content/drive/MyDrive/argus/out_crossfit/) "
+            "into ml/train_m2/harvest_out/sft_oof_greedy/ (do not fetch automatically)."
+        )
+        print(msg, file=sys.stderr)
+        return 1
+
+    folds_path = Path(args.folds)
+    if not folds_path.is_absolute():
+        folds_path = root / folds_path
+    folds_data = _load_folds(folds_path)
+    fold_membership = _build_fold_membership(folds_data)
+    key_flags = _build_key_flags(load_inputs())
+    ref_map = load_train_reference_map(root)
+
+    preds_by_fold = validate_preds_layout(fold_paths, folds_data)
+    summary = label_clean_oof_greedy(
+        preds_by_fold,
+        fold_membership,
+        key_flags,
+        ref_map,
+    )
+
+    out_dir = Path(args.out_dir)
+    if not out_dir.is_absolute():
+        out_dir = root / out_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Counts-only output JSON (strip per-key map from public report artifact or keep non-content summary)
+    report_payload = {k: v for k, v in summary.items() if k != "clean_cluster_labels"}
+    report_md = out_dir / "oof_greedy_labels.md"
+    report_json = out_dir / "oof_greedy_labels.json"
+
+    md_text = render_label_oof_greedy_report(summary)
+    report_md.write_text(md_text, encoding="utf-8", newline="\n")
+    jsonl_write_atomic(report_json, [report_payload])
+    rel_dir = resolved_dir.relative_to(root).as_posix() if resolved_dir and resolved_dir.is_relative_to(root) else "."
+    write_provenance(
+        report_json,
+        inputs=list(fold_paths.values()),
+        seed=args.seed,
+        extra={"preds_source_dir": rel_dir, "folds": sorted(fold_paths.keys())},
+    )
+
+    print(md_text)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
