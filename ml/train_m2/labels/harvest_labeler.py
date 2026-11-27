@@ -44,8 +44,15 @@ from ml.train_m2.labels.partitions import build_partition_flags, load_partition_
 
 LOG = logging.getLogger(__name__)
 
-HARVEST_GENERATORS = ("zeroshot", "sft", "rft", "rft_v2")
+HARVEST_GENERATORS = ("zeroshot", "sft", "rft", "rft_v2", "sft_oof")
 HARVEST_PROFILE = "A"
+
+FEATURE_GENERATOR_MAP = {"sft_oof": "sft"}
+
+
+def remap_generator_for_features(generator: str) -> str:
+    """Remap sft_oof -> sft at feature/training/calibration time while preserving provenance."""
+    return FEATURE_GENERATOR_MAP.get(generator, generator)
 
 
 def _iter_harvest_rows(
@@ -210,6 +217,9 @@ def label_harvest(
             row_dict["train_only"] = False
             row_dict["patch_ops"] = (patch or {}).get("ops", [])
             row_dict["candidate_set"] = "harvest"
+            row_dict["feature_generator"] = remap_generator_for_features(generator)
+            if sample_row.get("crossfit_fold") is not None:
+                row_dict["crossfit_fold"] = int(sample_row["crossfit_fold"])
             row_dict.update(partition_flags)
 
             labeled_rows.append(row_dict)
@@ -266,15 +276,20 @@ def label_harvest(
     harvest_dir = root / "ml" / "train_m2" / "harvest_out" / generator / HARVEST_PROFILE
     input_files = sorted(harvest_dir.glob("part-*.jsonl")) if harvest_dir.exists() else []
     input_files.append(root / "ml" / "train_m2" / "contract" / "harvest_inputs.jsonl")
+    crossfit_folds = sorted({int(r["crossfit_fold"]) for r in harvest_rows if r.get("crossfit_fold") is not None})
+    extra_prov: dict[str, Any] = {
+        "generator": generator,
+        "feature_generator": remap_generator_for_features(generator),
+        "profile": HARVEST_PROFILE,
+        "wall_time_s": round(elapsed, 2),
+    }
+    if crossfit_folds:
+        extra_prov["crossfit_folds"] = crossfit_folds
     write_provenance(
         out_path,
         inputs=[p for p in input_files if p.exists()],
         seed=seed,
-        extra={
-            "generator": generator,
-            "profile": HARVEST_PROFILE,
-            "wall_time_s": round(elapsed, 2),
-        },
+        extra=extra_prov,
     )
 
     # Finalize stats

@@ -652,15 +652,17 @@ def run_post_oof(
         X_va, y_va = td["X_va"], td["y_va"]
         meta_va = td["meta_va"]
     else:
-        # Check if real harvest labels exist for generator
+        # Check if real harvest labels exist for generator (include sft_oof for sft via feature-time remap)
         real_label_path = root / "ml" / "train_m2" / "out" / "labels" / "harvest" / f"{generator}.jsonl"
+        oof_label_path = root / "ml" / "train_m2" / "out" / "labels" / "harvest" / "sft_oof.jsonl"
+        frame_gens = [generator] + (["sft_oof"] if generator == "sft" and oof_label_path.is_file() else [])
         X_tr, y_tr, X_va, y_va, meta_va = None, None, None, None, None
         if real_label_path.is_file() and not synthetic_fixture:
             try:
                 from ml.train_m2.run_m2 import _frame
-                X_tr, meta_tr = _frame([generator], "train", new_splits)
+                X_tr, meta_tr = _frame(frame_gens, "train", new_splits)
                 y_tr = meta_tr["y"].to_numpy()
-                X_va, meta_va = _frame([generator], "val", new_splits)
+                X_va, meta_va = _frame(frame_gens, "val", new_splits)
                 y_va = meta_va["y"].to_numpy()
             except Exception as e:
                 LOG.warning("Failed to load real frames for %s (%s); falling back to synthetic", generator, e)
@@ -687,16 +689,19 @@ def run_post_oof(
         cd = synthetic_fixture["cal_data"]
         scores, wrong = cd["scores"], cd["wrong"]
     else:
-        # Check if real cal data can be computed
+        # Check if real cal data can be computed (include sft_oof for sft via feature-time remap)
         real_label_path = root / "ml" / "train_m2" / "out" / "labels" / "harvest" / f"{generator}.jsonl"
+        oof_label_path = root / "ml" / "train_m2" / "out" / "labels" / "harvest" / "sft_oof.jsonl"
+        cal_gens = [generator] + (["sft_oof"] if generator == "sft" and oof_label_path.is_file() else [])
         scores, wrong = None, None
         if real_label_path.is_file() and not synthetic_fixture:
             try:
                 from ml.train_m2.risk.decisions import select_decisions
                 from ml.train_m2.run_m2 import _frame
-                X_ca, meta_ca = _frame([generator], "cal", new_splits)
+                X_ca, meta_ca = _frame(cal_gens, "cal", new_splits)
                 fr_ca = meta_ca.assign(score=T.predict(art, X_ca))
-                sel = select_decisions(fr_ca[fr_ca["generator"] == generator])
+                eff_gen = "sft" if generator == "sft_oof" else generator
+                sel = select_decisions(fr_ca[fr_ca["generator"] == eff_gen])
                 scores = sel["score"].to_numpy()
                 wrong = (1 - sel["y"]).to_numpy()
             except Exception as e:

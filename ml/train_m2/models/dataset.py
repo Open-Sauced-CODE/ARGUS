@@ -64,22 +64,37 @@ def build_frame(label_rows: Iterable[Mapping[str, Any]], harvest_by_gen: Mapping
         info = info_by_key.get(lr["input_key"])
         if info is None or info.get("route") != "fix":
             continue
-        gen = lr["generator"]
-        hv = harvest_by_gen.get(gen, {})
+        raw_gen = lr["generator"]
+        eff_gen = "sft" if raw_gen == "sft_oof" else raw_gen
+        hv = harvest_by_gen.get(raw_gen) if raw_gen in harvest_by_gen else harvest_by_gen.get(eff_gen, {})
         row = hv.get((lr["input_key"], int(lr["sample_idx"])))
         if row is None:
             n_skipped += 1
             continue
-        ck = (gen, lr["input_key"])
+        ck = (raw_gen, lr["input_key"])
         if ck not in cohorts:
             cohorts[ck] = [hv[(lr["input_key"], i)] for i in range(64) if (lr["input_key"], i) in hv]
         f = compute_features(row, cohorts[ck], {"rule_id": info["rule_id"], "route": info["route"]})
         f.pop("spec_hash")
         feats.append(f)
-        metas.append({"input_key": lr["input_key"], "generator": gen, "sample_idx": int(lr["sample_idx"]),
-                      "rule_id": info["rule_id"], "y": int(cls == POS), "oracle_class": cls})
+        meta_entry: dict[str, Any] = {
+            "input_key": lr["input_key"],
+            "generator": eff_gen,
+            "source_generator": raw_gen,
+            "sample_idx": int(lr["sample_idx"]),
+            "rule_id": info["rule_id"],
+            "y": int(cls == POS),
+            "oracle_class": cls,
+        }
+        cf_val = lr.get("crossfit_fold") if lr.get("crossfit_fold") is not None else row.get("crossfit_fold")
+        if cf_val is not None:
+            meta_entry["crossfit_fold"] = cf_val
+        metas.append(meta_entry)
     X = pd.DataFrame(feats, columns=R.names()).astype(float)
-    meta = pd.DataFrame(metas, columns=["input_key", "generator", "sample_idx", "rule_id", "y", "oracle_class"])
+    meta_cols = ["input_key", "generator", "source_generator", "sample_idx", "rule_id", "y", "oracle_class"]
+    if any("crossfit_fold" in m for m in metas):
+        meta_cols.append("crossfit_fold")
+    meta = pd.DataFrame(metas, columns=meta_cols)
     meta.attrs["n_unjoined_label_rows"] = n_skipped
     return X, meta
 

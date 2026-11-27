@@ -511,10 +511,17 @@ def test_crossfit_package_md_no_remove_lines_and_tolerance_paragraph():
     # Verify neutral recipe note sentence
     assert "These settings are the SFT recipe from 01_sft.ipynb, not the rft_v2 recipe." in text
 
-    # Verify error tolerance paragraph with Clopper-Pearson and quoted cp_upper values
-    assert "59 clean clusters certify only at zero errors" in text
-    assert "~95 are needed with one error" in text
-    assert "~126 with two" in text
+    # Verify error tolerance paragraph with exact Clopper-Pearson values and acceptance-rate caveat
+    assert "k=0 requires 59" in text
+    assert "k=1 requires 93" in text
+    assert "k=2 requires 124" in text
+    assert "k=3 requires 153" in text
+    assert "k=4 requires 181" in text
+    assert "k=5 requires 208" in text
+    assert "~95" not in text
+    assert "~126" not in text
+    assert "95/126" not in text
+    assert "clean clusters needed also depends on the fraction of drafts accepted at tau" in text.lower()
     assert "Clopper-Pearson" in text
     assert "cp_upper" in text
 

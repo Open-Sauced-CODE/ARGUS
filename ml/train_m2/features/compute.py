@@ -140,8 +140,11 @@ def _rule_gen(row: Mapping[str, Any], ctx: Mapping[str, Any]) -> dict[str, float
         "rule_code": float(R.KNOWN_RULES.index(rid)) if rid in R.KNOWN_RULES else -1.0,
         "n_rule_fields": float(len(fields)) if fields is not None else None,
         "route_is_escalate": float(ctx.get("route") == "escalate")}
+    # Remap sft_oof -> sft at feature-time only without changing registry or spec_hash
+    raw_gen = row.get("generator")
+    eff_gen = "sft" if raw_gen == "sft_oof" else raw_gen
     for g in R.GENERATORS:
-        out[f"gen_{g}"] = float(row.get("generator") == g)
+        out[f"gen_{g}"] = float(eff_gen == g)
     return out
 
 

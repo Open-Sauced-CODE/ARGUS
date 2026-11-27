@@ -74,7 +74,14 @@ from ml.train_m2.labels.partitions import (
 LOG = logging.getLogger(__name__)
 
 GENERATORS = ("zeroshot", "sft", "rft")
-HARVEST_GENERATORS = ("zeroshot", "sft", "rft", "rft_v2")
+HARVEST_GENERATORS = ("zeroshot", "sft", "rft", "rft_v2", "sft_oof")
+
+FEATURE_GENERATOR_MAP = {"sft_oof": "sft"}
+
+
+def remap_generator_for_features(generator: str) -> str:
+    """Map sft_oof -> sft for feature/training/calibration while keeping provenance."""
+    return FEATURE_GENERATOR_MAP.get(generator, generator)
 
 # All Phase 5 candidate sets
 ALL_CANDIDATE_SETS = ("A_val", "train300", "B1", "B2", "C_verifier", "gold")
@@ -361,6 +368,22 @@ def main(argv: list[str] | None = None) -> int:
                 "candidate_sets": list(ALL_CANDIDATE_SETS),
             },
         )
+
+    if root is not None:
+        sft_oof_dir = root / "ml" / "train_m2" / "harvest_out" / "sft_oof" / "A"
+        if sft_oof_dir.exists() and any(sft_oof_dir.glob("part-*.jsonl")):
+            from ml.train_m2.labels.harvest_labeler import label_harvest
+            LOG.info("Processing sft_oof harvest rows (remapped for features -> sft)")
+            oof_stats = label_harvest(
+                generator="sft_oof",
+                root=root,
+                ref_map=ref_map,
+                hi_map=hi_map,
+                partition_sets=partition_sets,
+                out_dir=out_dir,
+                seed=args.seed,
+            )
+            all_stats["sft_oof"] = oof_stats
 
     if root is not None:
         p5_counts, p5_union = reproduce_phase5_natural_negatives(root)

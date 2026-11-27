@@ -241,7 +241,7 @@ Add to each harvest line:
 
 ## Acceptance checklist (Prabhav must satisfy ALL before delivering)
 
-59 clean clusters certify only at zero errors; ~95 are needed with one error and ~126 with two (Clopper-Pearson, alpha 0.05, delta 0.05; computed with `ml/train_m2/risk/ltt.py` `cp_upper`: `cp_upper(0, 59, 0.05) = 0.0495`, `cp_upper(1, 95, 0.05) = 0.0490`, `cp_upper(2, 126, 0.05) = 0.0491`). With 168 clean unseen clusters from all 5 folds (183 total with the existing 15), or 102 from the 3-fold fallback (117 total), the harvest provides sufficient margin to absorb candidate errors while certifying.
+Exact Clopper-Pearson minimum clean clusters at alpha 0.05, delta 0.05 (computed with `ml/train_m2/risk/ltt.py` `cp_upper`): k=0 requires 59 (`cp_upper(0, 59, 0.05) = 0.0495`), k=1 requires 93 (`cp_upper(1, 93, 0.05) = 0.0500`), k=2 requires 124 (`cp_upper(2, 124, 0.05) = 0.0499`), k=3 requires 153 (`cp_upper(3, 153, 0.05) = 0.0499`), k=4 requires 181 (`cp_upper(4, 181, 0.05) = 0.0499`), and k=5 requires 208 (`cp_upper(5, 208, 0.05) = 0.0499`). Clean clusters needed also depends on the fraction of drafts accepted at tau. With 168 clean unseen clusters from all 5 folds (183 total with the existing 15), or 102 from the 3-fold fallback (117 total), the harvest provides sufficient margin to absorb candidate errors while certifying.
 
 | Check | Requirement |
 |---|---|
