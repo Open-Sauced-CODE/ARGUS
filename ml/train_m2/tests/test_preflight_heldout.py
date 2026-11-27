@@ -66,12 +66,13 @@ def clean_preflight_env(tmp_path: Path) -> dict[str, Any]:
     }
     (docs_dir / "PREFLIGHT_HASHES.json").write_text(json.dumps(hashes), encoding="utf-8")
 
-    # HELDOUT_DECISION.md
+    # HELDOUT_DECISION.md (human-authored in production; synthetic fixture here)
     decision_text = (
         "# Held-Out Decision\n"
-        "**Decision:** PATH B (S4 not certified)\n"
-        "**Date:** 2026-11-23\n"
-        "**Clean Cluster Count:** 15\n"
+        "Decided by: Shaurya (human)\n"
+        "Decision: PATH B (S4 not certified)\n"
+        "Date: 2026-11-23\n"
+        "Clean Cluster Count: 15\n"
     )
     (docs_dir / "HELDOUT_DECISION.md").write_text(decision_text, encoding="utf-8")
 
@@ -170,7 +171,7 @@ def test_preflight_fails_if_heldout_decision_ambiguous(clean_preflight_env: dict
     """Preflight fails if HELDOUT_DECISION.md contains both PATH A and PATH B."""
     root = clean_preflight_env["root"]
     (root / "docs" / "phase6_shaurya" / "HELDOUT_DECISION.md").write_text(
-        "PATH A (OOF ingested)\nPATH B (S4 not certified)\nDate: 2026-11-23\nCount: 15\n",
+        "Decided by: Shaurya (human)\nPATH A (OOF ingested)\nPATH B (S4 not certified)\nDate: 2026-11-23\nCount: 15\n",
         encoding="utf-8",
     )
 
@@ -179,11 +180,49 @@ def test_preflight_fails_if_heldout_decision_ambiguous(clean_preflight_env: dict
     assert "Must state exactly one" in res.detail
 
 
+def test_preflight_fails_without_decided_by_line(clean_preflight_env: dict[str, Any]):
+    """Preflight fails if HELDOUT_DECISION.md lacks 'Decided by: Shaurya (human)'."""
+    root = clean_preflight_env["root"]
+    (root / "docs" / "phase6_shaurya" / "HELDOUT_DECISION.md").write_text(
+        "PATH B (S4 not certified)\nDate: 2026-11-23\nClean Cluster Count: 15\n",
+        encoding="utf-8",
+    )
+
+    res = PH.check_heldout_decision(root)
+    assert not res.passed
+    assert "Decided by: Shaurya (human)" in res.detail
+
+
+def test_preflight_fails_with_path_b_alone(clean_preflight_env: dict[str, Any]):
+    """Preflight fails if HELDOUT_DECISION.md contains PATH B alone."""
+    root = clean_preflight_env["root"]
+    (root / "docs" / "phase6_shaurya" / "HELDOUT_DECISION.md").write_text(
+        "PATH B (S4 not certified)\n",
+        encoding="utf-8",
+    )
+
+    res = PH.check_heldout_decision(root)
+    assert not res.passed
+
+
+def test_preflight_fails_without_date_line(clean_preflight_env: dict[str, Any]):
+    """Preflight fails if HELDOUT_DECISION.md lacks a Date: YYYY-MM-DD line."""
+    root = clean_preflight_env["root"]
+    (root / "docs" / "phase6_shaurya" / "HELDOUT_DECISION.md").write_text(
+        "Decided by: Shaurya (human)\nPATH B (S4 not certified)\nClean Cluster Count: 15\n",
+        encoding="utf-8",
+    )
+
+    res = PH.check_heldout_decision(root)
+    assert not res.passed
+    assert "Date:" in res.detail
+
+
 def test_preflight_fails_if_path_a_missing_report(clean_preflight_env: dict[str, Any]):
     """Preflight fails if PATH A is selected but no ingest_oof report exists."""
     root = clean_preflight_env["root"]
     (root / "docs" / "phase6_shaurya" / "HELDOUT_DECISION.md").write_text(
-        "**Decision:** PATH A (OOF ingested)\n**Date:** 2026-11-23\n**Clean Cluster Count:** 72\n",
+        "Decided by: Shaurya (human)\n**Decision:** PATH A (OOF ingested)\nDate: 2026-11-23\n**Clean Cluster Count:** 72\n",
         encoding="utf-8",
     )
 
@@ -196,7 +235,7 @@ def test_preflight_fails_if_path_a_clean_clusters_below_claimed(clean_preflight_
     """Preflight fails if PATH A report has fewer clean clusters than claimed."""
     root = clean_preflight_env["root"]
     (root / "docs" / "phase6_shaurya" / "HELDOUT_DECISION.md").write_text(
-        "**Decision:** PATH A (OOF ingested)\n**Date:** 2026-11-23\n**Clean Cluster Count:** 72\n",
+        "Decided by: Shaurya (human)\n**Decision:** PATH A (OOF ingested)\nDate: 2026-11-23\n**Clean Cluster Count:** 72\n",
         encoding="utf-8",
     )
     rep_dir = root / "ml" / "train_m2" / "out" / "reports"

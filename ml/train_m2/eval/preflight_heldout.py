@@ -64,7 +64,7 @@ def check_run_log_absent(root: Path) -> CheckResult:
     """Check 1: RUN_LOG_M2.md must be strictly absent."""
     log_path = root / "ml" / "train_m2" / "eval" / "RUN_LOG_M2.md"
     if log_path.exists():
-        return CheckResult("RUN_LOG_M2 absent", False, f"RUN_LOG_M2.md exists at {log_path}")
+        return CheckResult("RUN_LOG_M2 absent", False, "RUN_LOG_M2.md exists at ml/train_m2/eval/RUN_LOG_M2.md")
     return CheckResult("RUN_LOG_M2 absent", True, "RUN_LOG_M2.md is absent")
 
 
@@ -216,7 +216,7 @@ def check_artifact_hashes(root: Path, preflight_hashes_path: Path | None = None)
     """Check 5: Five artifact hashes match committed PREFLIGHT_HASHES.json."""
     hashes_file = preflight_hashes_path or (root / "docs" / "phase6_shaurya" / "PREFLIGHT_HASHES.json")
     if not hashes_file.is_file():
-        return CheckResult("Artifact hashes", False, f"PREFLIGHT_HASHES.json not found at {hashes_file}")
+        return CheckResult("Artifact hashes", False, "PREFLIGHT_HASHES.json not found at docs/phase6_shaurya/PREFLIGHT_HASHES.json")
 
     try:
         expected = json.loads(hashes_file.read_text(encoding="utf-8"))
@@ -251,7 +251,7 @@ def check_splits_hash(root: Path) -> CheckResult:
     """Check 6: splits.json internal hash matches and equals plan hash."""
     splits_file = root / "ml" / "train_m2" / "out" / "m2" / "splits.json"
     if not splits_file.is_file():
-        return CheckResult("Splits internal hash", False, f"splits.json not found at {splits_file}")
+        return CheckResult("Splits internal hash", False, "splits.json not found at ml/train_m2/out/m2/splits.json")
 
     try:
         s = json.loads(splits_file.read_text(encoding="utf-8"))
@@ -282,7 +282,7 @@ def check_heldout_decision(root: Path) -> CheckResult:
     """Check 7 & 8: HELDOUT_DECISION.md exists and validates correctly."""
     dec_file = root / "docs" / "phase6_shaurya" / "HELDOUT_DECISION.md"
     if not dec_file.is_file():
-        return CheckResult("Held-out decision doc", False, f"HELDOUT_DECISION.md not found at {dec_file}")
+        return CheckResult("Held-out decision doc", False, "HELDOUT_DECISION.md not found at docs/phase6_shaurya/HELDOUT_DECISION.md")
 
     text = dec_file.read_text(encoding="utf-8")
     has_path_a = "PATH A (OOF ingested)" in text
@@ -298,10 +298,23 @@ def check_heldout_decision(root: Path) -> CheckResult:
     # Strip markdown emphasis and headings for field matching
     clean_text = text.replace("*", "").replace("#", "")
 
-    # Check date format YYYY-MM-DD
-    date_match = re.search(r"\b202[0-9]-[0-1][0-9]-[0-3][0-9]\b", clean_text)
-    if not date_match:
-        return CheckResult("Held-out decision doc", False, "Missing date in YYYY-MM-DD format")
+    # Require explicit human sign-off line and Date line
+    lines = [ln.strip() for ln in clean_text.splitlines()]
+    if "Decided by: Shaurya (human)" not in lines:
+        return CheckResult(
+            "Held-out decision doc",
+            False,
+            "Missing required line 'Decided by: Shaurya (human)'",
+        )
+
+    date_line_match = None
+    for ln in lines:
+        m = re.match(r"^Date:\s*(202[0-9]-[0-1][0-9]-[0-3][0-9])\b", ln)
+        if m:
+            date_line_match = m
+            break
+    if not date_line_match:
+        return CheckResult("Held-out decision doc", False, "Missing 'Date: YYYY-MM-DD' line")
 
     # Check clean cluster count
     count_match = re.search(r"(?i)(?:clean[- ]cluster count|clean clusters|count)\s*[:=]?\s*(\d+)", clean_text)
@@ -327,7 +340,7 @@ def check_heldout_decision(root: Path) -> CheckResult:
             return CheckResult(
                 "Held-out decision doc",
                 False,
-                f"PATH A selected but no ingest_oof report found in {reports_dir}",
+                "PATH A selected but no ingest_oof report found in ml/train_m2/out/reports",
             )
 
         try:
@@ -351,7 +364,7 @@ def check_heldout_decision(root: Path) -> CheckResult:
     return CheckResult(
         "Held-out decision doc",
         True,
-        f"{path_str} valid (date: {date_match.group(0)}, clean clusters: {claimed_count})",
+        f"{path_str} valid (date: {date_line_match.group(1)}, clean clusters: {claimed_count})",
     )
 
 

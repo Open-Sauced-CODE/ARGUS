@@ -2,6 +2,7 @@
 
 Calls preflight_heldout to verify all preconditions, data integrity,
 and safety gates before permitting any held-out evaluation.
+Only the human creates docs/phase6_shaurya/HELDOUT_DECISION.md; agents must never create it.
 """
 from __future__ import annotations
 
