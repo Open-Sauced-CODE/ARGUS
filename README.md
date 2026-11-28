@@ -252,4 +252,4 @@ Built by undergraduate engineering students at **R. V. College of Engineering (R
 
 ## License
 
-License: to be added by the maintainers.
+**Proprietary - All Rights Reserved.** This repository is not open-source. No part of this codebase may be used, copied, modified, or distributed without prior written permission from the authors. See [LICENSE](LICENSE) for details.
