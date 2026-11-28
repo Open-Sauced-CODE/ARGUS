@@ -1,0 +1,83 @@
+{
+  "generated_by": "Shaurya (P6J)",
+  "git_commit": "5bcfc9b080766fb9a4153150f4b682164de84c08",
+  "utc_time": "2026-11-27T08:37:35.580047Z",
+  "schema_version": "1.0",
+  "note": "Fields marked UNVERIFIED come from messages/claims, not from files in the repo. INVALID folds are excluded from labeling and near-dup checks. INVALID files are NOT copied to docs/phase6_shaurya/crossfit/oof_preds/.",
+  "folds": {
+    "0": {
+      "file": "fold0_preds.jsonl",
+      "sha256": "1b25a16b6b554e77066564d795fe895a0707617d7e384ca95a2f3f787a38ac74",
+      "rows": 55,
+      "distinct_keys": 55,
+      "schema_valid_fraction": 1.0,
+      "status": "VALID",
+      "trained_by": "Prabhav",
+      "final_checkpoint": "checkpoint-324 (UNVERIFIED)",
+      "resumed": "UNVERIFIED",
+      "unsloth_version": "UNVERIFIED",
+      "precision": "UNVERIFIED",
+      "notes": "Trained by Prabhav; checkpoint number is an UNVERIFIED claim from messages. Resumed/precision/unsloth_version are UNVERIFIED (not recorded in files)."
+    },
+    "1": {
+      "file": "fold1_preds.jsonl",
+      "sha256": "645f578658631b4cd5ce652b811bcb3d601256dd37c6c9b8901d9ed08f533c28",
+      "rows": 50,
+      "distinct_keys": 50,
+      "schema_valid_fraction": 1.0,
+      "status": "VALID",
+      "trained_by": "Prabhav",
+      "final_checkpoint": "checkpoint-354 (UNVERIFIED)",
+      "resumed": "UNVERIFIED",
+      "unsloth_version": "UNVERIFIED",
+      "precision": "UNVERIFIED",
+      "notes": "Trained by Prabhav; checkpoint number is an UNVERIFIED claim from messages. Resumed/precision/unsloth_version are UNVERIFIED (not recorded in files)."
+    },
+    "2": {
+      "file": "fold2_preds.jsonl",
+      "sha256": "9942e8a32159a3178d28ac4043552bfdc52c0eb519b0893055f025cde690bfe9",
+      "rows": 43,
+      "distinct_keys": 43,
+      "schema_valid_fraction": 0.0,
+      "status": "INVALID",
+      "trained_by": "Shaurya (UNVERIFIED)",
+      "final_checkpoint": "checkpoint-384 (UNVERIFIED)",
+      "resumed": "True (from epoch-2 checkpoint, UNVERIFIED)",
+      "unsloth_version": "2026.11.12 (UNVERIFIED)",
+      "precision": "float32 (UNVERIFIED)",
+      "hardware": "T4 (UNVERIFIED)",
+      "invalid_reason": "0/43 rows (0.0%) parse as JSON or validate against remediate/patch_ir/schema.json; score_oof reports 0/43 schema-valid and 0/474 gate pass@1. All 43 rows contain multi-turn continuation leakage after predicted JSON: {json}\\nassistant\\n<think>...</think>\\n\\n{json}. Prabhav fold-2 checkpoint-380 was invalid/missing and unused; this retrained fold-2 is INVALID and not labeled.",
+      "notes": "INVALID file is NOT copied to docs/phase6_shaurya/crossfit/oof_preds/."
+    },
+    "3": {
+      "file": "fold3_preds.jsonl",
+      "sha256": "79fcd4d7d7282479f608897411167fb46a8cb32d1013e3b878b099db0cb1c269",
+      "rows": 41,
+      "distinct_keys": 41,
+      "schema_valid_fraction": 1.0,
+      "status": "VALID",
+      "trained_by": "Prabhav",
+      "final_checkpoint": "checkpoint-417 (UNVERIFIED)",
+      "resumed": "UNVERIFIED",
+      "unsloth_version": "UNVERIFIED",
+      "precision": "UNVERIFIED",
+      "notes": "Trained by Prabhav; checkpoint number is an UNVERIFIED claim from messages. Resumed/precision/unsloth_version are UNVERIFIED (not recorded in files)."
+    },
+    "4": {
+      "file": "fold4_preds.jsonl",
+      "sha256": "199e77224ef155fd56ca28d07ec207ba07496002e59e8ca459e8a35c682c0b0e",
+      "rows": 41,
+      "distinct_keys": 41,
+      "schema_valid_fraction": 0.0,
+      "status": "INVALID",
+      "trained_by": "Shaurya (UNVERIFIED)",
+      "final_checkpoint": "checkpoint-408 (UNVERIFIED)",
+      "resumed": "False (UNVERIFIED)",
+      "unsloth_version": "2026.11.12 (UNVERIFIED)",
+      "precision": "float32 (UNVERIFIED)",
+      "hardware": "T4 (UNVERIFIED)",
+      "invalid_reason": "0/41 rows (0.0%) parse as JSON or validate against remediate/patch_ir/schema.json; score_oof reports 0/41 schema-valid and 0/332 gate pass@1. All 41 rows contain {json}\\nassistant\\n<think>...</think> continuation leakage; 12/41 rows are unterminated (lengths 3561-4400 chars, missing </think>), indicating runaway generation beyond 300 tokens.",
+      "notes": "INVALID file is NOT copied to docs/phase6_shaurya/crossfit/oof_preds/."
+    }
+  }
+}

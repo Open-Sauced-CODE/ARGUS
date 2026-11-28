@@ -155,6 +155,91 @@ def _bin_label(sim: float) -> str:
     return "[0.0, 0.2)"
 
 
+def _cert_row(
+    oof_clean: int,
+    k: int,
+    *,
+    existing_clean: int = 15,
+    alpha: float = 0.05,
+    delta: float = 0.05,
+) -> dict[str, Any]:
+    """Compute counts-only Clopper-Pearson n / margin / verdict for clean + existing clusters."""
+    from ml.train_m2.eval.post_oof import compute_cp_min_n
+
+    n = oof_clean + existing_clean
+    cp_min_n = compute_cp_min_n(k, alpha=alpha, delta=delta)
+    margin = n - cp_min_n
+    verdict = "SUFFICIENT" if margin >= 0 else f"NEED {-margin} MORE CLEAN CLUSTERS"
+    return {
+        "oof_clean": oof_clean,
+        "existing_clean": existing_clean,
+        "n": n,
+        "k": k,
+        "alpha": alpha,
+        "delta": delta,
+        "cp_min_n": cp_min_n,
+        "margin": margin,
+        "verdict": verdict,
+    }
+
+
+def analyze_existing_near_duplicates(
+    folds_data: Mapping[str, Any],
+    records_by_key: Mapping[str, Mapping[str, Any]],
+    key_flags: Mapping[str, Mapping[str, bool]],
+    *,
+    threshold: float = 0.80,
+    k_shingle: int = 3,
+) -> dict[str, Any]:
+    """Check whether the existing pre-OOF clean clusters (in_a_val and not in_train/heldout)
+    have near-duplicates in any training fold. Returns counts only.
+    """
+    folds_map = folds_data.get("folds", {})
+    all_fold_ids = sorted(int(f) for f in folds_map.keys())
+    all_train_keys: list[str] = []
+    for f in all_fold_ids:
+        all_train_keys.extend(folds_map[str(f)]["input_keys"])
+
+    existing_keys = sorted(
+        ik for ik, flags in key_flags.items()
+        if not flags.get("in_train", False)
+        and not flags.get("in_heldout", False)
+        and flags.get("in_a_val", False)
+    )
+
+    norm_sigs: dict[str, tuple[str, str]] = {}
+    norm_shingles: dict[str, frozenset[tuple[str, ...]]] = {}
+    for ik in existing_keys + all_train_keys:
+        if ik not in norm_sigs and ik in records_by_key:
+            rec = records_by_key[ik]
+            _, toks = normalize_input_tokens(rec)
+            norm_sigs[ik] = normalized_signature(rec)
+            norm_shingles[ik] = token_shingles(toks, k=k_shingle)
+
+    exact_cnt = 0
+    near_dup_cnt = 0
+    for ik in existing_keys:
+        if ik not in norm_sigs:
+            continue
+        c_rule, c_sig = norm_sigs[ik]
+        c_shing = norm_shingles[ik]
+        same_rule_train = [tk for tk in all_train_keys if tk in norm_sigs and norm_sigs[tk][0] == c_rule]
+        ex = any(norm_sigs[tk][1] == c_sig for tk in same_rule_train)
+        max_sim = max((jaccard_similarity(c_shing, norm_shingles[tk]) for tk in same_rule_train), default=0.0)
+        if ex:
+            exact_cnt += 1
+        if ex or max_sim >= threshold:
+            near_dup_cnt += 1
+
+    return {
+        "existing_clean_count": len(existing_keys),
+        "exact_norm_matches": exact_cnt,
+        "near_dup_count": near_dup_cnt,
+        "remaining_independent": len(existing_keys) - near_dup_cnt,
+        "has_near_duplicates": near_dup_cnt > 0,
+    }
+
+
 def analyze_near_duplicates(
     folds_data: Mapping[str, Any],
     records_by_key: Mapping[str, Mapping[str, Any]],
@@ -164,6 +249,7 @@ def analyze_near_duplicates(
     folds_subset: Sequence[int] | None = None,
     threshold: float = 0.80,
     k_shingle: int = 3,
+    existing_clean_count: int = 15,
 ) -> dict[str, Any]:
     """Compare each clean OOF cluster against all training clusters (all other folds) of same rule_id.
 
@@ -278,6 +364,35 @@ def analyze_near_duplicates(
     if nd_rate_out["gate_pass_rate"] is not None and non_nd_rate_out["gate_pass_rate"] is not None:
         pass_rate_diff = nd_rate_out["gate_pass_rate"] - non_nd_rate_out["gate_pass_rate"]
 
+    existing_nd = analyze_existing_near_duplicates(
+        folds_data,
+        records_by_key,
+        key_flags,
+        threshold=threshold,
+        k_shingle=k_shingle,
+    )
+
+    cert_comparison = None
+    if clean_labels is not None:
+        all_k = int(pass_with_nd["wrong_k"]) + int(pass_without_nd["wrong_k"])
+        non_nd_k = int(pass_without_nd["wrong_k"])
+        cert_comparison = {
+            "all_clean": _cert_row(
+                total_clean,
+                all_k,
+                existing_clean=existing_clean_count,
+            ),
+            "after_removing_near_dups": _cert_row(
+                remaining_after_removal,
+                non_nd_k,
+                existing_clean=existing_clean_count,
+            ),
+            "note": (
+                "The certificate depends on accepted drafts at tau, so the effective n is smaller; "
+                "do not estimate it."
+            ),
+        }
+
     return {
         "folds_analyzed": target_folds,
         "similarity_threshold": threshold,
@@ -301,6 +416,8 @@ def analyze_near_duplicates(
             "without_near_dup": non_nd_rate_out,
             "gate_pass_rate_diff": pass_rate_diff,
         },
+        "existing_clean_near_dups": existing_nd,
+        "certification_comparison": cert_comparison,
     }
 
 
@@ -364,6 +481,39 @@ def render_near_dup_report(summary: Mapping[str, Any]) -> str:
     if comp["gate_pass_rate_diff"] is not None:
         lines.append(f"\n- Gate-pass rate difference (with - without): {comp['gate_pass_rate_diff']:+.1%}")
 
+    ex_nd = summary.get("existing_clean_near_dups")
+    if ex_nd:
+        lines.extend([
+            "",
+            "## Existing Clean Clusters vs All Training Folds (Counts Only)",
+            "",
+            f"- Existing pre-OOF clean clusters checked: **{ex_nd['existing_clean_count']}**",
+            f"- Exact normalized signature matches in training: **{ex_nd['exact_norm_matches']}**",
+            f"- Near-duplicates in any training fold: **{ex_nd['near_dup_count']}** "
+            f"({'YES' if ex_nd['has_near_duplicates'] else 'NO'})",
+            f"- Remaining independent existing clusters: **{ex_nd['remaining_independent']}**",
+        ])
+
+    cert = summary.get("certification_comparison")
+    if cert:
+        lines.extend([
+            "",
+            "## Clopper-Pearson Certification Comparison (alpha=0.05, delta=0.05)",
+            "",
+            "| Version | OOF Clean | Existing | Total n | k | cp_min_n | Margin | Verdict |",
+            "|---|---|---|---|---|---|---|---|",
+        ])
+        for label, key in (
+            ("(a) All clean clusters", "all_clean"),
+            ("(b) After removing near-duplicates", "after_removing_near_dups"),
+        ):
+            c = cert[key]
+            lines.append(
+                f"| {label} | {c['oof_clean']} | {c['existing_clean']} | {c['n']} | "
+                f"{c['k']} | {c['cp_min_n']} | {c['margin']:+d} | {c['verdict']} |"
+            )
+        lines.append(f"\n> {cert['note']}")
+
     return "\n".join(lines) + "\n"
 
 
@@ -372,6 +522,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Read-only near-duplicate check for clean OOF clusters")
     p.add_argument("--folds", default="docs/phase6_shaurya/crossfit/folds.json", help="Path to folds.json")
     p.add_argument("--preds-dir", default=None, help="Optional dir with fold*_preds.jsonl for pass rate comparison")
+    p.add_argument("--manifest", default=None, help="Path to OOF_PREDS_MANIFEST.json (default: auto-discovered)")
     p.add_argument("--threshold", type=float, default=0.80, help="Jaccard near-duplicate threshold (default: 0.80)")
     p.add_argument("--shingle-k", type=int, default=3, help="Token shingle length k (default: 3)")
     p.add_argument("--out-dir", default="ml/train_m2/out/reports", help="Output report directory")
@@ -389,22 +540,33 @@ def main(argv: Sequence[str] | None = None) -> int:
     key_flags = _build_key_flags(inputs)
     fold_membership = _build_fold_membership(folds_data)
 
-    # Optionally check OOF greedy predictions if available for pass-rate comparison
+    # Optionally check OOF greedy predictions if available for pass-rate comparison,
+    # excluding any INVALID folds listed in OOF_PREDS_MANIFEST.json.
     clean_labels: dict[str, dict[str, Any]] | None = None
     folds_subset: list[int] | None = None
     from ml.train_m2.eval.label_oof_greedy import (
         label_clean_oof_greedy,
+        load_invalid_folds,
         load_train_reference_map,
         resolve_preds_files,
         validate_preds_layout,
     )
+    manifest_path = Path(args.manifest) if args.manifest else None
+    if manifest_path and not manifest_path.is_absolute():
+        manifest_path = root / manifest_path
+    invalid_folds = load_invalid_folds(manifest_path)
+
     resolved_dir, fold_paths = resolve_preds_files(root, preds_dir=args.preds_dir)
-    if fold_paths:
-        folds_subset = sorted(fold_paths.keys())
+    valid_fold_paths = {f: path for f, path in fold_paths.items() if f not in invalid_folds}
+    if valid_fold_paths:
+        folds_subset = sorted(valid_fold_paths.keys())
         ref_map = load_train_reference_map(root)
-        preds_by_fold = validate_preds_layout(fold_paths, folds_data)
+        preds_by_fold = validate_preds_layout(valid_fold_paths, folds_data, invalid_folds=invalid_folds)
         greedy_res = label_clean_oof_greedy(preds_by_fold, fold_membership, key_flags, ref_map)
         clean_labels = greedy_res["clean_cluster_labels"]
+    elif invalid_folds:
+        all_fold_ids = sorted(int(f) for f in folds_data.get("folds", {}).keys())
+        folds_subset = [f for f in all_fold_ids if f not in invalid_folds]
 
     summary = analyze_near_duplicates(
         folds_data,
@@ -415,6 +577,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         threshold=args.threshold,
         k_shingle=args.shingle_k,
     )
+    if invalid_folds:
+        summary["invalid_folds_excluded"] = sorted(invalid_folds)
 
     out_dir = Path(args.out_dir)
     if not out_dir.is_absolute():
@@ -430,7 +594,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         rep_json,
         inputs=[folds_path, root / "ml" / "train_m2" / "contract" / "harvest_inputs.jsonl"],
         seed=args.seed,
-        extra={"threshold": args.threshold, "shingle_k": args.shingle_k},
+        extra={
+            "threshold": args.threshold,
+            "shingle_k": args.shingle_k,
+            "invalid_folds_excluded": sorted(invalid_folds),
+            "folds_analyzed": summary["folds_analyzed"],
+        },
     )
 
     if summary["alert_triggered"]:

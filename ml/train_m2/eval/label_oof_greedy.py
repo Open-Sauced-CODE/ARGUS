@@ -3,12 +3,13 @@
 Reads greedy OOF prediction files `fold{f}_preds.jsonl` from:
   1. Explicit `--preds-dir` if specified, OR
   2. Default `ml/train_m2/harvest_out/sft_oof_greedy/` (gitignored), falling back to
-     repository root (`fold{0..3}_preds.jsonl`) if present.
+     ``docs/phase6_shaurya/crossfit/oof_preds/`` then repository root if present.
 If files are absent, STOPs with exit code 1 and instructs the operator to copy them from Drive.
 
 Rules:
   - Validates file layout against ml/train_m1/score_oof.py and docs/phase6_shaurya/crossfit/folds.json.
   - Strictly excludes and NEVER scores any held-out (B1, B2, C_verifier, gold, C-human) or A_val cluster.
+  - Folds listed in OOF_PREDS_MANIFEST.json as INVALID are silently skipped; they are NEVER labeled.
   - Labels each clean fold-f cluster against the reference for its own input_key (preserving record finding_id).
   - Statistical unit is CLUSTER (distinct input_key).
   - Evaluates sufficiency verdict via post_oof.evaluate_partial_oof for n = clean_oof + 15.
@@ -47,8 +48,44 @@ from ml.train_m2.labels.oracle import (
 
 LOG = logging.getLogger("label_oof_greedy")
 DEFAULT_PREDS_RELDIR = Path("ml") / "train_m2" / "harvest_out" / "sft_oof_greedy"
+_CROSSFIT_OOF_PREDS_RELDIR = Path("docs") / "phase6_shaurya" / "crossfit" / "oof_preds"
 _FOLD_FILE_RE = re.compile(r"^fold(\d+)_preds\.jsonl$")
 SEED = 1337
+
+
+def load_invalid_folds(manifest_path: Path | None = None) -> frozenset[int]:
+    """Return the set of fold IDs marked INVALID in OOF_PREDS_MANIFEST.json (counts-only).
+
+    Returns an empty frozenset if the manifest does not exist or has no INVALID entries.
+    Never raises; logs a warning if the file cannot be parsed.
+    """
+    _log = logging.getLogger("label_oof_greedy.manifest")
+    candidates: list[Path] = []
+    if manifest_path is not None:
+        candidates = [manifest_path]
+    else:
+        try:
+            root = repo_root()
+            candidates = [
+                root / "docs" / "phase6_shaurya" / "crossfit" / "OOF_PREDS_MANIFEST.json",
+            ]
+        except Exception:
+            pass
+
+    for p in candidates:
+        if not p.is_file():
+            continue
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            folds_meta = data.get("folds", {})
+            invalid: set[int] = set()
+            for fold_id_str, fmeta in folds_meta.items():
+                if str(fmeta.get("status", "")).upper() == "INVALID":
+                    invalid.add(int(fold_id_str))
+            return frozenset(invalid)
+        except Exception as exc:
+            _log.warning("Could not parse OOF_PREDS_MANIFEST.json at %s: %s", p, exc)
+    return frozenset()
 
 
 def resolve_preds_files(
@@ -58,8 +95,10 @@ def resolve_preds_files(
     """Locate fold*_preds.jsonl files without fetching anything.
 
     When `preds_dir` is explicitly provided, searches ONLY that directory.
-    When `preds_dir` is None, searches `ml/train_m2/harvest_out/sft_oof_greedy/`
-    and falls back to repo root if absent there.
+    When `preds_dir` is None, searches (in order):
+      1. ml/train_m2/harvest_out/sft_oof_greedy/
+      2. docs/phase6_shaurya/crossfit/oof_preds/
+      3. repo root
     """
     candidates: list[Path] = []
     if preds_dir is not None:
@@ -68,7 +107,11 @@ def resolve_preds_files(
             d = root / d
         candidates = [d]
     else:
-        candidates = [root / DEFAULT_PREDS_RELDIR, root]
+        candidates = [
+            root / DEFAULT_PREDS_RELDIR,
+            root / _CROSSFIT_OOF_PREDS_RELDIR,
+            root,
+        ]
 
     for cand in candidates:
         if not cand.is_dir():
@@ -101,15 +144,79 @@ def load_train_reference_map(root: Path) -> dict[str, dict[str, Any]]:
     return ref_map
 
 
+def fold_schema_valid_fraction(
+    rows: Sequence[Mapping[str, Any]],
+    schema: Mapping[str, Any] | None = None,
+) -> float:
+    """Return fraction of rows whose ``content`` parses as JSON and passes Patch-IR schema."""
+    if not rows:
+        return 0.0
+    if schema is None:
+        schema_path = repo_root() / "remediate" / "patch_ir" / "schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    import jsonschema
+    validator = jsonschema.Draft7Validator(schema)
+    valid = 0
+    for r in rows:
+        content = r.get("content", "")
+        if not isinstance(content, str) or not content.strip():
+            continue
+        try:
+            obj = json.loads(content)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(obj, dict) and validator.is_valid(obj):
+            valid += 1
+    return valid / len(rows)
+
+
+def reject_invalid_schema_folds(
+    preds_by_fold: Mapping[int, list[dict[str, Any]]],
+    *,
+    min_schema_valid_frac: float = 0.90,
+    schema: Mapping[str, Any] | None = None,
+) -> tuple[dict[int, list[dict[str, Any]]], dict[int, float]]:
+    """Reject any fold whose schema-valid fraction is below ``min_schema_valid_frac``.
+
+    Returns (valid_preds_by_fold, rejected_fractions). Rejected folds are NEVER labeled.
+    """
+    valid: dict[int, list[dict[str, Any]]] = {}
+    rejected: dict[int, float] = {}
+    for f, rows in sorted(preds_by_fold.items()):
+        frac = fold_schema_valid_fraction(rows, schema=schema)
+        if frac < min_schema_valid_frac:
+            LOG.warning(
+                "Rejecting fold %d: schema-valid fraction %.3f < %.2f; will not label.",
+                f, frac, min_schema_valid_frac,
+            )
+            rejected[f] = frac
+        else:
+            valid[f] = rows
+    return valid, rejected
+
+
 def validate_preds_layout(
     fold_paths: Mapping[int, Path],
     folds_data: Mapping[str, Any],
+    invalid_folds: frozenset[int] | None = None,
+    *,
+    min_schema_valid_frac: float | None = None,
+    schema: Mapping[str, Any] | None = None,
 ) -> dict[int, list[dict[str, Any]]]:
-    """Validate each fold{f}_preds.jsonl against score_oof.py layout and folds.json keys."""
+    """Validate each fold{f}_preds.jsonl against score_oof.py layout and folds.json keys.
+
+    Folds listed in ``invalid_folds`` are silently skipped and never loaded.
+    If ``min_schema_valid_frac`` is set, any loaded fold below that threshold is also
+    rejected and excluded so invalid folds are never labeled.
+    """
+    _skip = invalid_folds or frozenset()
     preds_by_fold: dict[int, list[dict[str, Any]]] = {}
     folds_map = folds_data.get("folds", {})
 
     for f, p in sorted(fold_paths.items()):
+        if f in _skip:
+            LOG.info("Skipping fold %d: marked INVALID in manifest", f)
+            continue
         rows: list[dict[str, Any]] = []
         seen_keys: set[str] = set()
         for row in jsonl_iter(p):
@@ -132,6 +239,13 @@ def validate_preds_layout(
                     f"missing={len(expected_keys - seen_keys)}, extra={len(seen_keys - expected_keys)}"
                 )
         preds_by_fold[f] = rows
+
+    if min_schema_valid_frac is not None:
+        preds_by_fold, _ = reject_invalid_schema_folds(
+            preds_by_fold,
+            min_schema_valid_frac=min_schema_valid_frac,
+            schema=schema,
+        )
 
     return preds_by_fold
 
@@ -353,6 +467,7 @@ def label_clean_oof_greedy(
         "existing_clean_clusters": existing_unseen_clean,
         "total_clean_n": partial_verdict["total_clean_clusters"],
         "cp_min_n": partial_verdict["cp_min_n"],
+        "margin": partial_verdict["total_clean_clusters"] - partial_verdict["cp_min_n"],
         "verdict": partial_verdict["verdict"],
         "needed_more": partial_verdict["needed_more"],
         "remaining_folds": partial_verdict["remaining_folds"],
@@ -382,6 +497,7 @@ def render_label_oof_greedy_report(summary: Mapping[str, Any]) -> str:
         f"**{t['clean_clusters']}** | **{t['gate_pass']}** | **{t['minimal_correct']}** | "
         f"**{t['gate_pass_and_wrong_k']}** | **{t['valid_not_minimal']}** | **{t['unknown']}** |"
     )
+    margin = summary.get("margin", summary["total_clean_n"] - summary["cp_min_n"])
     lines.extend([
         "",
         "## Certification Verdict (Partial-Fold Post-OOF)",
@@ -391,9 +507,11 @@ def render_label_oof_greedy_report(summary: Mapping[str, Any]) -> str:
         f"- Total clean clusters n: **{summary['total_clean_n']}**",
         f"- Clean gate-pass-and-wrong count k: **{summary['clean_k']}**",
         f"- Clopper-Pearson minimum n required (alpha=0.05, delta=0.05): **{summary['cp_min_n']}**",
+        f"- Margin (n - cp_min_n): **{margin:+d}**",
         f"- **Verdict: {summary['verdict']}**",
         f"- Remaining folds: {summary['remaining_folds']}",
         f"- Coverage: {summary['covering_status']}",
+        "- Note: the certificate depends on accepted drafts at tau, so the effective n is smaller; do not estimate it.",
     ])
     return "\n".join(lines) + "\n"
 
@@ -401,8 +519,9 @@ def render_label_oof_greedy_report(summary: Mapping[str, Any]) -> str:
 def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, stream=sys.stderr)
     p = argparse.ArgumentParser(description="Label greedy OOF predictions via P3 oracle")
-    p.add_argument("--preds-dir", default=None, help="Directory with fold{f}_preds.jsonl (default checks harvest_out/sft_oof_greedy then repo root)")
+    p.add_argument("--preds-dir", default=None, help="Directory with fold{f}_preds.jsonl (default checks harvest_out/sft_oof_greedy then oof_preds/ then repo root)")
     p.add_argument("--folds", default="docs/phase6_shaurya/crossfit/folds.json", help="Path to folds.json")
+    p.add_argument("--manifest", default=None, help="Path to OOF_PREDS_MANIFEST.json (default: auto-discovered)")
     p.add_argument("--out-dir", default="ml/train_m2/out/reports", help="Output directory for counts-only report")
     p.add_argument("--seed", type=int, default=SEED, help="Seed (default 1337)")
     args = p.parse_args(argv)
@@ -411,13 +530,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     resolved_dir, fold_paths = resolve_preds_files(root, preds_dir=args.preds_dir)
     if not fold_paths:
         msg = (
-            "STOP: Greedy OOF predictions (fold{0..3}_preds.jsonl) are absent under "
+            "STOP: Greedy OOF predictions (fold{0..4}_preds.jsonl) are absent under "
             f"{args.preds_dir or DEFAULT_PREDS_RELDIR.as_posix()}. "
             "Please copy them from Google Drive (/content/drive/MyDrive/argus/out_crossfit/) "
             "into ml/train_m2/harvest_out/sft_oof_greedy/ (do not fetch automatically)."
         )
         print(msg, file=sys.stderr)
         return 1
+
+    # Load invalid folds from manifest (INVALID folds are silently skipped)
+    manifest_path = Path(args.manifest) if args.manifest else None
+    if manifest_path and not manifest_path.is_absolute():
+        manifest_path = root / manifest_path
+    invalid_folds = load_invalid_folds(manifest_path)
+    if invalid_folds:
+        LOG.info("Folds marked INVALID in manifest (will not be labeled): %s", sorted(invalid_folds))
 
     folds_path = Path(args.folds)
     if not folds_path.is_absolute():
@@ -427,7 +554,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     key_flags = _build_key_flags(load_inputs())
     ref_map = load_train_reference_map(root)
 
-    preds_by_fold = validate_preds_layout(fold_paths, folds_data)
+    preds_by_fold = validate_preds_layout(
+        fold_paths,
+        folds_data,
+        invalid_folds=invalid_folds,
+        min_schema_valid_frac=0.90,
+    )
     summary = label_clean_oof_greedy(
         preds_by_fold,
         fold_membership,
@@ -453,7 +585,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         report_json,
         inputs=list(fold_paths.values()),
         seed=args.seed,
-        extra={"preds_source_dir": rel_dir, "folds": sorted(fold_paths.keys())},
+        extra={
+            "preds_source_dir": rel_dir,
+            "folds": sorted(fold_paths.keys()),
+            "invalid_folds": sorted(invalid_folds),
+            "valid_folds": sorted(f for f in fold_paths if f not in invalid_folds),
+        },
     )
 
     print(md_text)

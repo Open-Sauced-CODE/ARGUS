@@ -4,17 +4,18 @@
 |---|---|---|---|---|---|---|---|---|
 | 0 | 55 | 18 | 37 | 37 | 37 | 0 | 0 | 0 |
 | 1 | 50 | 15 | 35 | 35 | 35 | 0 | 0 | 0 |
-| 2 | 43 | 13 | 30 | 30 | 30 | 0 | 0 | 0 |
 | 3 | 41 | 8 | 33 | 33 | 31 | 2 | 0 | 0 |
-| **Total** | **189** | **54** | **135** | **135** | **133** | **2** | **0** | **0** |
+| **Total** | **146** | **41** | **105** | **105** | **103** | **2** | **0** | **0** |
 
 ## Certification Verdict (Partial-Fold Post-OOF)
 
-- Clean OOF clusters: 135
+- Clean OOF clusters: 105
 - Existing clean clusters: 15
-- Total clean clusters n: **150**
+- Total clean clusters n: **120**
 - Clean gate-pass-and-wrong count k: **2**
 - Clopper-Pearson minimum n required (alpha=0.05, delta=0.05): **124**
-- **Verdict: SUFFICIENT**
-- Remaining folds: [4]
-- Coverage: Available clean unseen clusters are SUFFICIENT for certification.
+- Margin (n - cp_min_n): **-4**
+- **Verdict: NEED 4 MORE CLEAN CLUSTERS**
+- Remaining folds: [2, 4]
+- Coverage: Remaining fold(s) [2] provide 30 clean clusters, covering the deficit of 4.
+- Note: the certificate depends on accepted drafts at tau, so the effective n is smaller; do not estimate it.
