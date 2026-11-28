@@ -1,7 +1,7 @@
 {
-  "generated_by": "Shaurya (P6J)",
-  "git_commit": "5bcfc9b080766fb9a4153150f4b682164de84c08",
-  "utc_time": "2026-11-27T08:37:35.580047Z",
+  "generated_by": "Shaurya (P6K)",
+  "git_commit": "2c28fbbed5994526bb41c74dcd5edc6fd0b3eb5a",
+  "utc_time": "2026-11-28T10:34:56.050331Z",
   "schema_version": "1.0",
   "note": "Fields marked UNVERIFIED come from messages/claims, not from files in the repo. INVALID folds are excluded from labeling and near-dup checks. INVALID files are NOT copied to docs/phase6_shaurya/crossfit/oof_preds/.",
   "folds": {
@@ -47,7 +47,7 @@
       "precision": "float32 (UNVERIFIED)",
       "hardware": "T4 (UNVERIFIED)",
       "invalid_reason": "0/43 rows (0.0%) parse as JSON or validate against remediate/patch_ir/schema.json; score_oof reports 0/43 schema-valid and 0/474 gate pass@1. All 43 rows contain multi-turn continuation leakage after predicted JSON: {json}\\nassistant\\n<think>...</think>\\n\\n{json}. Prabhav fold-2 checkpoint-380 was invalid/missing and unused; this retrained fold-2 is INVALID and not labeled.",
-      "notes": "INVALID file is NOT copied to docs/phase6_shaurya/crossfit/oof_preds/."
+      "notes": "preds invalid as delivered (no stop token); regeneration pending"
     },
     "3": {
       "file": "fold3_preds.jsonl",
@@ -77,7 +77,7 @@
       "precision": "float32 (UNVERIFIED)",
       "hardware": "T4 (UNVERIFIED)",
       "invalid_reason": "0/41 rows (0.0%) parse as JSON or validate against remediate/patch_ir/schema.json; score_oof reports 0/41 schema-valid and 0/332 gate pass@1. All 41 rows contain {json}\\nassistant\\n<think>...</think> continuation leakage; 12/41 rows are unterminated (lengths 3561-4400 chars, missing </think>), indicating runaway generation beyond 300 tokens.",
-      "notes": "INVALID file is NOT copied to docs/phase6_shaurya/crossfit/oof_preds/."
+      "notes": "preds invalid as delivered (no stop token); regeneration pending"
     }
   }
 }

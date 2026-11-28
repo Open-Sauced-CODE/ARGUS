@@ -260,15 +260,25 @@ def label_clean_oof_greedy(
     existing_unseen_clean: int = 15,
     alpha: float = 0.05,
     delta: float = 0.05,
+    truncate_folds: frozenset[int] | set[int] | None = None,
+    schema: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Label CLEAN fold-f greedy OOF clusters using the P3 oracle.
 
     Strictly filters out held-out and A_val clusters BEFORE scoring. Never inspects or scores
     held-out or A_val rows. Computes partial-fold Clopper-Pearson verdict via post_oof.evaluate_partial_oof.
+
+    If ``truncate_folds`` contains fold ``f``, candidates in fold ``f`` are truncated via
+    ``oof_truncate.first_json_prefix`` as a diagnostic proxy ONLY and tagged
+    ``diagnostic_truncated=True``.
     """
     if score_fn is None:
         from ml.train_m1.eval.score import score_inputs  # FROZEN Phase 5 scorer
         score_fn = score_inputs
+
+    _trunc = frozenset(truncate_folds) if truncate_folds else frozenset()
+    if _trunc:
+        from ml.train_m2.eval.oof_truncate import first_json_prefix
 
     per_fold_counts: list[dict[str, Any]] = []
     partial_rows: list[dict[str, Any]] = []
@@ -288,6 +298,7 @@ def label_clean_oof_greedy(
     total_esc_unneeded = 0
 
     for f in sorted(preds_by_fold.keys()):
+        is_trunc_fold = f in _trunc
         raw_rows = list(preds_by_fold[f])
         clean_rows: list[Mapping[str, Any]] = []
         excluded = 0
@@ -302,16 +313,25 @@ def label_clean_oof_greedy(
                 raise KeyError(f"Clean input_key missing from train reference map: {ik[:60]}")
             clean_rows.append(r)
 
+        effective_contents: list[str] = []
+        for r in clean_rows:
+            raw_content = str(r.get("content", ""))
+            if is_trunc_fold:
+                obj, ok = first_json_prefix(raw_content, schema=schema)
+                effective_contents.append(json.dumps(obj) if ok and obj is not None else "")
+            else:
+                effective_contents.append(raw_content)
+
         # Batch score ONLY clean rows via score_fn (never held-out or A_val)
         score_items = []
-        for r in clean_rows:
+        for r, eff_content in zip(clean_rows, effective_contents):
             ik = r["input_key"]
             ref_entry = ref_map[ik]
             score_items.append({
                 "record": ref_entry["record"],
                 "route": ref_entry.get("route", "fix"),
                 "reference": ref_entry.get("reference"),
-                "contents": [r.get("content", "")],
+                "contents": [eff_content],
             })
 
         scored_results = score_fn(score_items) if score_items else []
@@ -330,9 +350,8 @@ def label_clean_oof_greedy(
         f_esc_ok = 0
         f_esc_unneeded = 0
 
-        for r, score_res in zip(clean_rows, scored_results):
+        for r, content, score_res in zip(clean_rows, effective_contents, scored_results):
             ik = r["input_key"]
-            content = r.get("content", "")
             ref_entry = ref_map[ik]
             record = ref_entry["record"]
             reference = ref_entry.get("reference")
@@ -399,6 +418,7 @@ def label_clean_oof_greedy(
                 "oracle_class": partial_oc,
                 "finding_id": record.get("finding_id"),
                 "patch": patch,
+                "diagnostic_truncated": is_trunc_fold,
             })
             clean_cluster_labels[ik] = {
                 "fold": f,
@@ -407,10 +427,12 @@ def label_clean_oof_greedy(
                 "outcome": label_row.outcome,
                 "oracle_class": oc,
                 "strict_correct": label_row.strict_correct,
+                "diagnostic_truncated": is_trunc_fold,
             }
 
         per_fold_counts.append({
             "fold": f,
+            "diagnostic_truncated": is_trunc_fold,
             "raw_clusters": len(raw_rows),
             "excluded_heldout_or_aval": excluded,
             "clean_clusters": len(clean_rows),
@@ -448,6 +470,8 @@ def label_clean_oof_greedy(
     )
 
     return {
+        "diagnostic_truncated": bool(_trunc),
+        "diagnostic_truncated_folds": sorted(_trunc),
         "per_fold": per_fold_counts,
         "totals": {
             "raw_clusters": total_raw,
@@ -479,6 +503,63 @@ def label_clean_oof_greedy(
 
 def render_label_oof_greedy_report(summary: Mapping[str, Any]) -> str:
     """Render counts-only markdown summary (zero input content)."""
+    is_diag = bool(summary.get("diagnostic_truncated"))
+    nd_summary = summary.get("near_dup_summary")
+
+    if is_diag:
+        title = (
+            "# DIAGNOSTIC ESTIMATE, folds 2 and 4 truncated at first JSON; "
+            "not evidence for certification; replace with regenerated preds"
+        )
+        nd_by_fold = {
+            r["fold"]: r for r in (nd_summary.get("per_fold", []) if nd_summary else [])
+        }
+        lines = [
+            title,
+            "",
+            "| Fold | Diagnostic Truncated | Raw | Excluded (Heldout/A_val) | Clean Clusters | Gate-Pass | Minimal Correct | Gate-Pass-and-Wrong (k) | valid_not_minimal | unknown | Near-Dups | Remaining Clean |",
+            "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        ]
+        for r in summary["per_fold"]:
+            nd_r = nd_by_fold.get(r["fold"], {})
+            nd_cnt = nd_r.get("near_dup_count", 0)
+            rem_cnt = nd_r.get("remaining_independent", r["clean_clusters"] - nd_cnt)
+            lines.append(
+                f"| {r['fold']} | {bool(r.get('diagnostic_truncated'))} | {r['raw_clusters']} | "
+                f"{r['excluded_heldout_or_aval']} | {r['clean_clusters']} | {r['gate_pass']} | "
+                f"{r['minimal_correct']} | {r['gate_pass_and_wrong_k']} | {r['valid_not_minimal']} | "
+                f"{r['unknown']} | {nd_cnt} | {rem_cnt} |"
+            )
+        t = summary["totals"]
+        tot_nd = nd_summary.get("near_duplicate_count", 0) if nd_summary else 0
+        tot_rem = nd_summary.get("remaining_after_removal", t["clean_clusters"] - tot_nd) if nd_summary else t["clean_clusters"]
+        lines.append(
+            f"| **Total** | **True** | **{t['raw_clusters']}** | **{t['excluded_heldout_or_aval']}** | "
+            f"**{t['clean_clusters']}** | **{t['gate_pass']}** | **{t['minimal_correct']}** | "
+            f"**{t['gate_pass_and_wrong_k']}** | **{t['valid_not_minimal']}** | **{t['unknown']}** | "
+            f"**{tot_nd}** | **{tot_rem}** |"
+        )
+        cert = nd_summary.get("certification_comparison") if nd_summary else None
+        if cert:
+            lines.extend([
+                "",
+                "## Diagnostic Clopper-Pearson Estimate (alpha=0.05, delta=0.05, NOT for certification)",
+                "",
+                "| Version | OOF Clean | Existing | Total n | k | cp_min_n | Margin | Verdict |",
+                "|---|---|---|---|---|---|---|---|",
+            ])
+            for label, key in (
+                ("(a) All clean clusters", "all_clean"),
+                ("(b) After removing near-duplicates", "after_removing_near_dups"),
+            ):
+                c = cert[key]
+                lines.append(
+                    f"| {label} | {c['oof_clean']} | {c['existing_clean']} | {c['n']} | "
+                    f"{c['k']} | {c['cp_min_n']} | {c['margin']:+d} | {c['verdict']} |"
+                )
+            lines.append(f"\n> {cert['note']}")
+        return "\n".join(lines) + "\n"
+
     lines = [
         "# OOF Greedy Predictions P3 Oracle Summary (Clean Clusters Only)",
         "",
@@ -523,6 +604,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--folds", default="docs/phase6_shaurya/crossfit/folds.json", help="Path to folds.json")
     p.add_argument("--manifest", default=None, help="Path to OOF_PREDS_MANIFEST.json (default: auto-discovered)")
     p.add_argument("--out-dir", default="ml/train_m2/out/reports", help="Output directory for counts-only report")
+    p.add_argument(
+        "--truncate-first-json",
+        action="store_true",
+        default=False,
+        help="Diagnostic only: label INVALID folds on their first-JSON prefix (writes separate diagnostic report; never mixes with certified counts).",
+    )
     p.add_argument("--seed", type=int, default=SEED, help="Seed (default 1337)")
     args = p.parse_args(argv)
 
@@ -538,44 +625,80 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(msg, file=sys.stderr)
         return 1
 
-    # Load invalid folds from manifest (INVALID folds are silently skipped)
+    # Load invalid folds from manifest
     manifest_path = Path(args.manifest) if args.manifest else None
     if manifest_path and not manifest_path.is_absolute():
         manifest_path = root / manifest_path
     invalid_folds = load_invalid_folds(manifest_path)
-    if invalid_folds:
-        LOG.info("Folds marked INVALID in manifest (will not be labeled): %s", sorted(invalid_folds))
 
     folds_path = Path(args.folds)
     if not folds_path.is_absolute():
         folds_path = root / folds_path
     folds_data = _load_folds(folds_path)
     fold_membership = _build_fold_membership(folds_data)
-    key_flags = _build_key_flags(load_inputs())
+    inputs = load_inputs()
+    key_flags = _build_key_flags(inputs)
     ref_map = load_train_reference_map(root)
 
-    preds_by_fold = validate_preds_layout(
-        fold_paths,
-        folds_data,
-        invalid_folds=invalid_folds,
-        min_schema_valid_frac=0.90,
-    )
+    if args.truncate_first_json:
+        # Diagnostic mode: load all folds, truncate ONLY invalid/sub-threshold folds at first JSON
+        preds_by_fold = validate_preds_layout(
+            fold_paths,
+            folds_data,
+            invalid_folds=frozenset(),
+            min_schema_valid_frac=None,
+        )
+        sub_threshold = {
+            f for f, rows in preds_by_fold.items()
+            if fold_schema_valid_fraction(rows) < 0.90
+        }
+        truncate_folds = frozenset(set(invalid_folds) | sub_threshold)
+        LOG.info("Diagnostic --truncate-first-json active; truncating folds: %s", sorted(truncate_folds))
+    else:
+        if invalid_folds:
+            LOG.info("Folds marked INVALID in manifest (will not be labeled): %s", sorted(invalid_folds))
+        preds_by_fold = validate_preds_layout(
+            fold_paths,
+            folds_data,
+            invalid_folds=invalid_folds,
+            min_schema_valid_frac=0.90,
+        )
+        truncate_folds = frozenset()
+
     summary = label_clean_oof_greedy(
         preds_by_fold,
         fold_membership,
         key_flags,
         ref_map,
+        truncate_folds=truncate_folds,
     )
+
+    if args.truncate_first_json:
+        from ml.train_m2.eval.near_dup_check import analyze_near_duplicates
+
+        records_by_key = {r["input_key"]: r["record"] for r in inputs}
+        nd_summary = analyze_near_duplicates(
+            folds_data,
+            records_by_key,
+            key_flags,
+            clean_labels=summary["clean_cluster_labels"],
+            folds_subset=sorted(preds_by_fold.keys()),
+        )
+        summary["near_dup_summary"] = nd_summary
 
     out_dir = Path(args.out_dir)
     if not out_dir.is_absolute():
         out_dir = root / out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Counts-only output JSON (strip per-key map from public report artifact or keep non-content summary)
+    # Counts-only output JSON; never mix diagnostic output into oof_greedy_labels.*
     report_payload = {k: v for k, v in summary.items() if k != "clean_cluster_labels"}
-    report_md = out_dir / "oof_greedy_labels.md"
-    report_json = out_dir / "oof_greedy_labels.json"
+    if args.truncate_first_json:
+        report_md = out_dir / "oof_greedy_labels_diagnostic.md"
+        report_json = out_dir / "oof_greedy_labels_diagnostic.json"
+    else:
+        report_md = out_dir / "oof_greedy_labels.md"
+        report_json = out_dir / "oof_greedy_labels.json"
 
     md_text = render_label_oof_greedy_report(summary)
     report_md.write_text(md_text, encoding="utf-8", newline="\n")
@@ -589,6 +712,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "preds_source_dir": rel_dir,
             "folds": sorted(fold_paths.keys()),
             "invalid_folds": sorted(invalid_folds),
+            "diagnostic_truncated": bool(args.truncate_first_json),
+            "diagnostic_truncated_folds": sorted(truncate_folds),
             "valid_folds": sorted(f for f in fold_paths if f not in invalid_folds),
         },
     )

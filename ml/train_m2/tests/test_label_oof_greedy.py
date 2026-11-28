@@ -323,3 +323,150 @@ def test_zero_schema_valid_fold_rejected_even_without_manifest(tmp_path: Path) -
     assert len(scored_keys) == 4
     assert [r["fold"] for r in res["per_fold"]] == [0]
     assert res["totals"]["clean_clusters"] == 4
+
+
+def test_truncate_first_json_diagnostic_mode_labels_only_truncated_folds(tmp_path: Path) -> None:
+    """With truncate_folds={2}, fold 2 uses first_json_prefix and is tagged diagnostic_truncated=True."""
+    valid_patch = {
+        "finding_id": "F-0",
+        "resource_ref": "RESOURCE_1",
+        "ops": [{"op": "set_attr", "attr": "logging_enabled", "value": True}],
+        "rationale_ref": "dpdp.rule6_logging",
+    }
+    valid_str = json.dumps(valid_patch)
+    trailing_str = valid_str + "\nassistant\n<think>\nrunaway reasoning..."
+
+    preds_by_fold = {
+        0: [{"input_key": "k0", "content": valid_str}],
+        2: [{"input_key": "k2", "content": trailing_str}],
+    }
+    fold_membership = {"k0": 0, "k2": 2}
+    key_flags = {
+        "k0": {"in_heldout": False, "in_a_val": False},
+        "k2": {"in_heldout": False, "in_a_val": False},
+    }
+    ref_map = {
+        "k0": {"record": {"finding_id": "F-0", "rule_id": "dpdp.rule6_logging", "resource_ref": "RESOURCE_1"}, "reference": valid_patch, "route": "fix"},
+        "k2": {"record": {"finding_id": "F-0", "rule_id": "dpdp.rule6_logging", "resource_ref": "RESOURCE_1"}, "reference": valid_patch, "route": "fix"},
+    }
+
+    seen_contents: list[str] = []
+
+    def fake_score(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        out = []
+        for it in items:
+            c = it["contents"][0]
+            seen_contents.append(c)
+            # Trailing chat text would fail json.loads if not truncated
+            parsed = json.loads(c)
+            assert isinstance(parsed, dict)
+            out.append({"candidates": [{"gate_passed": True, "outcome": "fixed", "hidden": {"full_equivalence": True, "minimal_patch": True, "decoys_untouched": True, "no_side_effects": True}, "hidden_ok": True}]})
+        return out
+
+    res = LOG_MOD.label_clean_oof_greedy(
+        preds_by_fold,
+        fold_membership,
+        key_flags,
+        ref_map,
+        score_fn=fake_score,
+        truncate_folds={2},
+    )
+    assert res["diagnostic_truncated"] is True
+    assert res["diagnostic_truncated_folds"] == [2]
+    assert res["per_fold"][0]["diagnostic_truncated"] is False
+    assert res["per_fold"][1]["diagnostic_truncated"] is True
+    assert len(seen_contents) == 2
+    assert res["totals"]["clean_clusters"] == 2
+    assert res["totals"]["minimal_correct"] == 2
+
+    md = LOG_MOD.render_label_oof_greedy_report(res)
+    assert md.startswith(
+        "# DIAGNOSTIC ESTIMATE, folds 2 and 4 truncated at first JSON; "
+        "not evidence for certification; replace with regenerated preds"
+    )
+
+
+def test_main_truncate_first_json_writes_separate_diagnostic_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """CLI --truncate-first-json writes oof_greedy_labels_diagnostic.* and never touches oof_greedy_labels.*."""
+    harvest_dir = tmp_path / "ml" / "train_m2" / "harvest_out" / "sft_oof_greedy"
+    harvest_dir.mkdir(parents=True)
+    contract_dir = tmp_path / "ml" / "train_m2" / "contract"
+    contract_dir.mkdir(parents=True)
+    (contract_dir / "harvest_inputs.jsonl").write_text("", encoding="utf-8")
+    schema_dir = tmp_path / "remediate" / "patch_ir"
+    schema_dir.mkdir(parents=True)
+    (schema_dir / "schema.json").write_text(
+        (LOG_MOD.repo_root() / "remediate" / "patch_ir" / "schema.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    valid_patch = {
+        "finding_id": "F-0",
+        "resource_ref": "RESOURCE_1",
+        "ops": [{"op": "set_attr", "attr": "logging_enabled", "value": True}],
+        "rationale_ref": "dpdp.rule6_logging",
+    }
+    valid_str = json.dumps(valid_patch)
+    trailing_str = valid_str + "\nassistant\n<think>\n</think>\n" + valid_str
+
+    folds_obj: dict[str, Any] = {"folds": {}}
+    inputs_list: list[dict[str, Any]] = []
+    ref_map: dict[str, dict[str, Any]] = {}
+    for f in (0, 2):
+        ik = f"key_{f}_0"
+        folds_obj["folds"][str(f)] = {"input_keys": [ik]}
+        rec = {"finding_id": "F-0", "rule_id": "dpdp.rule6_logging", "resource_ref": "RESOURCE_1", "fields": {"logging_enabled": False}}
+        inputs_list.append({"input_key": ik, "record": rec, "sets": {"train": True}})
+        ref_map[ik] = {"record": rec, "reference": valid_patch, "route": "fix"}
+        content = valid_str if f == 0 else trailing_str
+        (harvest_dir / f"fold{f}_preds.jsonl").write_text(json.dumps({"input_key": ik, "content": content}) + "\n", encoding="utf-8")
+
+    folds_path = tmp_path / "folds.json"
+    folds_path.write_text(json.dumps(folds_obj), encoding="utf-8")
+    manifest_path = tmp_path / "OOF_PREDS_MANIFEST.json"
+    manifest_path.write_text(json.dumps({
+        "folds": {
+            "0": {"status": "VALID"},
+            "2": {"status": "INVALID"},
+        }
+    }), encoding="utf-8")
+
+    out_dir = tmp_path / "reports"
+    out_dir.mkdir(parents=True)
+    sentinel = out_dir / "oof_greedy_labels.json"
+    sentinel.write_text('{"sentinel": true}\n', encoding="utf-8")
+
+    monkeypatch.setattr(LOG_MOD, "repo_root", lambda: tmp_path)
+    monkeypatch.setattr(LOG_MOD, "load_inputs", lambda: inputs_list)
+    monkeypatch.setattr(LOG_MOD, "load_train_reference_map", lambda root: ref_map)
+
+    from ml.train_m2.eval import oof_truncate as OT
+    OT._default_validator.cache_clear()
+    monkeypatch.setattr(OT, "repo_root", lambda: tmp_path)
+
+    # Mock score_inputs via sys.modules hook or patching ml.train_m1.eval.score.score_inputs
+    import ml.train_m1.eval.score as score_mod
+    def fake_score_inputs(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [
+            {"candidates": [{"gate_passed": True, "outcome": "fixed", "hidden": {"full_equivalence": True, "minimal_patch": True, "decoys_untouched": True, "no_side_effects": True}, "hidden_ok": True}]}
+            for _ in items
+        ]
+    monkeypatch.setattr(score_mod, "score_inputs", fake_score_inputs)
+
+    rc = LOG_MOD.main([
+        "--folds", str(folds_path),
+        "--manifest", str(manifest_path),
+        "--out-dir", str(out_dir),
+        "--truncate-first-json",
+    ])
+    assert rc == 0
+    # Certified report untouched
+    assert json.loads(sentinel.read_text(encoding="utf-8")) == {"sentinel": True}
+    # Diagnostic report written cleanly
+    diag_json = json.loads((out_dir / "oof_greedy_labels_diagnostic.json").read_text(encoding="utf-8"))
+    assert diag_json["diagnostic_truncated"] is True
+    assert diag_json["diagnostic_truncated_folds"] == [2]
+    assert diag_json["totals"]["clean_clusters"] == 2
+    assert "certification_comparison" in diag_json["near_dup_summary"]
+    diag_md = (out_dir / "oof_greedy_labels_diagnostic.md").read_text(encoding="utf-8")
+    assert "DIAGNOSTIC ESTIMATE, folds 2 and 4 truncated at first JSON" in diag_md
