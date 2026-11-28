@@ -9,7 +9,7 @@
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![Neo4j](https://img.shields.io/badge/graph-Neo4j-008CC1.svg)](https://neo4j.com/)
 [![OPA](https://img.shields.io/badge/policy-OPA%20%2F%20Rego-7D9199.svg)](https://www.openpolicyagent.org/)
-[![Status](https://img.shields.io/badge/status-in%20development-orange.svg)](#project-status)
+[![Status](https://img.shields.io/badge/status-in%20development-orange.svg)](#status)
 [![Compliance](https://img.shields.io/badge/maps%20to-India%20DPDP%20Rules%202025-green.svg)](#what-argus-does)
 
 <br/>
@@ -18,28 +18,48 @@
 
 </div>
 
+Built as an RVCE experiential-learning capstone and entered in the Campus to Cloud Hackathon (Techfest, IIT Bombay and AWS).
+
+| Resource | Link |
+| :--- | :--- |
+| Live demo | [http://13.201.224.53/](http://13.201.224.53/) <!-- TODO(owner): confirm live demo URL stays up through Demo Day --> |
+| Demo video (under 3 min) | _added at submission_ <!-- TODO(owner): add Demo Video URL (script at docs/hackathon/Demo_Video_Script.md) --> |
+| Idea brief | [docs/hackathon/Idea_Brief.md](docs/hackathon/Idea_Brief.md) |
+| Build summary | [docs/hackathon/Build_Summary.md](docs/hackathon/Build_Summary.md) |
+| Code repository | [https://github.com/Open-Sauced-CODE/ARGUS](https://github.com/Open-Sauced-CODE/ARGUS) |
+
 ---
 
 ## The Problem
 
-Most cloud breaches originate from mundane misconfigurations: publicly accessible S3 buckets, over-permissive IAM assume-role trust policies, unencrypted RDS clusters, and disabled CloudTrail logging. 
+Cloud breaches commonly stem from mundane misconfigurations: public S3 buckets, wildcard IAM policies, unencrypted RDS databases, and disabled CloudTrail logging. Conventional scanners rank findings individually and leave small teams with hundreds of "Critical" alerts, ignoring how attackers chain identity, network, and storage flaws into multi-hop compromise paths. Meanwhile, pasting infrastructure configs or logs into hosted AI APIs exposes sensitive topology and customer metadata.
 
-Traditional Cloud Security Posture Management (CSPM) scanners bombard security teams with hundreds of disconnected alerts, virtually all tagged **"Critical"**. Small security and platform engineering teams cannot remediate everything at once. More crucially, real attackers do not exploit findings in isolation—they chain subtle weaknesses across identity, compute, and data layers into multi-hop attack graphs. Remediating the scanner's loudest individual finding frequently changes nothing about the attacker's actual path to crown-jewel assets.
+### Why It Matters in India
+
+India's Digital Personal Data Protection (DPDP) Rules, 2025 were notified on 13 November 2025 and take full effect in mid-May 2027 ([v3 design doc](docs/ARGUS_v3_Tiered_Privacy_First_Remediation.md), [DPDP mapping table](docs/dpdp-mapping-table.md)). Small startup, university, and public-portal engineering teams rarely have dedicated SecOps staff, yet must demonstrate technical safeguards under **Rule 6** (encryption, access control, versioning, logging), **Rule 7** (72-hour breach detection readiness), **Rule 8** (retention and erasure lifecycles), and **Rule 15** (cross-border transfer visibility).
+
+---
+
+## Who It Helps
+
+| Persona | Core Need | Dashboard Feature Used |
+| :--- | :--- | :--- |
+| **Founder-Engineer** | Fix the few misconfigurations that actually stop breaches without breaking production | Interdiction budget cut-set (`/plan`) and verified patch diff export (`/approvals`) |
+| **SOC Analyst** | Trace multi-hop IAM and network paths instead of triaging flat alert lists | Interactive attack graph explorer (`/map`) and candidate verification pipeline (`/pipeline`) |
+| **Compliance Officer** | Track DPDP Rules 2025 readiness and confirm what data any model saw | DPDP readiness scorecard (`/compliance`) and Privacy Receipt viewer (`/proof`) |
 
 ---
 
 ## What ARGUS Does
 
-ARGUS combines graph analysis, network interdiction optimization, privacy-preserving LLM remediation, and formal policy enforcement:
-
 | Stage | Name | Mechanism | Outcome |
 | :--- | :--- | :--- | :--- |
-| **See** | Attack Graph Ingestion | Ingests AWS configuration into Neo4j via Cartography; models assets, IAM trust edges, and network exposure. | Discovers lateral movement and privilege escalation attack paths. |
-| **Decide** | Game-Theoretic Prioritization | Computes asset criticality using Personalized PageRank; solves a budget-constrained network interdiction problem. | Identifies the minimum-cost cut-set of fixes that maximizes attacker effort. |
-| **Protect** | Privacy Airlock | Projects findings to generic schemas, pseudonymizes identifiers via HMAC-SHA256, and scrubs sensitive secrets/PII. | Ensures zero customer credentials, account IDs, or private data ever reach an LLM. |
-| **Draft** | Multi-Tier Remediation | Tiers remediation through deterministic templates (T0) and a fine-tuned local model (T1) outputting structured Patch-IR. | Produces deterministic, syntactically valid infrastructure-as-code patches. |
-| **Verify** | Deterministic Verification Gate | Evaluates generated patches against Open Policy Agent (OPA) Rego rules covering CIS benchmarks and India DPDP Act Rules 2025. | Guarantees fixes resolve findings without introducing regressions or policy violations. |
-| **Trust** | Risk-Controlled Confidence | M2 calibrated confidence scoring with conformal prediction error bounds. | Dispatches patches safely: high-confidence fixes auto-apply; uncertain cases route to human approval. |
+| **See** | Attack Graph Ingestion | Ingests AWS configuration into Neo4j (or in-memory NetworkX for local scans); models assets, IAM trust edges, and ingress exposure. | Discovers lateral movement and privilege escalation attack paths. |
+| **Decide** | Game-Theoretic Prioritization | Computes asset criticality using Personalized PageRank; solves a budget-constrained network interdiction MILP. | Identifies the minimum-cost cut-set of fixes that maximizes attacker path cost. |
+| **Protect** | Privacy Airlock | Projects only rule-declared fields, tokenizes identifiers with deterministic mappings, and scrubs secrets/PII via regex and Presidio. | Ensures zero customer credentials, account IDs, or private data reach an LLM. |
+| **Draft** | Multi-Tier Remediation | Routes findings through deterministic templates (T0) and a fine-tuned local `unsloth/Qwen3.5-4B` model (T1) outputting closed JSON Patch-IR. | Produces deterministic, schema-constrained remediation edits locally. |
+| **Verify** | Deterministic Verification Gate | Evaluates candidate patches against Open Policy Agent (OPA) Rego rules covering CIS benchmarks and India DPDP Rules 2025. | Rejects invalid patches, deletions, or privilege widenings before application. |
+| **Trust** | Risk-Controlled Confidence | Calibrated M2 confidence scoring (`ml/train_m2/`) paired with Learn-Then-Test / conformal risk control (calibration in progress). | Keeps autonomy OFF until certified; routes uncertified or uncertain patches to human approval. |
 
 > *"Core idea: don't require the AI to be right. Require the checker to be strong, and keep the AI blind to sensitive data."*
 
@@ -66,13 +86,13 @@ flowchart LR
     subgraph Remediation["4. Remediation Tiers"]
         Airlock --> Choice{Tier Selector}
         Choice -->|Known Safe| T0["T0: Deterministic Templates"]
-        Choice -->|Complex| T1["T1: Local Model M1\n(Patch-IR via Qwen2.5)"]
-        Choice -->|Optional| T2["T2: Remote LLM\n(Opt-in, Scrubbed)"]
+        Choice -->|Complex| T1["T1: Local Model M1\n(Patch-IR via Qwen3.5-4B)"]
+        Choice -->|Optional| T2["T2: Remote LLM\n(Opt-in Stub, Off by Default)"]
     end
 
     subgraph VerifyTrust["5. Verification & Trust"]
         T0 & T1 & T2 --> Gate["OPA / Rego Verification Gate\n(CIS Benchmarks + DPDP Rules 6,7,8,15)"]
-        Gate --> M2["M2 Confidence Model\n(Conformal Threshold)"]
+        Gate --> M2["M2 Confidence Model\n(LTT Threshold - Pending)"]
         M2 -->|Above Threshold| Apply["Auto-Apply Patch"]
         M2 -->|Below Threshold / Escalate| Human["Human Approval Queue"]
     end
@@ -84,165 +104,152 @@ flowchart LR
 
 ---
 
-## Remediation Tiers
+## See It Work
 
-ARGUS avoids monolithic reliance on generative models by routing findings through stratified remediation tiers:
+A 3-minute walkthrough from vulnerable infrastructure to verified fix:
+
+1. **Vulnerable AWS testbed** (`testbeds/`): Scan the local DPDP/CIS Terraform workspace (`testbeds/sample_dpdp_infra/main.tf`) or read-only AWS control-plane metadata via `local_engine/` (live in local mode; simulated showcase scenario in cloud mode).
+2. **Attack graph** (`graph/`, `risk/`): Build the asset graph and run Personalized PageRank (`risk/pagerank.py`) to expose multi-hop IAM and network paths to PII stores.
+3. **Ranked fixes** (`prioritize/`): Solve the MILP network interdiction problem (`prioritize/interdiction.py`) to pick the highest-impact $K$ fixes within budget.
+4. **Privacy airlock** (`privacy/`): Project rule-declared fields (`privacy/airlock/`), tokenize real identifiers (`privacy/vault/`), scrub secrets/Aadhaar/PAN (`privacy/scrubbers/`), and emit a leak-checked Privacy Receipt.
+5. **Verified patch** (`remediate/`, `policy/`, `ml/`): Draft Patch-IR via T0 templates or local `unsloth/Qwen3.5-4B` (M1) and verify against OPA Rego rules (`policy/dpdp/`, `policy/generic/`) and intent checks.
+6. **Approve or auto-apply** (`ml/train_m2/`, `backend/`, `dashboard/`): Inspect confidence scores, diffs, and receipts in the React UI (`dashboard/` uses mock fallback data under `dashboard/src/mock/` in standalone/cloud showcase mode, and connects to live local scans when launched via `deploy_dashboard.py --local`; see [docs/hackathon/Build_Summary.md](docs/hackathon/Build_Summary.md)).
+
+---
+
+## Built on AWS
+
+| Category | AWS Service | What We Use It For | Why |
+| :--- | :--- | :--- | :--- |
+| **Analysed** | **IAM** | Inspect users, roles, attached policies, trust policies, and access keys (`testbeds/`, `graph/schema.md`). | Detects privilege-escalation chains and wildcard permissions without reading data planes. |
+| **Analysed** | **Amazon S3** | Audit bucket public access blocks, encryption, versioning, logging, and lifecycle rules (`testbeds/sample_dpdp_infra/main.tf`). | Primary storage surface for DPDP Rules 6 and 8 compliance checks. |
+| **Analysed** | **Amazon EC2 & VPC** | Audit security group ingress CIDRs, VPCs, subnets, NACLs, and route tables (`graph/schema.md`). | Identifies internet-exposed entry points feeding lateral movement. |
+| **Analysed** | **Amazon RDS** | Check `storage_encrypted` posture on database instances (`testbeds/sample_dpdp_infra/main.tf`). | Protects personal-data relational stores under DPDP Rule 6a. |
+| **Analysed** | **AWS CloudTrail** | Check `enable_logging` state (`testbeds/sample_dpdp_infra/main.tf`, `docs/dpdp-mapping-table.md`). | Signals readiness for DPDP Rule 7 breach detection and investigation. |
+| **Demo Hosting** | _added at submission_ | Public web showcase host <!-- TODO(owner): confirm exact AWS hosting services for submission (e.g., EC2 t3.micro ap-south-1 in docs/hackathon/Build_Summary.md and packaging/deploy_ec2.ps1, or S3 + CloudFront) --> | Keeps sensitive local scanning on-device while serving the live demo portal on AWS. |
+
+---
+
+## Remediation Tiers
 
 | Tier | Engine | Description | Data Exposure | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **T0** | Deterministic Templates | Pre-compiled, deterministic Terraform/JSON edits for known high-frequency CIS findings (e.g., S3 public access block, EBS volume encryption). | Local execution only | **Implemented** |
-| **T1** | Local Fine-Tuned Model (M1) | Specialized local model (fine-tuned Qwen2.5-Coder) drafting closed Patch-IR transformations. Runs Best-of-$N$ candidates filtered through the verification gate. | Local execution only | **Implemented** |
-| **T2** | Remote LLM (Opt-in) | Cloud LLM integration for rare/unseen architectures. **Disabled by default**; requires explicit administrator opt-in and operates exclusively on de-identified, tokenized airlock payloads. | Pseudonymized & scrubbed | **Implemented** |
-| **T3** | Human Escalation | Findings with high blast radius or ambiguity route directly to security engineers with contextual attack-graph evidence. | Internal only | **Planned (Phase 8)** |
+| **T0** | Deterministic Templates | Rule-keyed Patch-IR edits for 7 single-attribute S3 CIS and DPDP rules (`remediate/templates/__init__.py`). | Local execution only | **Implemented** |
+| **T1** | Local Model (M1) | `unsloth/Qwen3.5-4B` fine-tuned for schema-constrained Patch-IR via Ollama (`remediate/local_model/__init__.py`, `ml/train_m1/`). | Local execution only | **Trained, runtime wiring in progress** |
+| **T2** | Remote LLM (Opt-in) | Optional scrubbed fallback (`remediate/remote_opt/` placeholder only; off by default). | Pseudonymized & scrubbed | **Stub** |
+| **T3** | Human Escalation | Routes `escalate`-only, low-confidence, or uncertified patches (`ml/train_m2/decide.py`) to `/approvals`. | Internal only | **Planned** |
 
 ---
 
-## Project Status
+## Status
 
-ARGUS follows a disciplined 13-phase engineering roadmap for the RVCE Experiential Learning programme:
-
-<div align="center">
-  <img src="docs/assets/pipeline_status.png" alt="Pipeline Status Roadmap" width="950" />
-</div>
-
-<br/>
-
-| Phase | Milestone | Real Repo Evidence | Status |
-| :---: | :--- | :--- | :---: |
-| **Phase 0** | Setup, specifications & project charter | `requirements.txt`, Docker configuration, documentation specs | **Done** |
-| **Phase 1** | Attack graph schema & AWS ingestion | `graph/schema.md`, `Dockerfile.cartography`, `docker-compose.yml` | **Done** |
-| **Phase 2** | Risk engine & Personalized PageRank | `risk/pagerank.py`, `risk/attack_graph.py`, `risk/paths.py` | **Done** |
-| **Phase 3** | Game-theoretic interdiction optimizer | `prioritize/interdiction.py`, `prioritize/benchmark_results.json` | **Done** |
-| **Phase 4** | Privacy airlock & OPA/Rego policy suites | `privacy/airlock/`, `privacy/vault/`, `policy/dpdp/`, `policy/generic/` | **Done** |
-| **Phase 5** | M1 local model (SFT / RFT training) | `remediate/local_model/`, `ml/train_m1/`, Patch-IR schema | **Done** |
-| **Phase 6** | M2 calibrated confidence & conformal risk gate | `ml/train_m2/labels/`, `ml/train_m2/tests/` | **In Progress** |
-| **Phase 7** | Verification engine & backend API | `backend/` scaffolding, `verify/` planning | *Planned* |
-| **Phase 8** | Security analyst dashboard UI | `dashboard/` scaffolding | *Planned* |
-| **Phase 9** | Live testbed deployment & integration | `testbeds/` Terraform configurations | *Planned* |
-| **Phase 10** | End-to-end comparative evaluation | Benchmark harnesses and validation suites | *Planned* |
-| **Phase 11** | Technical paper & academic report | Experimental writeups and documentation | *Planned* |
-| **Phase 12** | Live demonstration & open release | Packaging, walkthroughs, and production release | *Planned* |
+* **Works today**: Neo4j / NetworkX attack graph ingestion (`graph/`, `local_engine/`), Personalized PageRank risk engine (`risk/`), PuLP/SciPy network interdiction optimizer (`prioritize/`), Privacy Airlock (`privacy/`), OPA Rego policies for CIS and DPDP (`policy/`), T0 templates (`remediate/templates/`), fine-tuned M1 `unsloth/Qwen3.5-4B` training pipeline (`ml/train_m1/`), React showcase dashboard (`dashboard/`), and dual-mode Python server (`backend/api_server.py`, `deploy_dashboard.py`).
+* **In progress**: M2 calibrated confidence evaluation (`ml/train_m2/`, [docs/PHASE6_RESULTS.md](docs/PHASE6_RESULTS.md) reports certification as `PENDING` until full 5-fold cross-fit regeneration and one-shot held-out evaluation complete), runtime M1/M2 integration, and live dashboard API wiring beyond mock fallbacks.
+* **Next**: Complete clean cross-fit regeneration and certify `tau_star.json`, finish standalone `verify/` orchestration (`verify/README.md`), and complete end-to-end live testbed remediation.
 
 ---
 
-## Repository Layout
+## Results
 
-```
-ARGUS/
-├── backend/                  # FastAPI orchestration server and REST endpoints (Phase 7 planned)
-├── dashboard/                # Analyst remediation console and graph explorer (Phase 8 planned)
-├── docs/                     # Architectural specifications, glossary, decisions, and visual assets
-│   ├── assets/               # Generated diagrams, roadmaps, and social preview assets
-│   ├── ARCHITECTURE.md       # In-depth architectural breakdown of all 6 pipeline stages
-│   └── GLOSSARY.md           # Domain glossary (Attack Graphs, PageRank, Interdiction, DPDP)
-├── graph/                    # Attack graph definitions and Cartography ingestion queries
-├── ml/                       # Machine learning systems
-│   ├── mutation_engine/      # Synthetic AWS finding mutator and QA validation harness
-│   ├── train_m1/             # Phase 5 M1 local generator training (SFT & RFT-v2 notebooks)
-│   └── train_m2/             # Phase 6 M2 calibrated confidence model & conformal threshold
-├── policy/                   # Open Policy Agent (OPA) Rego policy suites
-│   ├── dpdp/                 # India DPDP Rules 2025 technical safeguards (Rules 6, 7, 8, 15)
-│   └── generic/              # CIS AWS Foundations benchmark rules
-├── prioritize/               # Game-theoretic network interdiction and cut-set optimizer
-├── privacy/                  # Zero-data privacy airlock
-│   ├── airlock/              # Structural finding projection and leakage auditor
-│   ├── scrubbers/            # High-entropy regex scrubber for AWS credentials and tokens
-│   └── vault/                # Deterministic HMAC-SHA256 pseudonymizing tokenizer
-├── remediate/                # Remediation engines
-│   ├── local_model/          # M1 model client and inference wrapper
-│   ├── patch_ir/             # Closed Patch-IR JSON schema
-│   ├── remote_opt/           # Optional de-identified remote LLM client (disabled by default)
-│   └── templates/            # T0 deterministic remediation templates
-├── risk/                     # Graph loader, Personalized PageRank, and path simulator
-├── scripts/                  # Project utility scripts and asset generator (make_assets.py)
-├── testbeds/                 # Terraform configurations for reproducible vulnerable AWS environments
-├── tools/                    # Parallel development ownership and branch hygiene checkers
-└── verify/                   # Verification engine (Phase 7 planned)
-```
+Figures measured on inputs seen during model training are **in-sample**, not generalization estimates.
 
----
+<details>
+<summary>Verified metrics from committed repository reports and benchmarks (click to expand)</summary>
 
-## Validated Results
+| Area | Metric & Source | Honest Caveat |
+| :--- | :--- | :--- |
+| **Network Interdiction** | Outperformed naive and Stackelberg baselines in **43/50** (budget 2), **49/50** (budget 4), and **49/50** (budget 6) random graphs; mean solve time **35.3 ms**, scale probe 58 findings ([prioritize/benchmark_results.json](prioritize/benchmark_results.json)). | Evaluated on 50 synthetic random graph instances (`brute_force_checks = 0` in artifact), not production AWS accounts. |
+| **M1 Patch Synthesis (In-Sample Common Keys)** | On **181** common model-input keys, greedy gate pass rates were **99.4% (180/181)** for SFT and **98.3% (178/181)** for RFT vs **11.0% (20/181)** zero-shot ([ml/train_m2/out/reports/harvest_vs_phase5.md](ml/train_m2/out/reports/harvest_vs_phase5.md)). | Common keys overlap training inputs (**in-sample**); rates across different input sets are not comparable. |
+| **M1 Cross-Fit OOF (Partial)** | Across validated folds 0, 1, and 3, **105/105** clean unseen clusters passed the gate and **103/105** were minimal-correct (`k=2`, `n=120` vs `cp_min_n=124` at $\alpha=0.05, \delta=0.05$; **22/105** near-duplicates flagged) ([oof_greedy_labels.md](ml/train_m2/out/reports/oof_greedy_labels.md), [near_dup_oof.md](ml/train_m2/out/reports/near_dup_oof.md)). | Folds 2 and 4 were marked `INVALID` (missing stop token); certification remains `PENDING` until clean regeneration and held-out evaluation. |
+| **Counterfactual Oracle** | **100.0% agreement (2,868 / 2,868)** across all 14 rule families ([cf_validation_summary.md](ml/train_m2/out/reports/cf_validation_summary.md)). | BFS (`max_edits=3`) is permissive on compound multi-field S3 rules (`dpdp.rule6_public_exposure`, `cis.s3_public_access_block`). |
+| **M2 Label Leak-Guard Audit** | **18,607** label rows audited with **0** violations ([leak_audit.md](ml/train_m2/out/reports/leak_audit.md)); `500/500` feature-parity checks passed ([docs/PHASE6_RESULTS.md](docs/PHASE6_RESULTS.md)). | Audits M2 label partitioning via `leakguard`, not runtime Privacy Airlock egress; held-out test sets remain sealed (`PENDING`). |
 
-Every metric reported below is derived directly from artifacts and benchmark runs committed in the repository:
-
-* **Network Interdiction Optimization (`prioritize/benchmark_results.json`)**:
-  In a benchmark graph of 50 assets and 12 attack paths, the interdiction optimizer reduced maximum attacker reachability to zero within a budget of $K=3$ targeted remediations, outperforming naive severity-ordered remediation which required twice the budget to sever equivalent critical paths.
-* **M1 Local Model Synthesis Quality (`ml/train_m2/out/reports/harvest_vs_phase5.md`)**:
-  Across common model-input evaluation clusters, greedy generation pass rates against formal Patch-IR verification gates achieved **99.4%** on Supervised Fine-Tuning (SFT) and **98.3%** on Reinforcement Fine-Tuning (RFT-v2).
-* **M2 Counterfactual Oracle Validation (`ml/train_m2/out/reports/cf_validation_summary.md`)**:
-  Counterfactual label verification achieved **100.0% agreement** across 2,868 / 2,868 audited mutation test cases.
-* **Privacy Airlock Leakage Audit (`ml/train_m2/out/reports/label_acceptance.md`)**:
-  Audited 18,607 records through the privacy airlock leak-guard filter with **0 data leakage violations**.
-
-> *Note: End-to-end cloud infrastructure evaluation benchmarks will be conducted and published during Phase 10.*
+</details>
 
 ---
 
 ## Honest Limitations
 
-* **Single AWS Account Scope**: The current graph ingestion and risk engine focus on single-account topologies; cross-account AWS Organizations transitive peering is planned for future iterations.
-* **Heuristic Edge Weights**: Attack graph transition costs currently use calibrated heuristic weights (privilege tier distances, network exposure levels) rather than dynamically learned attacker telemetry.
-* **Scope of DPDP Rule Mapping**: Formal Rego policies currently map to technical safeguards in Rules 6, 7, 8, and 15 of India's DPDP Rules 2025. Rule 15 (data retention) is reported as an inventory visibility signal rather than an automated blocking violation.
-* **Pseudonymization vs. Anonymization**: The Privacy Airlock implements deterministic HMAC-SHA256 pseudonymization and credential stripping; it protects sensitive customer identifiers, but structural graph relations are preserved to allow code synthesis.
-* **Conformal Guarantees**: Conformal prediction bounds hold under the assumption that runtime cloud findings share exchangeability with the calibration distribution.
+* **Confidence threshold not yet certified**: `ml/train_m2/out/tau_star.json` currently has `certified: false` ([docs/PHASE6_RESULTS.md](docs/PHASE6_RESULTS.md)), so autonomous apply stays **OFF** and candidates route to human review (`decide.py`).
+* **Single AWS account scope**: Graph ingestion models single-account topologies; cross-account AWS Organizations peering is outside current scope.
+* **Heuristic edge weights**: Attack graph transition probabilities use calibrated heuristic weights rather than learned runtime attacker telemetry.
+* **Scope of DPDP Rules mapping**: Rego policies check technical proxies for Rules 6, 7, and 8 (retention/erasure). **Rule 15 (cross-border transfer)** is a permissive negative-list check surfaced as an inventory visibility flag rather than an automated blocking violation ([docs/dpdp-mapping-table.md](docs/dpdp-mapping-table.md)).
+* **Pseudonymization preserves structure**: The Privacy Airlock strips secrets and replaces identifiers with deterministic tokens, while preserving structural resource relations needed for synthesis.
+* **Exchangeability assumption**: Conformal / LTT risk bounds assume deployment findings share exchangeability with the calibration distribution.
+
+---
+
+<details>
+<summary>Repository layout (click to expand)</summary>
+
+```text
+ARGUS/
+├── backend/              # Dual-mode HTTP server (showcase & local agent API)
+├── dashboard/            # React + TypeScript UI (implemented with mock fallback data)
+├── docs/                 # Architecture specs, glossary, DPDP mapping, hackathon briefs
+├── graph/                # Attack graph schema and Cartography ingestion docs (implemented)
+├── local_engine/         # Local Terraform/AWS scanners, Ollama GGUF & OPA helpers (implemented)
+├── ml/
+│   ├── mutation_engine/  # Synthetic AWS finding mutator and QA gate harness (implemented)
+│   ├── train_m1/         # M1 Qwen3.5-4B SFT/RFT notebooks & OOF scorer (implemented)
+│   └── train_m2/         # M2 confidence model, labels, features & LTT calibration (in progress)
+├── packaging/            # Windows desktop installer build & EC2 deploy scripts (implemented)
+├── policy/               # OPA Rego suites: CIS AWS (generic/) and DPDP Rules (dpdp/) (implemented)
+├── prioritize/           # Network interdiction MILP cut-set optimizer (implemented)
+├── privacy/              # Airlock projection, Fernet vault, Presidio/regex scrubbers (implemented)
+├── remediate/
+│   ├── local_model/      # T1 local Ollama client wrapper (implemented)
+│   ├── patch_ir/         # Closed Patch-IR JSON schema (implemented)
+│   ├── remote_opt/       # T2 remote LLM placeholder (stub)
+│   └── templates/        # T0 deterministic templates (implemented)
+├── risk/                 # Neo4j/graph loader and Personalized PageRank scorer (implemented)
+├── testbeds/             # Sample DPDP Terraform workspace and AWS test templates (implemented)
+├── tools/                # Parallel development ownership and frozen-contract checks (implemented)
+└── verify/               # Standalone verification runner placeholder (stub)
+```
+
+</details>
 
 ---
 
 ## Getting Started
 
-### Prerequisites
-* **Python 3.11+** (Python 3.12 recommended)
-* **Docker & Docker Compose** (for Neo4j graph database)
-* **Git**
+**Prerequisites**: Python 3.11+ (3.12 recommended), Docker & Docker Compose, [OPA CLI](https://www.openpolicyagent.org/) (`opa` on `PATH`, required for policy tests), Node.js/npm (for dashboard), Git.
 
-### Installation
+```powershell
+# 1. Clone and start Neo4j
+git clone https://github.com/Open-Sauced-CODE/ARGUS.git
+cd ARGUS
+docker compose up -d neo4j
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Open-Sauced-CODE/ARGUS.git
-   cd ARGUS
-   ```
+# 2. Python environment & offline hermetic tests (matching .github/workflows/tests.yml)
+python -m venv .venv
+.\.venv\Scripts\activate          # Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt   # Or requirements-ci.txt for offline tests
+pytest risk/tests privacy/tests ml/tests/test_contracts_doc.py -q
+```
 
-2. **Start the Neo4j attack graph database**:
-   ```bash
-   docker compose up -d neo4j
-   ```
-   *Neo4j Browser will be available at `http://localhost:7474` (default: neo4j / arguspassword).*
+**Run the dashboard locally** (`dashboard/package.json` scripts: `dev`, `build`, `preview`, `typecheck`; uses `dashboard/src/mock/` data unless paired with `python deploy_dashboard.py --local`):
 
-3. **Configure virtual environment**:
-   ```powershell
-   # Windows (PowerShell)
-   python -m venv .venv
-   .\.venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-   ```bash
-   # Linux / macOS
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-4. **Run offline unit and policy test suites**:
-   ```bash
-   # Runs hermetic risk, privacy, and contract tests without external dependencies
-   pytest risk/tests privacy/tests ml/tests/test_contracts_doc.py -q
-   ```
+```powershell
+cd dashboard
+npm install
+npm run dev
+```
 
 ---
 
 ## Team
 
-Developed as part of the **RVCE Experiential Learning (Semester 3)** programme under the Cloud Security & Automated Remediation theme:
+Built by undergraduate engineering students at **R. V. College of Engineering (RVCE)** as part of the Experiential Learning capstone programme:
 
-* **Prabhav Tiwari** ([@prabhavtiwari](https://github.com/prabhavtiwari)) — Generation systems, Ollama harvest, RFT-v2 fine-tuning
-* **Shaurya Khanna** ([@khannashaurya0108-ux](https://github.com/khannashaurya0108-ux)) — M2 confidence modeling, label oracle, risk-controlled gates
-* **Yash** — Graph schemas, Cartography ingestion, risk models
-* **Yashraj** — Policy engineering, testbeds, and verification
+* **Prabhav Tiwari** ([@prabhavtiwari](https://github.com/prabhavtiwari)) - Generation pipeline, Ollama harvest, M1 fine-tuning
+* **Shaurya Khanna** ([@khannashaurya0108-ux](https://github.com/khannashaurya0108-ux)) - M2 confidence modeling, label oracle, risk-controlled threshold
+* **Yash** - Graph schemas, Cartography ingestion, risk scoring
+* **Yashraj** - Policy engineering, testbeds, verification
 
 ---
 
 ## License
 
-This project is open-source under development for academic and research purposes. A formal open-source license will be selected prior to public release. See [LICENSE](LICENSE) for details.
+License: to be added by the maintainers.
